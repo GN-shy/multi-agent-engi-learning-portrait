@@ -22,7 +22,7 @@
         <div class="panel-title">
           <div>
             <h3>冻结评测与冲奖证据</h3>
-            <p>6 类合成画像、60 个冻结任务、15 条路线；结果由当前代码现场复算</p>
+            <p>6 类合成画像、60 个冻结任务、16 个主方向与 29 条细分路线；结果由当前代码现场复算</p>
           </div>
           <el-button type="primary" :loading="evaluationRunning" @click="runEvaluation">
             运行 60 项离线评测

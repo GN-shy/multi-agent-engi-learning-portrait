@@ -6,9 +6,9 @@
       <h1>不是再给你一份课程清单，<br />而是帮你做出<span>路线决策</span>。</h1>
       <p class="lead">画像诊断、方向比较、技能图谱、可信生成、项目实操、测试反馈和动态重规划形成一个闭环。</p>
       <div class="proofs">
-        <div><strong>15</strong><span>条正式计算机路线</span></div>
+        <div><strong>16</strong><span>个计算机主方向</span></div>
+        <div><strong>29</strong><span>条细分学习路线</span></div>
         <div><strong>6</strong><span>个协作 Agent</span></div>
-        <div><strong>4</strong><span>类个性化资源</span></div>
       </div>
     </section>
 
@@ -23,24 +23,24 @@
           <el-input v-model="form.username" maxlength="40" placeholder="页面将动态显示该名称" />
         </el-form-item>
         <el-form-item :label="mode === 'login' ? '账号或邮箱' : '邮箱'">
-          <el-input v-model="form.account" autocomplete="username" placeholder="demo@gongxue.local" />
+          <el-input v-model="form.account" autocomplete="off" placeholder="请输入你的邮箱" />
         </el-form-item>
         <el-form-item label="密码">
-          <el-input v-model="form.password" type="password" show-password autocomplete="current-password" />
+          <el-input v-model="form.password" type="password" show-password :autocomplete="mode === 'register' ? 'new-password' : 'off'" />
         </el-form-item>
         <el-alert v-if="user.error" :title="user.error" type="error" :closable="false" show-icon />
         <el-button class="submit" type="primary" native-type="submit" :loading="user.loading">
           {{ mode === 'login' ? '进入学习空间' : '注册并开始诊断' }}
         </el-button>
       </el-form>
-      <button class="demo" @click="useDemo">使用演示账号：demo@gongxue.local / demo12345</button>
+      <div class="login-tools"><button @click="clearForm">清空输入</button><button @click="useDemo">使用演示账号</button></div>
       <p class="privacy">刷新令牌保存在 HttpOnly Cookie；系统只展示可审计执行摘要，不展示模型隐藏思维链。</p>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
@@ -50,6 +50,23 @@ const route = useRoute()
 const mode = ref<'login' | 'register'>('login')
 const form = reactive({ username: '', account: '', password: '' })
 
+onMounted(async () => {
+  if (route.query.reset === '1') {
+    await user.logout()
+    mode.value = 'register'
+    clearForm()
+    await router.replace('/login')
+  }
+})
+watch(mode, () => {
+  clearForm()
+})
+function clearForm() {
+  form.username = ''
+  form.account = ''
+  form.password = ''
+  user.error = ''
+}
 function useDemo() {
   mode.value = 'login'
   form.account = 'demo@gongxue.local'
@@ -69,6 +86,6 @@ async function submit() {
 .kicker { margin:22px 0 14px;color:#3566dc;font-weight:700;letter-spacing:.08em; }.story h1 { font-size:48px;line-height:1.22;margin:0;color:#152039; }.story h1 span { color:#3269ee; }.lead { font-size:17px;line-height:1.85;color:#66738a;max-width:650px; }
 .proofs { display:flex;gap:34px;margin-top:38px }.proofs div { display:flex;flex-direction:column }.proofs strong { font-size:30px;color:#285fe2 }.proofs span { color:#778399;font-size:13px }
 .auth-card { background:rgba(255,255,255,.94);border:1px solid #e3eaf5;border-radius:26px;padding:34px;box-shadow:0 28px 80px rgba(32,63,112,.14);max-width:480px;width:100%;justify-self:center; }
-.auth-title { margin:28px 0 20px }.auth-title h2 { margin:0 0 8px;font-size:26px }.auth-title p,.privacy { color:#7b8799;font-size:13px;line-height:1.6 }.submit { width:100%;height:44px;margin-top:10px }.demo { border:0;background:none;color:#3168ee;cursor:pointer;width:100%;margin:18px 0 8px }
+.auth-title { margin:28px 0 20px }.auth-title h2 { margin:0 0 8px;font-size:26px }.auth-title p,.privacy { color:#7b8799;font-size:13px;line-height:1.6 }.submit { width:100%;height:44px;margin-top:10px }.login-tools{display:flex;justify-content:center;gap:18px;margin:18px 0 8px}.login-tools button{border:0;background:none;color:#3168ee;cursor:pointer}
 @media(max-width:900px){.login-page{grid-template-columns:1fr;padding:24px}.story{display:none}}
 </style>

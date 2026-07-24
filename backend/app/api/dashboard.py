@@ -72,6 +72,7 @@ def dashboard(
                 "first_session_ready": latest_session is not None,
             },
             "profile": {
+                "version": profile.version if profile else 0,
                 "score": (
                     round(sum(profile.dimension_scores.values()) / len(profile.dimension_scores), 1)
                     if profile and profile.dimension_scores
@@ -79,6 +80,8 @@ def dashboard(
                 ),
                 "dimensions": profile.dimension_scores if profile else {},
                 "blind_spots": profile.blind_spots[:3] if profile else [],
+                "strengths": profile.strengths[:3] if profile else [],
+                "weekly_hours": profile.weekly_hours if profile else 0,
             },
             "selected_track": track,
             "route_match": selected.rationale if selected else None,

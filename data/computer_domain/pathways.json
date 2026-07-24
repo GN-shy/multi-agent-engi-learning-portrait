@@ -1,0 +1,509 @@
+{
+  "version": "2026.08",
+  "purpose": "计算机细分方向路线目录；参考用户自有项目 vibe-coding-guide 的路线结构，并按工学智链的画像、计划与验收模型重新组织。",
+  "directions": [
+    {
+      "id": "react-frontend",
+      "track_code": "web_frontend",
+      "name": "React 前端开发",
+      "estimated_months": "6-10",
+      "difficulty": 3,
+      "demand": 5,
+      "suitable_for": "喜欢组件化思维、对 UI 与交互敏感，希望从事现代 Web 前端开发的学习者。",
+      "milestone": "完成包含鉴权、权限、数据看板、主题切换和自动部署的 SaaS 管理后台。",
+      "stages": [
+        {"title": "HTML5 与 CSS3 地基", "duration": "2-3周", "topics": ["HTML 语义化", "Flexbox", "Grid", "响应式设计", "CSS 动画", "Sass"]},
+        {"title": "JavaScript 与 TypeScript 核心", "duration": "5-7周", "topics": ["ES6+", "异步编程", "闭包与原型链", "TypeScript", "DOM", "模块化", "Git"]},
+        {"title": "React 生态深入", "duration": "7-9周", "topics": ["React 核心", "Hooks", "状态管理", "React Router", "组件库", "测试"]},
+        {"title": "工程化与性能优化", "duration": "5-7周", "topics": ["构建工具", "浏览器渲染", "性能优化", "监控埋点", "CI/CD", "代码质量"]},
+        {"title": "架构与生产交付", "duration": "6-8周", "topics": ["Next.js", "微前端", "BFF", "前端安全", "跨端基础", "WebAssembly"]},
+        {"title": "作品集与面试", "duration": "持续", "topics": ["手写题", "前端系统设计", "项目深挖", "作品集", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "vue-frontend",
+      "track_code": "web_frontend",
+      "name": "Vue 前端开发",
+      "estimated_months": "5-8",
+      "difficulty": 2,
+      "demand": 4,
+      "suitable_for": "偏好渐进式框架和中文生态，希望进入国内企业前端岗位的学习者。",
+      "milestone": "使用 Vue 3、Nuxt 和组件库完成带权限、图表、国际化与主题系统的企业后台。",
+      "stages": [
+        {"title": "Web 与 TypeScript 基础", "duration": "3-4周", "topics": ["HTML", "CSS", "JavaScript", "TypeScript", "Git"]},
+        {"title": "Vue 3 核心", "duration": "5-7周", "topics": ["Composition API", "响应式原理", "组件化", "Vue Router", "Pinia", "Vite"]},
+        {"title": "Vue 工程生态", "duration": "4-6周", "topics": ["组件库", "TailwindCSS", "表单表格", "VueUse", "测试", "DevTools"]},
+        {"title": "Nuxt 与生产优化", "duration": "5-7周", "topics": ["Nuxt", "数据获取", "SSR", "性能优化", "CI/CD"]},
+        {"title": "作品集与面试", "duration": "持续", "topics": ["Vue 原理", "手写题", "前端安全", "项目深挖", "跨端拓展"]}
+      ]
+    },
+    {
+      "id": "java-backend",
+      "track_code": "backend",
+      "name": "Java 后端开发",
+      "estimated_months": "8-14",
+      "difficulty": 4,
+      "demand": 5,
+      "suitable_for": "目标大中型企业、金融或政企后端岗位，偏好成熟稳定技术生态的学习者。",
+      "milestone": "实现具有限流、削峰、防超卖、异步解耦和可观测能力的高并发业务系统。",
+      "stages": [
+        {"title": "Java 与计算机基础", "duration": "6-8周", "topics": ["Java", "面向对象", "集合", "并发", "JVM", "算法", "网络", "Linux"]},
+        {"title": "数据库与缓存", "duration": "5-7周", "topics": ["MySQL", "事务与锁", "SQL 优化", "MyBatis", "Redis", "数据建模"]},
+        {"title": "Spring Boot 与服务开发", "duration": "7-9周", "topics": ["Spring Boot", "REST API", "事务", "认证授权", "微服务", "工程构建"]},
+        {"title": "消息与分布式系统", "duration": "6-8周", "topics": ["Kafka", "RocketMQ", "分布式理论", "服务治理", "Docker"]},
+        {"title": "高阶架构与调优", "duration": "7-9周", "topics": ["JVM 调优", "高并发", "DDD", "可观测性", "系统设计"]},
+        {"title": "面试与工业实战", "duration": "持续", "topics": ["算法", "源码阅读", "项目量化", "系统设计", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "python-backend",
+      "track_code": "backend",
+      "name": "Python 后端开发",
+      "estimated_months": "6-10",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "偏好 Python 生态，希望从事 AI 服务、创业产品或数据型后端开发的学习者。",
+      "milestone": "构建含认证、权限、异步任务、缓存、API 文档与自动测试的 SaaS 后端。",
+      "stages": [
+        {"title": "Python 工程基础", "duration": "3-4周", "topics": ["高级语法", "面向对象", "并发", "类型提示", "包管理"]},
+        {"title": "Web 框架与 API", "duration": "5-7周", "topics": ["FastAPI", "Django", "RESTful", "SQLAlchemy", "认证鉴权", "测试"]},
+        {"title": "数据库与中间件", "duration": "4-6周", "topics": ["PostgreSQL", "Redis", "MongoDB", "消息队列", "任务队列"]},
+        {"title": "异步与生产部署", "duration": "4-6周", "topics": ["异步 IO", "性能优化", "GraphQL", "gRPC", "Docker"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["系统设计", "算法", "项目作品集", "AI 集成", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "go-backend",
+      "track_code": "backend",
+      "name": "Go 后端开发",
+      "estimated_months": "7-12",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "喜欢高性能和简洁工程体系，希望进入云原生或基础设施团队的学习者。",
+      "milestone": "使用 Go、gRPC、消息队列、缓存和数据库实现可部署的微服务订单系统。",
+      "stages": [
+        {"title": "Go 语言核心", "duration": "4-6周", "topics": ["类型系统", "Goroutine", "错误处理", "工程结构", "测试", "性能分析"]},
+        {"title": "Web 与数据层", "duration": "5-7周", "topics": ["Gin", "Kratos", "ORM", "SQL", "REST API", "Redis"]},
+        {"title": "微服务与云原生", "duration": "6-8周", "topics": ["gRPC", "服务治理", "消息队列", "分布式组件", "Docker", "Kubernetes"]},
+        {"title": "运行时与优化", "duration": "4-6周", "topics": ["Go Runtime", "性能调优", "Channel", "源码阅读", "标准库"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["算法", "系统设计", "云原生生态", "项目亮点", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "node-backend",
+      "track_code": "backend",
+      "name": "Node.js 后端开发",
+      "estimated_months": "6-9",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "已有前端基础，希望统一 TypeScript 技术栈并拓展到服务端的学习者。",
+      "milestone": "使用 NestJS、PostgreSQL、Redis 和任务队列构建带文档与测试的企业 API。",
+      "stages": [
+        {"title": "Node.js 运行时", "duration": "3-4周", "topics": ["事件循环", "模块系统", "异步模式", "Buffer", "进程", "安全"]},
+        {"title": "Express 与 NestJS", "duration": "5-7周", "topics": ["Express", "NestJS", "ORM", "API 设计", "Swagger", "测试"]},
+        {"title": "身份与类型安全接口", "duration": "3-5周", "topics": ["认证授权", "GraphQL", "tRPC", "输入校验"]},
+        {"title": "性能与生产部署", "duration": "4-6周", "topics": ["性能优化", "消息队列", "Docker", "日志", "监控"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["算法", "Node 原理", "系统设计", "项目复盘"]}
+      ]
+    },
+    {
+      "id": "cpp-rust-backend",
+      "track_code": "backend",
+      "name": "C++ / Rust 高性能后端",
+      "estimated_months": "12-18",
+      "difficulty": 5,
+      "demand": 3,
+      "suitable_for": "关注底层原理、性能和资源控制，目标数据库、音视频、游戏或基础软件团队的学习者。",
+      "milestone": "实现支持并发、崩溃恢复和网络接口的高性能键值存储引擎。",
+      "stages": [
+        {"title": "现代 C++ 与内存", "duration": "8-12周", "topics": ["C++17/20", "内存管理", "STL", "泛型", "并发"]},
+        {"title": "系统与网络编程", "duration": "6-8周", "topics": ["Linux 系统调用", "Socket", "IO 多路复用", "高性能服务器", "调试"]},
+        {"title": "存储与中间件原理", "duration": "6-8周", "topics": ["数据库内核", "KV 存储", "RPC", "消息队列", "基准测试"]},
+        {"title": "Rust 进阶路径", "duration": "5-7周", "topics": ["所有权", "异步 Rust", "Web 后端", "FFI", "安全并发"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["算法", "底层系统设计", "性能证据", "源码阅读"]}
+      ]
+    },
+    {
+      "id": "ios-mobile",
+      "track_code": "mobile",
+      "name": "iOS 原生开发",
+      "estimated_months": "8-12",
+      "difficulty": 3,
+      "demand": 3,
+      "suitable_for": "对 Apple 生态和原生体验感兴趣，希望开发高质量移动应用的学习者。",
+      "milestone": "完成支持同步、组件、推送、主题切换的 iOS 应用并走通发布流程。",
+      "stages": [
+        {"title": "Swift 与 Xcode", "duration": "4-6周", "topics": ["Swift", "协议编程", "内存", "并发", "Combine"]},
+        {"title": "SwiftUI 界面", "duration": "5-7周", "topics": ["布局", "导航", "动画", "SwiftData", "CoreData", "测试"]},
+        {"title": "网络与架构", "duration": "4-6周", "topics": ["网络层", "架构模式", "依赖注入", "持久化"]},
+        {"title": "性能与发布", "duration": "4-6周", "topics": ["性能分析", "App Store", "CI/CD", "推送", "后台任务"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["算法", "iOS 原理", "作品集", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "android-mobile",
+      "track_code": "mobile",
+      "name": "Android 原生开发",
+      "estimated_months": "8-12",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "对 Android 开放生态和多设备场景感兴趣的学习者。",
+      "milestone": "完成包含网络、离线缓存、推送和 Material 3 主题的 Android 应用。",
+      "stages": [
+        {"title": "Kotlin 与 Android 基础", "duration": "5-7周", "topics": ["Kotlin", "协程", "核心组件", "Gradle"]},
+        {"title": "Jetpack Compose", "duration": "5-7周", "topics": ["Compose", "布局", "导航", "动画", "ViewModel", "Material 3"]},
+        {"title": "数据层与架构", "duration": "5-7周", "topics": ["Room", "网络", "架构模式", "DataStore", "测试"]},
+        {"title": "性能与发布", "duration": "4-6周", "topics": ["性能优化", "并发", "应用发布", "CI/CD"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["算法", "Android 原理", "KMP", "项目复盘"]}
+      ]
+    },
+    {
+      "id": "flutter-mobile",
+      "track_code": "mobile",
+      "name": "Flutter 跨平台开发",
+      "estimated_months": "6-10",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "希望一套代码覆盖多端、重视 UI 表现力和快速交付的学习者。",
+      "milestone": "完成包含动画、网络、本地存储和推送的双端应用并打包发布。",
+      "stages": [
+        {"title": "Dart 语言", "duration": "2-3周", "topics": ["Dart 语法", "面向对象", "异步编程"]},
+        {"title": "Flutter Widget 体系", "duration": "5-7周", "topics": ["Widget 树", "布局约束", "动画", "导航", "主题"]},
+        {"title": "状态与数据", "duration": "4-6周", "topics": ["Riverpod", "网络请求", "持久化", "依赖注入"]},
+        {"title": "原生交互与优化", "duration": "4-6周", "topics": ["Platform Channel", "插件", "性能", "CI/CD", "发布"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["Flutter 原理", "跨端拓展", "作品集", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "react-native-mobile",
+      "track_code": "mobile",
+      "name": "React Native 跨平台开发",
+      "estimated_months": "6-10",
+      "difficulty": 3,
+      "demand": 3,
+      "suitable_for": "已有 React 基础，希望快速进入移动端和出海应用开发的学习者。",
+      "milestone": "使用 React Native 与 Expo 完成含相机、推送、动画和离线缓存的双端应用。",
+      "stages": [
+        {"title": "React Native 基础", "duration": "3-5周", "topics": ["环境搭建", "核心组件", "样式", "导航"]},
+        {"title": "核心机制与性能", "duration": "4-6周", "topics": ["新架构", "动画手势", "原生模块", "性能优化"]},
+        {"title": "设备能力与发布", "duration": "4-6周", "topics": ["Expo SDK", "状态管理", "EAS Build", "Firebase", "发布"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["React 原理", "移动端边界", "作品集", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "typescript-fullstack",
+      "track_code": "fullstack",
+      "name": "TypeScript 全栈",
+      "estimated_months": "8-12",
+      "difficulty": 4,
+      "demand": 5,
+      "suitable_for": "希望独立开发完整产品、创业或构建出海 SaaS 的学习者。",
+      "milestone": "独立开发包含账号、订阅、仪表盘、API Key 管理和生产部署的 SaaS 产品。",
+      "stages": [
+        {"title": "React 与 TypeScript", "duration": "4-6周", "topics": ["React", "TypeScript", "组件系统", "数据请求"]},
+        {"title": "Next.js 全栈核心", "duration": "5-7周", "topics": ["App Router", "RSC", "渲染策略", "Middleware", "数据获取"]},
+        {"title": "数据库与 ORM", "duration": "3-5周", "topics": ["Prisma", "PostgreSQL", "数据建模", "文件存储"]},
+        {"title": "认证、支付与安全", "duration": "3-5周", "topics": ["Auth.js", "权限", "支付", "API 安全"]},
+        {"title": "部署与架构", "duration": "3-5周", "topics": ["生产部署", "实时功能", "测试", "可观测性"]},
+        {"title": "产品化与商业闭环", "duration": "持续", "topics": ["SEO", "产品分析", "增长", "成本", "用户反馈"]}
+      ]
+    },
+    {
+      "id": "vue-java-fullstack",
+      "track_code": "fullstack",
+      "name": "Vue + Java 全栈",
+      "estimated_months": "10-16",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "目标国内企业级、政企或管理系统开发，希望覆盖前后端完整链路的学习者。",
+      "milestone": "搭建包含组织、角色、菜单、数据字典、审计日志和文件管理的企业系统。",
+      "stages": [
+        {"title": "Vue 3 前端体系", "duration": "4-6周", "topics": ["Vue 3", "TypeScript", "组件库", "Vite"]},
+        {"title": "Spring Boot 后端", "duration": "6-8周", "topics": ["Spring Boot", "MyBatis", "MySQL", "权限", "Redis"]},
+        {"title": "联调与业务闭环", "duration": "4-6周", "topics": ["接口契约", "Axios", "权限路由", "导入导出", "异常处理"]},
+        {"title": "部署与运维", "duration": "3-5周", "topics": ["Linux", "Docker", "CI/CD", "日志", "监控"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["项目深挖", "系统设计", "作品集", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "react-python-fullstack",
+      "track_code": "fullstack",
+      "name": "React + Python 全栈",
+      "estimated_months": "8-12",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "希望把现代前端、Python 后端与 AI 能力组合成可交付产品的学习者。",
+      "milestone": "完成含用户系统、异步任务、AI 能力、实时推送和生产部署的 SaaS 平台。",
+      "stages": [
+        {"title": "React 前端核心", "duration": "4-6周", "topics": ["React", "TypeScript", "数据请求", "Next.js"]},
+        {"title": "Python 后端核心", "duration": "4-6周", "topics": ["FastAPI", "SQLAlchemy", "PostgreSQL", "认证", "Celery"]},
+        {"title": "前后端与 AI 集成", "duration": "5-7周", "topics": ["接口契约", "LLM 集成", "实时通信", "错误恢复", "Docker"]},
+        {"title": "产品化与交付", "duration": "3-5周", "topics": ["对象存储", "CDN", "CI/CD", "监控", "日志"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["系统设计", "项目作品集", "成本优化", "面试复盘"]}
+      ]
+    },
+    {
+      "id": "algorithm-engineer",
+      "track_code": "machine_learning",
+      "name": "AI 算法工程师",
+      "estimated_months": "12-18",
+      "difficulty": 5,
+      "demand": 5,
+      "suitable_for": "数学基础较好、愿意深入模型原理和实验方法的学习者。",
+      "milestone": "完成可复现的领域模型训练或微调项目，并建立数据、实验、评测与部署闭环。",
+      "stages": [
+        {"title": "数学基础", "duration": "6-10周", "topics": ["线性代数", "概率统计", "微积分", "最优化", "信息论"]},
+        {"title": "编程与数据", "duration": "4-6周", "topics": ["Python 科学栈", "PyTorch", "数据预处理", "实验管理"]},
+        {"title": "经典机器学习", "duration": "8-12周", "topics": ["监督学习", "集成学习", "无监督学习", "模型评估"]},
+        {"title": "深度学习", "duration": "10-14周", "topics": ["神经网络", "CNN", "序列模型", "生成模型", "训练工程"]},
+        {"title": "大模型与工程化", "duration": "8-10周", "topics": ["Transformer", "微调", "推理优化", "RAG", "评测与安全"]},
+        {"title": "论文、项目与面试", "duration": "持续", "topics": ["论文复现", "算法", "项目报告", "面试专题"]}
+      ]
+    },
+    {
+      "id": "nlp-engineer",
+      "track_code": "machine_learning",
+      "name": "NLP 自然语言处理",
+      "estimated_months": "12-16",
+      "difficulty": 5,
+      "demand": 4,
+      "suitable_for": "对语言、文本检索与生成感兴趣，愿意兼顾算法和工程的学习者。",
+      "milestone": "微调中文领域模型并实现有评测、有引用、多轮对话的知识问答系统。",
+      "stages": [
+        {"title": "数学与语言基础", "duration": "5-7周", "topics": ["概率统计", "线性代数", "信息论", "语言学", "Python NLP"]},
+        {"title": "经典 NLP", "duration": "6-8周", "topics": ["文本表示", "分类聚类", "序列标注", "主题模型"]},
+        {"title": "深度学习 NLP", "duration": "8-10周", "topics": ["Transformer", "BERT", "生成与解码", "Hugging Face"]},
+        {"title": "LLM 训练与对齐", "duration": "8-10周", "topics": ["模型架构", "SFT", "DPO", "PEFT", "数据治理"]},
+        {"title": "NLP 应用与评测", "duration": "5-7周", "topics": ["RAG", "对话系统", "摘要", "生成控制", "评测"]},
+        {"title": "前沿与面试", "duration": "持续", "topics": ["多模态", "长上下文", "论文", "面试专项"]}
+      ]
+    },
+    {
+      "id": "computer-vision",
+      "track_code": "machine_learning",
+      "name": "计算机视觉",
+      "estimated_months": "12-16",
+      "difficulty": 5,
+      "demand": 4,
+      "suitable_for": "对图像、视频、空间感知和视觉生成感兴趣的学习者。",
+      "milestone": "训练或微调视觉理解/生成模型，并部署为具备数据卡和评测报告的服务。",
+      "stages": [
+        {"title": "数学与图像基础", "duration": "5-7周", "topics": ["线性代数", "图像处理", "成像原理", "PyTorch"]},
+        {"title": "经典视觉算法", "duration": "6-8周", "topics": ["特征提取", "经典分割", "传统检测", "视频分析", "相机模型"]},
+        {"title": "深度学习视觉", "duration": "8-12周", "topics": ["CNN", "目标检测", "语义分割", "姿态估计", "训练技巧"]},
+        {"title": "生成模型与多模态", "duration": "8-10周", "topics": ["GAN", "VAE", "Diffusion", "ViT", "多模态"]},
+        {"title": "3D 与工程部署", "duration": "6-8周", "topics": ["NeRF", "3D Gaussian", "模型加速", "边缘部署", "监控"]},
+        {"title": "前沿与面试", "duration": "持续", "topics": ["视觉大模型", "论文复现", "作品集", "面试专项"]}
+      ]
+    },
+    {
+      "id": "agent-fullstack",
+      "track_code": "agent_engineering",
+      "name": "AI Agent 全栈开发",
+      "estimated_months": "8-12",
+      "difficulty": 4,
+      "demand": 5,
+      "suitable_for": "希望构建可落地 AI 产品，并兼顾模型、后端、前端、评测和治理的学习者。",
+      "milestone": "构建支持 RAG、工具调用、多 Agent 协作、在线搜索、流式界面、评测与部署的生产级平台。",
+      "stages": [
+        {"title": "Python 与工程化", "duration": "3-4周", "topics": ["Python", "异步编程", "工程结构", "Git", "测试"]},
+        {"title": "LLM 应用基础", "duration": "3-4周", "topics": ["模型 API", "SSE", "Function Calling", "结构化输出", "提示工程"]},
+        {"title": "Agent 编排", "duration": "6-8周", "topics": ["LangChain", "LangGraph", "MCP", "技能封装", "多 Agent 协作"]},
+        {"title": "RAG 全链路", "duration": "7-9周", "topics": ["切分索引", "向量数据库", "混合检索", "重排", "GraphRAG", "知识图谱"]},
+        {"title": "模型原理与优化", "duration": "5-7周", "topics": ["Transformer", "LoRA", "Embedding", "Rerank", "语义匹配"]},
+        {"title": "高级工具与业务落地", "duration": "4-6周", "topics": ["Text2SQL", "在线搜索", "自主规划", "权限", "失败恢复"]},
+        {"title": "后端与部署", "duration": "4-6周", "topics": ["FastAPI", "数据库", "队列", "容器", "可观测性"]},
+        {"title": "前端与人机协作", "duration": "4-5周", "topics": ["Vue/React", "流式对话", "轨迹界面", "人工接管", "管理后台"]},
+        {"title": "评测、成本与作品集", "duration": "持续", "topics": ["任务成功率", "幻觉评测", "安全审计", "成本治理", "项目答辩"]}
+      ]
+    },
+    {
+      "id": "data-analysis",
+      "track_code": "data_engineering",
+      "name": "数据分析",
+      "estimated_months": "5-8",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "对业务数据敏感、善于结构化分析并希望用证据支持决策的学习者。",
+      "milestone": "完成从采集、清洗、统计建模、可视化看板到分析报告的端到端项目。",
+      "stages": [
+        {"title": "工具与分析思维", "duration": "3-4周", "topics": ["SQL", "Excel", "统计基础", "指标体系", "业务拆解"]},
+        {"title": "Python 数据分析", "duration": "5-7周", "topics": ["Pandas", "NumPy", "可视化", "数据清洗", "Notebook"]},
+        {"title": "统计建模", "duration": "6-8周", "topics": ["假设检验", "回归", "时间序列", "A/B 测试", "因果推断"]},
+        {"title": "BI 与数据产品", "duration": "4-6周", "topics": ["BI 看板", "数据仓库", "SQL 优化", "数据产品", "口径治理"]},
+        {"title": "项目与面试", "duration": "持续", "topics": ["SQL 笔试", "业务案例", "分析报告", "作品集"]}
+      ]
+    },
+    {
+      "id": "devops-sre",
+      "track_code": "devops",
+      "name": "DevOps / SRE",
+      "estimated_months": "8-14",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "喜欢 Linux、自动化和系统可靠性，希望建设交付与基础设施平台的学习者。",
+      "milestone": "用 IaC 建设 Kubernetes 环境，完成 GitOps、监控、日志、追踪、告警和故障演练。",
+      "stages": [
+        {"title": "Linux 与网络", "duration": "5-7周", "topics": ["Linux 管理", "Shell", "网络", "DNS", "CDN"]},
+        {"title": "容器与 Kubernetes", "duration": "6-8周", "topics": ["Docker", "Kubernetes", "存储", "网络", "Helm"]},
+        {"title": "CI/CD 与 IaC", "duration": "5-7周", "topics": ["CI/CD", "GitOps", "Terraform", "Ansible", "镜像构建"]},
+        {"title": "云平台与可观测性", "duration": "6-8周", "topics": ["云服务", "Prometheus", "Grafana", "日志", "追踪", "SRE"]},
+        {"title": "故障演练与职业认证", "duration": "持续", "topics": ["故障排查", "容量规划", "系统设计", "认证", "复盘"]}
+      ]
+    },
+    {
+      "id": "cyber-security",
+      "track_code": "network_security",
+      "name": "网络安全",
+      "estimated_months": "10-16",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "对安全攻防、逆向思维和漏洞分析感兴趣的学习者。",
+      "milestone": "完成授权靶场中的全流程渗透测试、安全加固与可复现报告；所有练习限定合法环境。",
+      "stages": [
+        {"title": "网络与系统安全基础", "duration": "5-7周", "topics": ["网络协议", "Linux 安全", "密码学", "Web 基础", "合规边界"]},
+        {"title": "Web 与 API 安全", "duration": "7-9周", "topics": ["OWASP Top 10", "认证授权", "API 安全", "Burp Suite", "威胁建模"]},
+        {"title": "授权渗透测试", "duration": "8-10周", "topics": ["信息收集", "靶场利用", "权限边界", "报告规范", "云安全"]},
+        {"title": "安全开发与 DevSecOps", "duration": "5-7周", "topics": ["代码审计", "供应链安全", "流水线扫描", "SDL", "修复验证"]},
+        {"title": "安全运营与响应", "duration": "6-8周", "topics": ["SOC", "检测规则", "事件响应", "DDoS", "数据安全"]},
+        {"title": "竞赛、认证与前沿", "duration": "持续", "topics": ["CTF", "授权 SRC", "安全认证", "AI 安全", "伦理与法律"]}
+      ]
+    },
+    {
+      "id": "uiux-design",
+      "track_code": "uiux",
+      "name": "UI / UX 与设计工程",
+      "estimated_months": "4-8",
+      "difficulty": 2,
+      "demand": 3,
+      "suitable_for": "重视用户研究、交互细节和视觉表达，并愿意与研发协作的学习者。",
+      "milestone": "完成一个真实产品的研究、信息架构、原型、设计系统、高保真交付和量化复盘。",
+      "stages": [
+        {"title": "设计基础与工具", "duration": "3-4周", "topics": ["设计原则", "色彩", "排版", "Figma"]},
+        {"title": "用户研究与交互", "duration": "5-7周", "topics": ["用户研究", "信息架构", "交互原型", "可用性测试", "认知心理"]},
+        {"title": "设计系统", "duration": "4-6周", "topics": ["Design Token", "原子设计", "组件库", "响应式", "无障碍"]},
+        {"title": "数据驱动与工程协作", "duration": "4-6周", "topics": ["A/B 测试", "CRO", "设计交付", "版本协作", "指标验证"]},
+        {"title": "作品集与职业发展", "duration": "持续", "topics": ["案例叙事", "设计评审", "作品集", "AI 辅助设计", "面试"]}
+      ]
+    },
+    {
+      "id": "quality-engineering",
+      "track_code": "quality_engineering",
+      "name": "测试与质量工程",
+      "estimated_months": "5-9",
+      "difficulty": 3,
+      "demand": 4,
+      "suitable_for": "重视证据、边界和工程稳定性，希望从测试执行走向质量平台建设的学习者。",
+      "milestone": "为真实 Web 服务建设分层自动化测试、质量门禁、性能基线和可追溯缺陷闭环。",
+      "stages": [
+        {"title": "测试思维与设计", "duration": "3-4周", "topics": ["测试模型", "等价类", "边界值", "风险分析", "缺陷报告"]},
+        {"title": "接口与 UI 自动化", "duration": "5-7周", "topics": ["API 测试", "Playwright", "数据驱动", "Mock", "稳定性"]},
+        {"title": "性能与可靠性", "duration": "4-6周", "topics": ["负载模型", "性能指标", "故障注入", "日志追踪", "容量分析"]},
+        {"title": "持续质量平台", "duration": "4-6周", "topics": ["CI 门禁", "覆盖率", "静态分析", "测试报告", "质量看板"]},
+        {"title": "质量治理与作品集", "duration": "持续", "topics": ["测试策略", "质量度量", "根因分析", "项目复盘", "面试"]}
+      ]
+    },
+    {
+      "id": "algorithm-competition",
+      "track_code": "algorithms",
+      "name": "算法与竞赛",
+      "estimated_months": "6-12",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "希望强化问题建模、正确性证明、复杂度分析和编程竞赛能力的学习者。",
+      "milestone": "建设带题解、复杂度证明、边界用例与自动评测的专题题库，并完成稳定训练周期。",
+      "stages": [
+        {"title": "复杂度与基础结构", "duration": "4-6周", "topics": ["复杂度", "数组链表", "栈队列", "哈希", "排序搜索"]},
+        {"title": "树、图与基础算法", "duration": "6-8周", "topics": ["树", "堆", "并查集", "DFS/BFS", "最短路"]},
+        {"title": "算法范式", "duration": "6-8周", "topics": ["分治", "贪心", "动态规划", "回溯", "随机化"]},
+        {"title": "高级专题", "duration": "8-12周", "topics": ["字符串", "网络流", "匹配", "数论", "计算几何"]},
+        {"title": "竞赛训练与复盘", "duration": "持续", "topics": ["限时训练", "错题归因", "正确性证明", "模板治理", "自动评测"]}
+      ]
+    },
+    {
+      "id": "llm-application",
+      "track_code": "llm_application",
+      "name": "LLM 应用开发",
+      "estimated_months": "6-10",
+      "difficulty": 4,
+      "demand": 5,
+      "suitable_for": "希望构建有来源、有评测、可控成本而非只会调用模型接口的学习者。",
+      "milestone": "完成具备 RAG、引用校验、冻结评测集、成本治理和降级机制的专业问答系统。",
+      "stages": [
+        {"title": "模型接口与结构化输出", "duration": "3-4周", "topics": ["消息模型", "流式输出", "工具调用", "结构化输出", "重试"]},
+        {"title": "RAG 检索链路", "duration": "5-7周", "topics": ["文档解析", "切分", "Embedding", "混合检索", "重排", "引用"]},
+        {"title": "评测与幻觉治理", "duration": "4-6周", "topics": ["冻结集", "事实性", "引用覆盖", "人工标注", "回归测试"]},
+        {"title": "生产工程", "duration": "4-6周", "topics": ["模型网关", "缓存", "预算", "超时", "观测", "安全", "降级"]},
+        {"title": "领域产品与作品集", "duration": "持续", "topics": ["领域数据", "用户反馈", "质量看板", "项目报告", "答辩"]}
+      ]
+    },
+    {
+      "id": "embedded-iot",
+      "track_code": "embedded_iot",
+      "name": "嵌入式与物联网",
+      "estimated_months": "8-14",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "喜欢软硬件结合、实时约束和设备调试，希望从事嵌入式或 IoT 的学习者。",
+      "milestone": "完成具备采集、通信、断网恢复、安全升级和功耗实测的联网设备。",
+      "stages": [
+        {"title": "C 与电子基础", "duration": "5-7周", "topics": ["C", "内存", "数字电路", "编译链接", "调试工具"]},
+        {"title": "MCU 与外设驱动", "duration": "6-8周", "topics": ["GPIO", "中断", "定时器", "ADC", "I2C/SPI/UART"]},
+        {"title": "RTOS 与实时设计", "duration": "5-7周", "topics": ["任务调度", "同步", "时序", "资源约束", "可靠性"]},
+        {"title": "设备联网与安全", "duration": "5-7周", "topics": ["MQTT", "设备身份", "OTA", "断网恢复", "功耗"]},
+        {"title": "系统联调与量产意识", "duration": "持续", "topics": ["硬件在环", "故障注入", "日志", "测试报告", "可维护性"]}
+      ]
+    },
+    {
+      "id": "operating-systems",
+      "track_code": "operating_systems",
+      "name": "操作系统与系统编程",
+      "estimated_months": "10-16",
+      "difficulty": 5,
+      "demand": 3,
+      "suitable_for": "希望理解计算机底层机制、系统调用、并发和性能定位的学习者。",
+      "milestone": "实现具备进程、虚拟内存、文件系统和测试的教学型操作系统或用户态内核。",
+      "stages": [
+        {"title": "C/C++ 与计算机组成", "duration": "6-8周", "topics": ["C/C++", "汇编", "ABI", "编译链接", "调试"]},
+        {"title": "Linux 系统编程", "duration": "5-7周", "topics": ["系统调用", "进程线程", "IPC", "网络 IO", "信号"]},
+        {"title": "内存、调度与并发", "duration": "7-9周", "topics": ["虚拟内存", "调度", "同步", "死锁", "缓存"]},
+        {"title": "文件系统与内核机制", "duration": "7-9周", "topics": ["文件系统", "设备", "驱动", "网络栈", "崩溃恢复"]},
+        {"title": "观测与性能工程", "duration": "持续", "topics": ["Tracing", "Profiling", "基准测试", "故障定位", "设计报告"]}
+      ]
+    },
+    {
+      "id": "database-systems",
+      "track_code": "database_systems",
+      "name": "数据库系统与内核",
+      "estimated_months": "10-16",
+      "difficulty": 5,
+      "demand": 3,
+      "suitable_for": "对存储、事务、查询优化和分布式一致性有兴趣的学习者。",
+      "milestone": "实现支持索引、查询、事务、崩溃恢复和可重复基准的迷你数据库。",
+      "stages": [
+        {"title": "关系模型与 SQL", "duration": "4-6周", "topics": ["关系代数", "SQL", "数据建模", "执行计划", "优化基础"]},
+        {"title": "存储与索引", "duration": "6-8周", "topics": ["页与记录", "缓冲池", "B+Tree", "LSM", "压缩"]},
+        {"title": "查询执行与优化", "duration": "6-8周", "topics": ["算子", "Join", "统计信息", "代价模型", "优化器"]},
+        {"title": "事务与恢复", "duration": "7-9周", "topics": ["锁", "MVCC", "WAL", "隔离级别", "崩溃恢复"]},
+        {"title": "分布式与性能验证", "duration": "持续", "topics": ["复制", "分片", "共识", "一致性", "基准测试"]}
+      ]
+    },
+    {
+      "id": "data-engineering",
+      "track_code": "data_engineering",
+      "name": "数据工程",
+      "estimated_months": "8-14",
+      "difficulty": 4,
+      "demand": 4,
+      "suitable_for": "希望建设可靠数据管道、仓库、流处理与数据治理平台的学习者。",
+      "milestone": "构建支持批流处理、质量校验、血缘、权限与回放的实时数据平台。",
+      "stages": [
+        {"title": "SQL 与数据建模", "duration": "4-6周", "topics": ["SQL", "维度建模", "仓库分层", "指标口径", "数据契约"]},
+        {"title": "批处理管道", "duration": "5-7周", "topics": ["ETL/ELT", "Airflow", "幂等", "回填", "数据质量"]},
+        {"title": "流处理系统", "duration": "6-8周", "topics": ["Kafka", "Flink", "事件时间", "窗口", "状态", "一致性"]},
+        {"title": "湖仓与平台化", "duration": "5-7周", "topics": ["数据湖", "湖仓一体", "元数据", "服务化", "成本"]},
+        {"title": "治理与可观测", "duration": "持续", "topics": ["血缘", "权限", "质量规则", "告警", "SLA", "事故复盘"]}
+      ]
+    }
+  ]
+}

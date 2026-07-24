@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from statistics import mean
 from typing import Any
 
@@ -19,6 +20,7 @@ class ContentEngine:
         profile: dict[str, Any],
         route_match: dict[str, Any],
         evidence: list[dict[str, Any]],
+        pathway_id: str | None = None,
     ) -> dict[str, Any]:
         track = self.catalog.get_track(track_code)
         ordered = self._ordered_skills(track)
@@ -32,6 +34,17 @@ class ContentEngine:
                     "difficulty": skill["difficulty"],
                     "objective": f"能够解释并完成 {skill['name']} 的代表性任务",
                     "explanation": skill["description"],
+                    "why_this_matters": f"{skill['name']} 是完成“{track['project']['title']}”时必须能够独立判断和落地的能力。",
+                    "learning_tasks": [
+                        f"用一个最小示例验证 {skill['name']} 的核心机制",
+                        "记录输入、预期输出、实际输出和差异",
+                        "整理一条可复用的排错清单",
+                    ],
+                    "common_mistakes": [
+                        "只记结论，没有运行或对照证据",
+                        "忽略异常路径与失败边界",
+                    ],
+                    "verification": "提供可重复执行的命令、测试结果或界面操作记录。",
                     "checkpoint": f"用自己的话说明 {skill['name']} 的边界、常见失败和验证方法。",
                     "citation_ids": [source["chunk_id"]] if source else [],
                 }
@@ -46,6 +59,7 @@ class ContentEngine:
             sections,
             evidence,
             practice_mode="specification_first",
+            pathway_id=pathway_id,
         )
 
     def generate_project_first(
@@ -55,6 +69,7 @@ class ContentEngine:
         profile: dict[str, Any],
         route_match: dict[str, Any],
         evidence: list[dict[str, Any]],
+        pathway_id: str | None = None,
     ) -> dict[str, Any]:
         track = self.catalog.get_track(track_code)
         skills = self._ordered_skills(track)
@@ -70,6 +85,17 @@ class ContentEngine:
                     "explanation": (
                         f"先实现最小结果，再根据失败现象回到原理：{skill['description']}"
                     ),
+                    "why_this_matters": f"这一能力直接决定“{track['project']['title']}”能否从演示走向可交付。",
+                    "learning_tasks": [
+                        "先交付一个可以运行的最小增量",
+                        "为正常路径和异常路径各补一条验证",
+                        "根据证据解释一次关键技术取舍",
+                    ],
+                    "common_mistakes": [
+                        "只展示最终界面，无法复现过程",
+                        "用主观描述代替测试、日志或数据指标",
+                    ],
+                    "verification": "将代码提交、测试结果与对应任务步骤关联。",
                     "checkpoint": f"提交运行证据，并说明一次与 {skill['name']} 有关的取舍。",
                     "citation_ids": [source["chunk_id"]] if source else [],
                 }
@@ -84,6 +110,7 @@ class ContentEngine:
             sections,
             evidence,
             practice_mode="challenge_first",
+            pathway_id=pathway_id,
         )
 
     def _candidate(
@@ -97,9 +124,18 @@ class ContentEngine:
         sections: list[dict[str, Any]],
         evidence: list[dict[str, Any]],
         practice_mode: str,
+        pathway_id: str | None = None,
     ) -> dict[str, Any]:
         weekly_hours = profile.get("weekly_hours", 8)
-        phases = self._plan_phases(track, sections, weekly_hours, strategy)
+        variants = track.get("pathway_variants", [])
+        pathway = (
+            next((item for item in variants if item["id"] == pathway_id), None)
+            if pathway_id
+            else None
+        ) or (variants[0] if variants else None)
+        phases = self._plan_phases(
+            track, sections, weekly_hours, strategy, pathway
+        )
         quizzes = [
             {
                 "id": f"q-{skill['code']}",
@@ -107,9 +143,16 @@ class ContentEngine:
                 "type": "evidence",
                 "question": f"为“{skill['name']}”设计一个可验证的小任务，并写出通过标准。",
                 "rubric": [
-                    "任务覆盖核心概念",
-                    "通过标准可以客观检查",
-                    "能说明常见失败与定位方法",
+                    "写出可执行行动",
+                    "给出客观验证方式",
+                    "覆盖异常与失败边界",
+                    "解释关键技术取舍",
+                ],
+                "answer_requirements": [
+                    "做什么",
+                    "如何验证",
+                    "失败如何定位",
+                    "为什么这样选择",
                 ],
                 "max_score": 10,
             }
@@ -119,7 +162,21 @@ class ContentEngine:
             "agent": agent,
             "strategy": strategy,
             "track_code": track["code"],
-            "title": f"{track['name']} · {goal}",
+            "pathway": (
+                {
+                    "id": pathway["id"],
+                    "name": pathway["name"],
+                    "estimated_months": pathway["estimated_months"],
+                    "milestone": pathway["milestone"],
+                }
+                if pathway
+                else None
+            ),
+            "title": (
+                f"{pathway['name']} · {goal}"
+                if pathway
+                else f"{track['name']} · {goal}"
+            ),
             "learner_fit": {
                 "style": profile.get("learning_style", "balanced"),
                 "weekly_hours": weekly_hours,
@@ -140,7 +197,12 @@ class ContentEngine:
                         "title": section["title"],
                         "skill_code": section["skill_code"],
                         "done": False,
-                        "proof_required": "代码提交、运行截图或测试结果",
+                        "instructions": (
+                            f"围绕“{section['objective']}”完成一个可运行增量；"
+                            "先写清验收条件，再实现、验证并记录失败修正。"
+                        ),
+                        "proof_required": "至少提交一条仓库、提交哈希、测试结果或部署地址，并与本步骤关联",
+                        "evidence_types": ["repository", "commit", "test", "deployment"],
                     }
                     for index, section in enumerate(sections)
                 ],
@@ -206,6 +268,19 @@ class ContentEngine:
             },
         }
         final_score = self._score(final, evidence, profile)
+        quality_gate = {
+            "passed": (
+                final_score["citation_coverage"] >= 0.95
+                and final_score["prerequisite_violations"] == 0
+                and final_score["hallucination_risk"] < 0.05
+            ),
+            "rules": {
+                "citation_coverage_at_least_95_percent": final_score["citation_coverage"] >= 0.95,
+                "no_prerequisite_violation": final_score["prerequisite_violations"] == 0,
+                "unreferenced_risk_below_5_percent": final_score["hallucination_risk"] < 0.05,
+            },
+            "notice": "风险值是基于引用覆盖和引用完整性的规则估计；是否达到真实幻视率目标，以冻结评测集结果为准。",
+        }
         return {
             "candidate_scores": {"dgs_a": score_a, "dgs_b": score_b},
             "debate_triggered": debate_triggered,
@@ -215,6 +290,7 @@ class ContentEngine:
             "decision_summary": (
                 f"采用 {winner['strategy']} 作为主结构，并融合另一策略的项目步骤。"
             ),
+            "quality_gate": quality_gate,
             "final_output": final,
             "quality_metrics": final_score,
         }
@@ -252,6 +328,15 @@ class ContentEngine:
             "total": round(total, 1),
             "knowledge_coverage": round(coverage, 3),
             "citation_coverage": round(citation_coverage, 3),
+            "citation_integrity": round(
+                sum(
+                    bool(section.get("citation_ids"))
+                    and all(item in valid_sources for item in section["citation_ids"])
+                    for section in sections
+                )
+                / max(1, len(sections)),
+                3,
+            ),
             "profile_fit": round(difficulty_fit, 3),
             "prerequisite_violations": prerequisite_violations,
             "hallucination_risk": round(max(0, 1 - citation_coverage) * 0.08, 3),
@@ -302,13 +387,68 @@ class ContentEngine:
                 merged.append(step)
         return merged
 
-    @staticmethod
     def _plan_phases(
+        self,
         track: dict[str, Any],
         sections: list[dict[str, Any]],
         weekly_hours: int,
         strategy: str,
+        pathway: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
+        if pathway:
+            route_skills = [item["code"] for item in track["skills"]]
+            week_cursor = 1
+            phases = []
+            for index, stage in enumerate(pathway["stages"]):
+                duration_numbers = [
+                    int(value) for value in re.findall(r"\d+", stage["duration"])
+                ]
+                duration_weeks = (
+                    max(1, min(10, round(mean(duration_numbers))))
+                    if duration_numbers
+                    else 2
+                )
+                assigned_skill = route_skills[
+                    min(
+                        len(route_skills) - 1,
+                        index * len(route_skills) // max(1, len(pathway["stages"])),
+                    )
+                ]
+                tasks = [
+                    {
+                        "id": f"{pathway['id']}:stage-{index + 1}:task-{task_index + 1}",
+                        "title": topic,
+                        "skill_code": assigned_skill,
+                        "evidence_required": "学习笔记、可运行代码、测试结果或作品截图至少一项",
+                    }
+                    for task_index, topic in enumerate(stage["topics"])
+                ]
+                phases.append(
+                    {
+                        "id": f"phase-{index + 1}",
+                        "pathway_id": pathway["id"],
+                        "pathway_name": pathway["name"],
+                        "name": stage["title"],
+                        "source_duration": stage["duration"],
+                        "week_start": week_cursor,
+                        "week_end": week_cursor + duration_weeks - 1,
+                        "hours_per_week": weekly_hours,
+                        "strategy": strategy,
+                        "skills": sorted(
+                            {task["skill_code"] for task in tasks}
+                        ),
+                        "tasks": tasks,
+                        "milestone": (
+                            pathway["milestone"]
+                            if index == len(pathway["stages"]) - 1
+                            else f"完成“{stage['title']}”的可验证阶段作品并通过复盘"
+                        ),
+                        "status": "active" if index == 0 else "pending",
+                    }
+                )
+                week_cursor += duration_weeks
+            return phases
+
         labels = ["基础校准", "核心能力", "项目交付", "评测与复盘"]
         buckets = [sections[:1], sections[1:3], sections[3:], sections[-1:]]
         return [

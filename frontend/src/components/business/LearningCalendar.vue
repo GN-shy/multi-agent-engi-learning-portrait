@@ -1,7 +1,7 @@
 <template>
   <div class="learning-calendar">
     <div class="cal-header">
-      <span class="cal-month">2026年7月</span>
+      <span class="cal-month">{{ monthLabel }}</span>
       <div class="cal-legend">
         <span class="legend-dot low"></span>少
         <span class="legend-dot mid"></span>中
@@ -23,16 +23,32 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+const props = withDefaults(defineProps<{
+  month?: string
+  entries?: Array<{ date: string; hours: number }>
+}>(), {
+  month: () => new Date().toISOString().slice(0, 7),
+  entries: () => [],
+})
+const monthLabel = computed(() => {
+  const [year, month] = props.month.split('-')
+  return `${year}年${Number(month)}月`
+})
 const calendarDays = computed(() => {
+  const [year, month] = props.month.split('-').map(Number)
+  const firstDay = new Date(year, month - 1, 1)
+  const dayCount = new Date(year, month, 0).getDate()
+  const today = new Date().toISOString().slice(0, 10)
+  const hoursByDate = new Map(props.entries.map(item => [item.date, item.hours]))
   const days = []
-  // Simulate July 2026 calendar
-  for (let i = 0; i < 4; i++) days.push({ date: '', hours: 0 })
-  for (let d = 1; d <= 31; d++) {
-    const hours = Math.random() > 0.3 ? Math.floor(Math.random() * 5) + 0.5 : 0
+  const mondayOffset = (firstDay.getDay() + 6) % 7
+  for (let i = 0; i < mondayOffset; i++) days.push({ date: '', hours: 0, isToday: false })
+  for (let d = 1; d <= dayCount; d++) {
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`
     days.push({
-      date: `2026-07-${String(d).padStart(2, '0')}`,
-      hours,
-      isToday: d === 21,
+      date,
+      hours: hoursByDate.get(date) || 0,
+      isToday: date === today,
     })
   }
   return days

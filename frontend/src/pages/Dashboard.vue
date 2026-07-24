@@ -1,72 +1,105 @@
 <template>
   <AppShell>
-    <div v-loading="loading">
-      <section class="hero panel">
-        <div>
-          <p>你好，{{ user.displayName }} 👋</p>
-          <h2>{{ dashboard.selected_track ? `继续你的「${dashboard.selected_track.name}」路线` : '先比较方向，再投入学习' }}</h2>
-          <span>{{ heroCopy }}</span>
-          <div class="hero-actions">
-            <el-button type="primary" @click="router.push(nextAction.path)">{{ nextAction.label }}</el-button>
-            <el-button @click="router.push('/tracks')">比较全部方向</el-button>
+    <div v-loading="loading" class="dashboard-layout">
+      <main class="dashboard-main">
+        <section class="hero panel">
+          <div class="hero-copy">
+            <p>{{ greeting }}，{{ user.displayName }}！ 👋</p>
+            <h2>{{ dashboard.selected_track ? `继续你的「${dashboard.selected_track.name}」路线` : '先比较方向，再投入学习' }}</h2>
+            <span>{{ heroCopy }}</span>
           </div>
-        </div>
-        <div class="hero-orbit"><span>画像</span><span>路线</span><span>证据</span><strong>AI</strong></div>
-      </section>
-
-      <div class="metric-grid">
-        <article class="metric" @click="openMetric('能力画像', dashboard.profile)">
-          <span class="muted">综合能力</span><strong>{{ dashboard.profile?.score || 0 }}</strong><small>点击查看六维能力</small>
-        </article>
-        <article class="metric" @click="openMetric('路线匹配', dashboard.route_match)">
-          <span class="muted">当前路线匹配</span><strong>{{ dashboard.route_match?.score || 0 }}%</strong><small>{{ dashboard.selected_track?.role || '尚未选择' }}</small>
-        </article>
-        <article class="metric" @click="openMetric('学习资源', dashboard.resources)">
-          <span class="muted">已生成资源</span><strong>{{ dashboard.resources?.total || 0 }}</strong><small>讲义 / 实操 / 测试 / 计划</small>
-        </article>
-        <article class="metric" @click="openMetric('学习计划', dashboard.plan)">
-          <span class="muted">计划进度</span><strong>{{ dashboard.plan?.progress || 0 }}%</strong><small>{{ dashboard.plan?.goal || '尚未创建' }}</small>
-        </article>
-      </div>
-
-      <div class="grid two section-gap">
-        <section class="panel">
-          <div class="panel-title"><div><h3>六维能力画像</h3><p>来自自评、诊断、测试和实操证据</p></div><el-button text @click="router.push('/profile')">更新画像</el-button></div>
-          <EChart :option="radarOption" height="330px" @click="openChartDetail" />
+          <div class="hero-visual" aria-hidden="true">
+            <i></i><i></i><i></i><div>AI</div>
+          </div>
+          <div class="hero-metrics">
+            <button @click="openMetric('能力画像',dashboard.profile)"><span>综合能力</span><strong>{{ dashboard.profile?.score || 0 }}</strong><small>画像 V{{ dashboard.profile?.version || 0 }}</small></button>
+            <button @click="openMetric('路线匹配',dashboard.route_match)"><span>路线匹配</span><strong>{{ dashboard.route_match?.score || 0 }}%</strong><small>{{ dashboard.selected_track?.role || '待选择方向' }}</small></button>
+            <button @click="openMetric('学习资源',dashboard.resources)"><span>生成资源</span><strong>{{ dashboard.resources?.total || 0 }}</strong><small>讲义 / 实操 / 测评</small></button>
+            <button @click="openMetric('学习计划',dashboard.plan)"><span>计划进度</span><strong>{{ dashboard.plan?.progress || 0 }}%</strong><small>{{ dashboard.plan ? '持续更新中' : '尚未创建' }}</small></button>
+          </div>
         </section>
-        <section class="panel">
-          <div class="panel-title"><div><h3>测试成长趋势</h3><p>每次测试都会回写画像</p></div><el-button text @click="router.push('/assessment')">去测试</el-button></div>
-          <EChart :option="trendOption" height="330px" @click="openChartDetail" />
-        </section>
-      </div>
 
-      <div class="grid two section-gap">
-        <section class="panel">
-          <div class="panel-title"><div><h3>当前路线</h3><p>推荐理由和反事实投入比较</p></div></div>
-          <template v-if="dashboard.route_match">
-            <div class="route-head"><strong>{{ dashboard.route_match.track_name }}</strong><el-tag>{{ dashboard.route_match.estimated_weeks }} 周</el-tag></div>
-            <p v-for="reason in dashboard.route_match.why" :key="reason" class="reason">✓ {{ reason }}</p>
-            <el-button type="primary" plain @click="openMetric('路线完整依据', dashboard.route_match)">查看全部依据</el-button>
-          </template>
-          <div v-else class="empty">尚未完成路线比较</div>
-        </section>
-        <section class="panel">
-          <div class="panel-title"><div><h3>最新 Agent 闭环</h3><p>状态、质量指标与证据可审计</p></div></div>
-          <template v-if="dashboard.latest_session">
-            <div class="route-head"><strong>{{ dashboard.latest_session.goal }}</strong><el-tag type="success">{{ dashboard.latest_session.status }}</el-tag></div>
-            <div class="quality-list">
-              <span v-for="(value,key) in dashboard.latest_session.quality_metrics" :key="key">{{ metricLabel(String(key)) }} <b>{{ formatMetric(String(key), value) }}</b></span>
+        <div class="content-grid">
+          <section class="panel diagnosis">
+            <div class="panel-title"><div><h3>学习诊断</h3><p>自评会被测试和实操证据持续校准</p></div><el-button text @click="router.push('/profile')">更新画像 →</el-button></div>
+            <div class="diagnosis-body">
+              <EChart :option="radarOption" height="255px" @click="openChartDetail" />
+              <div class="gaps">
+                <b>优先补齐 TOP3</b>
+                <button v-for="(item,index) in dashboard.profile?.blind_spots||[]" :key="item.skill_code" @click="openMetric(item.name,item)">
+                  <span>{{ index+1 }}. {{ item.name }}</span><el-tag :type="item.score < 40 ? 'danger' : 'warning'">{{ item.score }} 分</el-tag>
+                </button>
+                <p v-if="!dashboard.profile?.blind_spots?.length">完成画像后给出具体建议</p>
+              </div>
             </div>
-            <el-button type="primary" plain @click="router.push(`/session/${dashboard.latest_session.id}`)">查看完整轨迹</el-button>
-          </template>
-          <div v-else class="empty">尚未运行个性化生成</div>
+          </section>
+
+          <section class="panel route-card">
+            <div class="panel-title"><div><h3>学习路径</h3><p>{{ dashboard.selected_track?.name || '尚未选择方向' }}</p></div><el-button text @click="router.push('/plan')">查看全部 →</el-button></div>
+            <template v-if="dashboard.plan">
+              <div class="phase-rail">
+                <div v-for="(phase,index) in dashboard.plan.phases" :key="phase.id" :class="{active:phase.status==='active',done:phase.status==='completed'}">
+                  <span>{{ phase.status==='completed' ? '✓' : index+1 }}</span><b>{{ phase.name }}</b>
+                </div>
+              </div>
+              <div class="current-task">
+                <div><small>当前目标</small><b>{{ dashboard.plan.goal }}</b></div>
+                <el-progress :percentage="dashboard.plan.progress" />
+                <el-button type="primary" @click="router.push('/plan')">继续学习</el-button>
+              </div>
+            </template>
+            <div v-else class="empty compact"><el-button type="primary" @click="router.push(nextAction.path)">{{ nextAction.label }}</el-button></div>
+          </section>
+        </div>
+
+        <section class="panel resources-panel">
+          <div class="panel-title"><div><h3>智能生成资源</h3><p>所有数量来自当前账号真实生成记录</p></div><el-button text @click="router.push('/resources')">全部资源 →</el-button></div>
+          <div class="resource-grid">
+            <button @click="router.push('/resources?type=lecture')"><i class="blue">讲</i><div><b>个性化讲义</b><span>基于画像与引用生成</span></div><strong>{{ dashboard.resources?.lecture || 0 }}</strong></button>
+            <button @click="router.push('/practice')"><i class="green">练</i><div><b>项目实操</b><span>步骤、交付与证据验收</span></div><strong>{{ dashboard.resources?.practice || 0 }}</strong></button>
+            <button @click="router.push('/assessment')"><i class="purple">测</i><div><b>分阶测评</b><span>四维评分并回写画像</span></div><strong>{{ dashboard.resources?.assessment || 0 }}</strong></button>
+            <button @click="router.push('/report')"><i class="orange">报</i><div><b>成长报告</b><span>能力、路线与质量证据</span></div><strong>查看</strong></button>
+          </div>
         </section>
-      </div>
+
+        <section class="panel data-panel">
+          <div class="panel-title"><div><h3>学习数据概览</h3><p>测评成绩与当前知识掌握分布</p></div></div>
+          <div class="chart-grid">
+            <EChart :option="trendOption" height="260px" @click="openChartDetail" />
+            <EChart :option="distributionOption" height="260px" @click="openChartDetail" />
+          </div>
+        </section>
+      </main>
+
+      <aside class="dashboard-rail">
+        <section class="panel agent-status">
+          <div class="panel-title"><div><h3>多智能体协同状态</h3></div><el-button text @click="router.push('/agents')">查看详情 →</el-button></div>
+          <button v-for="agent in agents.items||[]" :key="agent.code" @click="openMetric(agent.name,agent)">
+            <i>{{ agent.code.toUpperCase().slice(0,2) }}</i>
+            <div><b>{{ agent.name }}</b><span>{{ agent.summary }}</span></div>
+            <el-tag :type="agent.status==='completed'?'success':'info'">{{ valueLabel(agent.status) }}</el-tag>
+          </button>
+          <footer><span></span>{{ valueLabel(agents.workflow_status) }}</footer>
+        </section>
+
+        <section class="panel latest">
+          <div class="panel-title"><div><h3>最新消息</h3></div><el-button text @click="router.push('/messages')">查看全部 →</el-button></div>
+          <button v-for="item in messages.slice(0,4)" :key="item.id" @click="router.push(item.action_url || '/messages')">
+            <i :class="item.type">•</i><div><b>{{ item.title }}</b><span>{{ item.content }}</span></div><small>{{ relativeTime(item.created_at) }}</small>
+          </button>
+          <div v-if="!messages.length" class="empty compact">暂无消息</div>
+        </section>
+
+        <section class="panel quick-actions">
+          <div class="panel-title"><div><h3>下一步建议</h3><p>依据当前业务状态生成</p></div></div>
+          <button @click="router.push(nextAction.path)"><span>01</span><div><b>{{ nextAction.label }}</b><small>{{ nextActionHint }}</small></div>→</button>
+          <button @click="router.push('/practice')"><span>02</span><div><b>提交项目证据</b><small>让能力画像不只依赖自评</small></div>→</button>
+          <button @click="router.push('/report')"><span>03</span><div><b>查看成长报告</b><small>检查路线、趋势与质量门</small></div>→</button>
+        </section>
+      </aside>
     </div>
 
-    <DetailModal v-model="detail.visible" :title="detail.title">
-      <pre class="json-detail">{{ pretty(detail.data) }}</pre>
-    </DetailModal>
+    <DetailModal v-model="detail.visible" :title="detail.title"><HumanDetail :value="detail.data" /></DetailModal>
   </AppShell>
 </template>
 
@@ -76,48 +109,54 @@ import { useRouter } from 'vue-router'
 import AppShell from '@/components/layout/AppShell.vue'
 import DetailModal from '@/components/common/DetailModal.vue'
 import EChart from '@/components/common/EChart.vue'
+import HumanDetail from '@/components/common/HumanDetail.vue'
 import { getData } from '@/api'
 import { useUserStore } from '@/stores/user'
+import { valueLabel } from '@/utils/presentation'
 
 const router = useRouter()
 const user = useUserStore()
 const loading = ref(true)
 const dashboard = reactive<any>({})
-const detail = reactive({ visible: false, title: '', data: null as any })
-
-const heroCopy = computed(() => dashboard.profile?.blind_spots?.length
-  ? `当前最需要补齐：${dashboard.profile.blind_spots.map((item:any)=>item.name).join('、')}`
-  : '完成画像后，系统会比较不同方向的适配度、成本与关键缺口。')
-const nextAction = computed(() => !dashboard.onboarding?.profile_ready
-  ? { label: '开始能力诊断', path: '/profile' }
-  : !dashboard.onboarding?.track_selected
-    ? { label: '开始路线比较', path: '/tracks' }
-    : { label: '生成下一阶段资源', path: '/generate' })
+const agents = reactive<any>({ items: [] })
+const messages = ref<any[]>([])
+const detail = reactive({ visible:false, title:'', data:null as any })
+const greeting = computed(() => new Date().getHours() < 12 ? '上午好' : new Date().getHours() < 18 ? '下午好' : '晚上好')
+const heroCopy = computed(() => dashboard.profile?.blind_spots?.length ? `当前最需要补齐：${dashboard.profile.blind_spots.map((item:any)=>item.name).join('、')}` : '完成画像后，系统会比较不同方向的适配度、成本与关键缺口。')
+const nextAction = computed(() => !dashboard.onboarding?.profile_ready ? {label:'开始能力诊断',path:'/profile'} : !dashboard.onboarding?.track_selected ? {label:'开始路线比较',path:'/tracks'} : {label:'生成下一阶段资源',path:'/generate'})
+const nextActionHint = computed(() => !dashboard.onboarding?.profile_ready ? '建立可持续更新的能力基线' : !dashboard.onboarding?.track_selected ? '对比时间成本和技能差距' : '由六 Agent 生成完整学习闭环')
 const dimensions = computed(() => dashboard.profile?.dimensions || {})
-const radarOption = computed(() => ({
-  tooltip: {},
-  radar: { indicator: Object.keys(dimensions.value).map(name => ({ name: metricLabel(name), max: 100 })), radius: '66%', splitArea: { areaStyle: { color: ['#fbfcff','#f2f6ff'] } } },
-  series: [{ type:'radar', data:[{ value:Object.values(dimensions.value), name:'当前能力', areaStyle:{color:'rgba(49,104,238,.22)'}, lineStyle:{color:'#3168ee'} }] }],
-}))
-const trendOption = computed(() => ({
-  tooltip:{trigger:'axis'}, grid:{left:38,right:20,top:25,bottom:34},
-  xAxis:{type:'category',data:(dashboard.assessment_trend||[]).map((item:any)=>new Date(item.date).toLocaleDateString())},
-  yAxis:{type:'value',min:0,max:100},
-  series:[{type:'line',smooth:true,data:(dashboard.assessment_trend||[]).map((item:any)=>item.score),lineStyle:{color:'#17a673',width:3},areaStyle:{color:'rgba(23,166,115,.12)'},symbolSize:9}],
-}))
+const radarOption = computed(() => ({tooltip:{},radar:{indicator:Object.keys(dimensions.value).map(name=>({name:metricLabel(name),max:100})),radius:'57%',splitArea:{areaStyle:{color:['#fbfcff','#f2f6ff']}},axisName:{fontSize:11}},series:[{type:'radar',data:[{value:Object.values(dimensions.value),name:'当前能力',areaStyle:{color:'rgba(49,104,238,.22)'},lineStyle:{color:'#3168ee',width:2}}]}]}))
+const trendOption = computed(() => ({title:{text:'测评成长趋势',textStyle:{fontSize:14}},tooltip:{trigger:'axis'},grid:{left:38,right:20,top:48,bottom:30},xAxis:{type:'category',data:(dashboard.assessment_trend||[]).map((item:any)=>new Date(item.date).toLocaleDateString())},yAxis:{type:'value',min:0,max:100},series:[{type:'line',smooth:true,data:(dashboard.assessment_trend||[]).map((item:any)=>item.score),lineStyle:{color:'#3168ee',width:3},areaStyle:{color:'rgba(49,104,238,.11)'},symbolSize:8}]}))
+const distributionOption = computed(() => {
+  const values = Object.values(dimensions.value).map(Number)
+  const buckets = [
+    {name:'优势（80–100）',value:values.filter(v=>v>=80).length,itemStyle:{color:'#3168ee'}},
+    {name:'良好（60–79）',value:values.filter(v=>v>=60&&v<80).length,itemStyle:{color:'#17b996'}},
+    {name:'成长（40–59）',value:values.filter(v=>v>=40&&v<60).length,itemStyle:{color:'#f3a83b'}},
+    {name:'待补（0–39）',value:values.filter(v=>v<40).length,itemStyle:{color:'#ef6271'}},
+  ]
+  return {title:{text:'能力分布',textStyle:{fontSize:14}},tooltip:{trigger:'item'},legend:{orient:'vertical',right:0,top:55,textStyle:{fontSize:11}},series:[{type:'pie',radius:['42%','66%'],center:['35%','56%'],label:{show:false},data:buckets}]}
+})
 
 onMounted(async () => {
-  try { Object.assign(dashboard, await getData('/dashboard')) } finally { loading.value = false }
+  try {
+    const [dashboardData, agentData, messageData] = await Promise.all([
+      getData('/dashboard'),
+      getData('/agents/status'),
+      getData<{items:any[]}>('/messages'),
+    ])
+    Object.assign(dashboard,dashboardData)
+    Object.assign(agents,agentData)
+    messages.value=messageData.items
+  } finally { loading.value=false }
 })
-function openMetric(title:string,data:any){ detail.title=title;detail.data=data;detail.visible=true }
-function openChartDetail(params:any){ openMetric(`图表数据 · ${params.name || params.seriesName}`, params) }
-function pretty(value:any){ return JSON.stringify(value ?? { message:'暂无数据' },null,2) }
-function metricLabel(key:string){ return ({programming_and_algorithms:'编程与算法',systems_foundation:'系统基础',software_engineering:'软件工程',architecture_and_security:'架构与安全',engineering_delivery:'工程交付',route_specific:'方向专项',knowledge_coverage:'知识覆盖',citation_coverage:'引用覆盖',profile_fit:'画像适配',prerequisite_violations:'前置冲突',hallucination_risk:'幻觉风险',total:'质量总分'} as any)[key] || key }
-function formatMetric(key:string,value:any){ return key.includes('coverage')||key.includes('fit')||key.includes('risk') ? `${Math.round(Number(value)*100)}%` : value }
+function openMetric(title:string,data:any){detail.title=title;detail.data=data;detail.visible=true}
+function openChartDetail(params:any){openMetric(`图表数据 · ${params.name||params.seriesName}`,params)}
+function metricLabel(key:string){return ({programming_and_algorithms:'编程与算法',systems_foundation:'系统基础',software_engineering:'软件工程',architecture_and_security:'架构与安全',engineering_delivery:'工程交付',route_specific:'方向专项'} as Record<string,string>)[key]||key}
+function relativeTime(value:string){const delta=Math.max(0,Date.now()-new Date(value).getTime());const minutes=Math.floor(delta/60000);return minutes<60?`${minutes||1} 分钟前`:minutes<1440?`${Math.floor(minutes/60)} 小时前`:`${Math.floor(minutes/1440)} 天前`}
 </script>
 
 <style scoped>
-.hero { min-height:250px; display:flex;align-items:center;justify-content:space-between;overflow:hidden;background:linear-gradient(120deg,#fff 35%,#edf3ff); }.hero p{color:#3168ee;font-weight:700}.hero h2{font-size:30px;margin:8px 0 12px}.hero span{color:#68758c}.hero-actions{margin-top:26px}
-.hero-orbit { width:220px;height:220px;border:1px solid #cddcff;border-radius:50%;position:relative;display:grid;place-items:center;margin-right:40px;animation:float 4s ease-in-out infinite }.hero-orbit strong{width:82px;height:82px;border-radius:24px;display:grid;place-items:center;color:white;font-size:28px;background:linear-gradient(145deg,#3168ee,#7957ee);box-shadow:0 20px 45px rgba(52,94,220,.3)}.hero-orbit span{position:absolute;background:white;padding:8px 12px;border-radius:20px;box-shadow:var(--shadow);font-size:12px}.hero-orbit span:nth-child(1){top:12px}.hero-orbit span:nth-child(2){bottom:28px;left:0}.hero-orbit span:nth-child(3){right:-10px;top:90px}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:18px}.metric small{display:block;color:#7b8799;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.section-gap{margin-top:18px}.route-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.route-head strong{font-size:20px}.reason{color:#5d6980}.quality-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}.quality-list span{padding:11px;background:#f5f8fd;border-radius:10px;display:flex;justify-content:space-between}.json-detail{white-space:pre-wrap;word-break:break-word;background:#f7f9fd;padding:18px;border-radius:12px;line-height:1.65}@keyframes float{50%{transform:translateY(-8px)}}@media(max-width:1100px){.metric-grid{grid-template-columns:repeat(2,1fr)}.hero-orbit{display:none}}@media(max-width:650px){.metric-grid{grid-template-columns:1fr}.hero h2{font-size:24px}}
+.dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}.dashboard-main,.dashboard-rail{display:grid;gap:16px;align-content:start}.hero{position:relative;min-height:220px;padding:24px;overflow:hidden;background:linear-gradient(112deg,#f9fbff 0,#edf4ff 65%,#e2edff 100%)}.hero-copy{position:relative;z-index:2}.hero-copy p{font-size:22px;color:#111827;font-weight:800;margin:0 0 8px}.hero-copy h2{font-size:15px;margin:0 0 8px}.hero-copy>span{color:var(--muted);font-size:13px}.hero-visual{position:absolute;width:290px;height:170px;right:8px;top:0}.hero-visual>div{position:absolute;right:78px;top:38px;width:72px;height:78px;border-radius:17px;display:grid;place-items:center;color:white;font-weight:900;font-size:26px;background:linear-gradient(145deg,#5f9eff,#2459e8);box-shadow:0 18px 40px rgba(39,94,221,.3);transform:rotateY(-12deg)}.hero-visual:before,.hero-visual:after{content:'';position:absolute;border:1px solid rgba(81,128,230,.25);border-radius:50%;right:22px;top:20px}.hero-visual:before{width:220px;height:130px}.hero-visual:after{width:180px;height:105px;right:42px;top:33px}.hero-visual i{position:absolute;width:16px;height:16px;border-radius:5px;background:#7aaaff;box-shadow:0 6px 14px rgba(60,105,220,.2)}.hero-visual i:nth-child(1){right:235px;top:70px}.hero-visual i:nth-child(2){right:28px;top:92px}.hero-visual i:nth-child(3){right:180px;top:22px}.hero-metrics{position:absolute;z-index:3;left:24px;right:24px;bottom:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.hero-metrics button{border:1px solid rgba(222,231,247,.9);background:rgba(255,255,255,.91);border-radius:11px;padding:11px 13px;text-align:left;cursor:pointer}.hero-metrics span,.hero-metrics strong,.hero-metrics small{display:block}.hero-metrics span{font-size:11px;color:#69758b}.hero-metrics strong{font-size:21px;margin:3px 0}.hero-metrics small{font-size:10px;color:#748198;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.content-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.diagnosis-body{display:grid;grid-template-columns:1fr 190px;align-items:center}.gaps{display:grid;gap:8px}.gaps>button{border:0;background:#f7f9fd;border-radius:8px;padding:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left}.gaps>p{color:var(--muted);font-size:12px}.phase-rail{display:flex;align-items:start;justify-content:space-between;position:relative;margin:24px 0}.phase-rail:before{content:'';position:absolute;left:8%;right:8%;top:15px;border-top:2px solid #d9e2f2}.phase-rail>div{z-index:1;text-align:center;flex:1}.phase-rail span,.phase-rail b{display:block}.phase-rail span{width:30px;height:30px;margin:auto;border-radius:50%;display:grid;place-items:center;background:#b8c2d7;color:white}.phase-rail .active span,.phase-rail .done span{background:#2866ed}.phase-rail b{font-size:11px;margin-top:7px}.current-task{padding:13px;border-radius:11px;background:#f6f9ff}.current-task>div small,.current-task>div b{display:block}.current-task>div small{color:var(--muted)}.current-task>div b{font-size:12px;margin:4px 0 8px}.current-task .el-button{width:100%;margin-top:8px}.resource-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.resource-grid button{border:1px solid var(--line);background:#fbfcff;border-radius:11px;padding:13px;display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;text-align:left;cursor:pointer}.resource-grid i{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:white;font-style:normal}.blue{background:#3679ef}.green{background:#24bd88}.purple{background:#865fea}.orange{background:#f59443}.resource-grid b,.resource-grid span{display:block}.resource-grid span{font-size:10px;color:var(--muted);margin-top:4px}.resource-grid strong{font-size:12px;color:#3168ee}.chart-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}.dashboard-rail .panel{padding:16px}.dashboard-rail .panel-title{margin-bottom:10px}.dashboard-rail .panel-title h3{font-size:15px}.agent-status>button,.latest>button{width:100%;border:0;background:transparent;display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #edf1f7;text-align:left;cursor:pointer}.agent-status>button>i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#edf3ff;color:#3168ee;font-style:normal;font-size:10px;font-weight:800}.agent-status button b,.agent-status button span,.latest button b,.latest button span{display:block}.agent-status button b,.latest button b{font-size:12px}.agent-status button span,.latest button span{font-size:10px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:175px}.agent-status footer{font-size:11px;color:#17a673;margin-top:11px}.agent-status footer span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#17a673;margin-right:7px}.latest>button>i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#edf3ff;color:#3168ee;font-style:normal;font-size:18px}.latest small{font-size:9px;color:var(--muted);white-space:nowrap}.quick-actions>button{width:100%;border:1px solid var(--line);background:#fbfcff;border-radius:10px;padding:11px;margin-top:8px;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;text-align:left;cursor:pointer}.quick-actions>button>span{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:#edf3ff;color:#3168ee;font-size:10px}.quick-actions b,.quick-actions small{display:block}.quick-actions b{font-size:12px}.quick-actions small{font-size:10px;color:var(--muted);margin-top:3px}.compact{padding:18px}@media(max-width:1250px){.dashboard-layout{grid-template-columns:1fr}.dashboard-rail{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:1fr}.resource-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.dashboard-rail,.chart-grid{grid-template-columns:1fr}.hero-visual{display:none}.hero-metrics{position:relative;left:auto;right:auto;bottom:auto;margin-top:28px;grid-template-columns:repeat(2,1fr)}.diagnosis-body{grid-template-columns:1fr}.resource-grid{grid-template-columns:1fr}}
 </style>

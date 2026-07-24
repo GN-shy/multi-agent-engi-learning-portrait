@@ -14,12 +14,20 @@ class CatalogError(RuntimeError):
 
 
 class ComputerCatalog:
-    def __init__(self, raw: dict[str, Any]):
+    def __init__(self, raw: dict[str, Any], pathways_raw: dict[str, Any] | None = None):
         self.raw = raw
         self.version = raw["version"]
         self.domain = raw["domain"]
         self.clusters = raw["clusters"]
         self.tracks = raw["tracks"]
+        self.pathways = (pathways_raw or {}).get("directions", [])
+        self._pathway_map = {pathway["id"]: pathway for pathway in self.pathways}
+        for track in self.tracks:
+            track["pathway_variants"] = [
+                pathway
+                for pathway in self.pathways
+                if pathway["track_code"] == track["code"]
+            ]
         self._track_map = {track["code"]: track for track in self.tracks}
         self._skill_map = {skill["code"]: skill for skill in raw["core_skills"]}
         for track in self.tracks:
@@ -30,6 +38,15 @@ class ComputerCatalog:
     def validate(self) -> None:
         if len(self.tracks) < 15:
             raise CatalogError("正式计算机路线不得少于 15 条")
+        unknown_pathway_tracks = sorted(
+            {
+                pathway["track_code"]
+                for pathway in self.pathways
+                if pathway["track_code"] not in self._track_map
+            }
+        )
+        if unknown_pathway_tracks:
+            raise CatalogError(f"细分路线引用了不存在的主路线: {unknown_pathway_tracks}")
         for track in self.tracks:
             required = ("code", "cluster", "name", "description", "skills", "project", "sources")
             missing = [key for key in required if not track.get(key)]
@@ -37,6 +54,8 @@ class ComputerCatalog:
                 raise CatalogError(f"路线 {track.get('code')} 缺少字段: {missing}")
             if len(track["skills"]) < 3:
                 raise CatalogError(f"路线 {track['code']} 至少需要 3 个专属技能")
+            if not track["pathway_variants"]:
+                raise CatalogError(f"路线 {track['code']} 缺少可执行的细分学习路线")
             if not track["project"].get("acceptance"):
                 raise CatalogError(f"路线 {track['code']} 缺少项目验收标准")
             for skill in track["skills"]:
@@ -44,6 +63,14 @@ class ComputerCatalog:
                     if prerequisite not in self._skill_map:
                         raise CatalogError(
                             f"技能 {skill['code']} 引用了不存在的前置技能 {prerequisite}"
+                        )
+            for pathway in track["pathway_variants"]:
+                if not pathway.get("stages") or not pathway.get("milestone"):
+                    raise CatalogError(f"细分路线 {pathway.get('id')} 缺少阶段或里程碑")
+                for stage in pathway["stages"]:
+                    if not stage.get("title") or not stage.get("topics"):
+                        raise CatalogError(
+                            f"细分路线 {pathway['id']} 存在不可执行的空阶段"
                         )
 
     def get_track(self, code: str) -> dict[str, Any]:
@@ -57,6 +84,19 @@ class ComputerCatalog:
             return self._skill_map[code]
         except KeyError as exc:
             raise CatalogError(f"未知技能: {code}") from exc
+
+    def get_pathway(
+        self, pathway_id: str, track_code: str | None = None
+    ) -> dict[str, Any]:
+        try:
+            pathway = self._pathway_map[pathway_id]
+        except KeyError as exc:
+            raise CatalogError(f"未知细分路线: {pathway_id}") from exc
+        if track_code and pathway["track_code"] != track_code:
+            raise CatalogError(
+                f"细分路线 {pathway_id} 不属于主路线 {track_code}"
+            )
+        return pathway
 
     def track_tree(self) -> list[dict[str, Any]]:
         return [
@@ -81,6 +121,11 @@ class ComputerCatalog:
             "keywords": track["keywords"],
             "skill_count": len(track["skills"]),
             "project": track["project"]["title"],
+            "pathway_count": len(track["pathway_variants"]),
+            "pathway_names": [item["name"] for item in track["pathway_variants"]],
+            "estimated_months": sorted(
+                {item["estimated_months"] for item in track["pathway_variants"]}
+            ),
         }
 
     def skill_graph(self, track_code: str) -> dict[str, Any]:
@@ -152,4 +197,9 @@ def get_catalog() -> ComputerCatalog:
     if not settings.catalog_path.exists():
         raise CatalogError(f"计算机路线目录不存在: {settings.catalog_path}")
     with settings.catalog_path.open("r", encoding="utf-8") as handle:
-        return ComputerCatalog(json.load(handle))
+        raw = json.load(handle)
+    pathways_raw: dict[str, Any] = {}
+    if settings.pathways_path.exists():
+        with settings.pathways_path.open("r", encoding="utf-8") as handle:
+            pathways_raw = json.load(handle)
+    return ComputerCatalog(raw, pathways_raw)

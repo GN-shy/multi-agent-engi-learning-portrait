@@ -12,21 +12,21 @@
       </div>
       <section class="panel section"><div class="panel-title"><div><h3>优先补齐的知识盲区</h3><p>按当前路线目标阈值排序</p></div></div><div class="blind-grid"><article v-for="item in report.blind_spots||[]" :key="item.skill_code" class="clickable" @click="open(item.name,item)"><b>{{ item.name }}</b><el-progress :percentage="item.score" /><span>目标 75 · 当前 {{ item.score }}</span></article></div></section>
     </div>
-    <DetailModal v-model="detail.visible" :title="detail.title"><pre>{{ JSON.stringify(detail.data,null,2) }}</pre></DetailModal>
+    <DetailModal v-model="detail.visible" :title="detail.title"><HumanDetail :value="detail.data" /></DetailModal>
   </AppShell>
 </template>
 
 <script setup lang="ts">
 import { computed,onMounted,reactive,ref } from 'vue';import { ElMessage } from 'element-plus'
-import AppShell from '@/components/layout/AppShell.vue';import DetailModal from '@/components/common/DetailModal.vue';import EChart from '@/components/common/EChart.vue';import { api,getData } from '@/api';import { useUserStore } from '@/stores/user'
+import AppShell from '@/components/layout/AppShell.vue';import DetailModal from '@/components/common/DetailModal.vue';import EChart from '@/components/common/EChart.vue';import HumanDetail from '@/components/common/HumanDetail.vue';import { api,getData } from '@/api';import { useUserStore } from '@/stores/user'
 const user=useUserStore(),report=reactive<any>({}),loading=ref(true),printing=ref(false),detail=reactive({visible:false,title:'',data:null as any})
 const radarOption=computed(()=>({tooltip:{},radar:{indicator:Object.keys(report.dimensions||{}).map(k=>({name:label(k),max:100}))},series:[{type:'radar',data:[{value:Object.values(report.dimensions||{}),areaStyle:{color:'rgba(49,104,238,.23)'},lineStyle:{color:'#3168ee'}}]}]}))
 const trendOption=computed(()=>({tooltip:{trigger:'axis'},xAxis:{type:'category',data:(report.assessment_trend||[]).map((i:any)=>new Date(i.date).toLocaleDateString())},yAxis:{type:'value',min:0,max:100},series:[{type:'line',smooth:true,data:(report.assessment_trend||[]).map((i:any)=>i.score),lineStyle:{color:'#17a673',width:3},areaStyle:{color:'rgba(23,166,115,.14)'}}]}))
 onMounted(async()=>{try{Object.assign(report,await getData('/reports/latest'))}finally{loading.value=false}})
 async function printReport(){printing.value=true;try{const response=await api.get('/reports/latest/print',{responseType:'blob'});const url=URL.createObjectURL(response.data);window.open(url,'_blank','width=980,height=760');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch{ElMessage.error('报告生成失败')}finally{printing.value=false}}
 function open(title:string,data:any){detail.title=title;detail.data=data;detail.visible=true}
-function label(key:string){return ({programming_and_algorithms:'编程与算法',systems_foundation:'系统基础',software_engineering:'软件工程',architecture_and_security:'架构与安全',engineering_delivery:'工程交付',route_specific:'方向专项',total:'质量总分',knowledge_coverage:'知识覆盖',citation_coverage:'引用覆盖',profile_fit:'画像适配',prerequisite_violations:'前置冲突',hallucination_risk:'幻觉风险'} as any)[key]||key}
-function format(key:string,value:any){return ['knowledge_coverage','citation_coverage','profile_fit','hallucination_risk'].includes(key)?`${Math.round(Number(value)*100)}%`:value}
+function label(key:string){return ({programming_and_algorithms:'编程与算法',systems_foundation:'系统基础',software_engineering:'软件工程',architecture_and_security:'架构与安全',engineering_delivery:'工程交付',route_specific:'方向专项',total:'质量总分',knowledge_coverage:'知识覆盖',citation_coverage:'引用覆盖',citation_integrity:'引用完整性',profile_fit:'画像适配',prerequisite_violations:'前置冲突',hallucination_risk:'未引用风险估计'} as any)[key]||key}
+function format(key:string,value:any){return ['knowledge_coverage','citation_coverage','citation_integrity','profile_fit','hallucination_risk'].includes(key)?`${Math.round(Number(value)*100)}%`:value}
 </script>
 
 <style scoped>

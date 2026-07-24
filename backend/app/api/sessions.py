@@ -288,6 +288,8 @@ def create_session(
 ):
     try:
         get_catalog().get_track(body.track_code)
+        if body.pathway_id:
+            get_catalog().get_pathway(body.pathway_id, body.track_code)
     except CatalogError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -354,6 +356,7 @@ def create_session(
             body.goal,
             body.topic,
             extra_evidence=extra_evidence,
+            pathway_id=body.pathway_id,
         )
         _apply_ai_enhancement(body, user, db, row.id, result, source_audit)
         web_used = source_audit["layers"].get("web", {}).get("status") == "used"

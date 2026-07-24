@@ -53,6 +53,10 @@ class Settings(BaseSettings):
         return PROJECT_ROOT / "data" / "computer_domain" / "catalog.json"
 
     @property
+    def pathways_path(self) -> Path:
+        return PROJECT_ROOT / "data" / "computer_domain" / "pathways.json"
+
+    @property
     def evaluation_profiles_path(self) -> Path:
         return PROJECT_ROOT / "data" / "evaluation" / "learner_profiles.json"
 

@@ -50,6 +50,7 @@ class TrackSelectInput(BaseModel):
 
 class SessionCreateInput(BaseModel):
     track_code: str
+    pathway_id: str | None = Field(default=None, max_length=120)
     goal: str = Field(min_length=2, max_length=1000)
     topic: str = Field(default="", max_length=200)
     source_mode: Literal[

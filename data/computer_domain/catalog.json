@@ -1,5 +1,5 @@
 {
-  "version": "2026.07",
+  "version": "2026.08",
   "domain": "computer_science_engineering",
   "clusters": [
     {
@@ -316,6 +316,22 @@
       ],
       "project": {"title": "可追溯的实时学习行为数据平台", "deliverables": ["数据契约", "批流管道", "质量规则", "血缘看板"], "acceptance": "数据可回放、可校验、可追溯，迟到与重复事件处理有测试。"},
       "sources": [{"id": "src-airflow", "title": "Apache Airflow Documentation", "url": "https://airflow.apache.org/docs/", "version": "current"}, {"id": "src-flink", "title": "Apache Flink Documentation", "url": "https://flink.apache.org/what-is-flink/flink-architecture/", "version": "current"}]
+    },
+    {
+      "code": "uiux",
+      "cluster": "software",
+      "name": "UI / UX 与设计工程",
+      "role": "产品体验设计师",
+      "description": "以用户研究、交互原型、设计系统和数据验证连接产品需求与工程交付。",
+      "keywords": ["UI", "UX", "交互设计", "用户研究", "设计系统", "Figma", "无障碍"],
+      "skills": [
+        {"code": "design.research", "name": "用户研究与问题定义", "description": "访谈、观察、问卷、用户旅程、问题陈述与研究证据。", "prerequisites": ["core.software_engineering"], "difficulty": 2},
+        {"code": "design.interaction", "name": "信息架构与交互原型", "description": "任务流、信息架构、线框图、交互状态和可用性测试。", "prerequisites": ["design.research"], "difficulty": 2},
+        {"code": "design.system", "name": "视觉与设计系统", "description": "排版、色彩、Design Token、组件规范、响应式与无障碍。", "prerequisites": ["design.interaction"], "difficulty": 3},
+        {"code": "design.delivery", "name": "设计工程协作与验证", "description": "设计交付、版本协作、埋点指标、A/B 测试和上线复盘。", "prerequisites": ["design.system", "core.git"], "difficulty": 3}
+      ],
+      "project": {"title": "可验证的产品体验重构", "deliverables": ["用户研究报告", "交互原型", "设计系统", "可用性与指标报告"], "acceptance": "设计结论有用户证据，关键任务可完成，组件状态完整，上线前后指标可比较。"},
+      "sources": [{"id": "src-nng", "title": "Nielsen Norman Group", "url": "https://www.nngroup.com/articles/", "version": "current"}, {"id": "src-wcag-design", "title": "Web Content Accessibility Guidelines", "url": "https://www.w3.org/WAI/standards-guidelines/wcag/", "version": "2.2"}]
     }
   ]
 }

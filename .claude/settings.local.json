@@ -3,7 +3,23 @@
     "allow": [
       "Bash(git config *)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(./venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000)",
+      "Bash(npm run *)",
+      "Bash(start *)",
+      "Bash(./venv/Scripts/python.exe -c \"import fastapi; print\\('fastapi ok'\\)\")",
+      "Bash(./venv/Scripts/python.exe -c \"import uvicorn; print\\('uvicorn ok'\\)\")",
+      "Bash(./venv/Scripts/python.exe -c \"import sqlalchemy; print\\('sqlalchemy ok'\\)\")",
+      "Bash(./venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000 --host 0.0.0.0)",
+      "Bash(curl -s http://localhost:8000/api/v1/health)",
+      "Bash(python -m json.tool)",
+      "Bash(backend/runtime_venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload)",
+      "Bash(npx vite *)",
+      "Bash(E:/multi-agent-engi-learning-portrait/backend/runtime_venv/Scripts/python.exe *)",
+      "Bash(../backend/runtime_venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload)"
     ]
   }
 }

@@ -21,6 +21,7 @@ class WorkflowState(TypedDict, total=False):
     track_code: str
     goal: str
     topic: str
+    pathway_id: str
     profile: dict[str, Any]
     route_match: dict[str, Any]
     evidence: list[dict[str, Any]]
@@ -119,6 +120,7 @@ def dgs_a_node(state: WorkflowState) -> dict[str, Any]:
         state["profile"],
         state["route_match"],
         state["evidence"],
+        state.get("pathway_id"),
     )
     return {
         "candidate_a": candidate,
@@ -144,6 +146,7 @@ def dgs_b_node(state: WorkflowState) -> dict[str, Any]:
         state["profile"],
         state["route_match"],
         state["evidence"],
+        state.get("pathway_id"),
     )
     return {
         "candidate_b": candidate,
@@ -239,6 +242,7 @@ def run_workflow(
     goal: str,
     topic: str = "",
     extra_evidence: list[dict[str, Any]] | None = None,
+    pathway_id: str | None = None,
 ) -> WorkflowState:
     return orchestration_graph.invoke(
         {
@@ -246,6 +250,7 @@ def run_workflow(
             "track_code": track_code,
             "goal": goal,
             "topic": topic,
+            "pathway_id": pathway_id or "",
             "events": [],
             "extra_evidence": extra_evidence or [],
         }

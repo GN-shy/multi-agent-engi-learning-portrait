@@ -7,10 +7,25 @@
         </div>
         <el-form label-position="top">
           <el-form-item label="目标路线">
-            <el-select v-model="form.track_code" filterable>
+            <el-select v-model="form.track_code" filterable @change="loadPathways">
               <el-option v-for="track in tracks" :key="track.code" :label="`${track.name} · ${track.role}`" :value="track.code" />
             </el-select>
           </el-form-item>
+          <el-form-item label="细分学习路线">
+            <el-select v-model="form.pathway_id" filterable placeholder="请选择具体技术路线">
+              <el-option
+                v-for="pathway in pathways"
+                :key="pathway.id"
+                :label="`${pathway.name} · ${pathway.estimated_months} 个月`"
+                :value="pathway.id"
+              />
+            </el-select>
+          </el-form-item>
+          <div v-if="selectedPathway" class="pathway-preview">
+            <div><b>{{ selectedPathway.name }}</b><span>{{ selectedPathway.stages.length }} 个阶段 · 难度 {{ selectedPathway.difficulty }}/5</span></div>
+            <p>{{ selectedPathway.suitable_for }}</p>
+            <small>最终里程碑：{{ selectedPathway.milestone }}</small>
+          </div>
           <el-form-item label="本次目标">
             <el-input v-model="form.goal" type="textarea" :rows="3" placeholder="例如：完成一个可评测、可观测的多智能体项目" />
           </el-form-item>
@@ -75,12 +90,13 @@
       </section>
 
       <section class="panel pipeline-panel">
-        <div class="panel-title"><div><h3>协作流程</h3><p>编排器负责路由，不计作第七个 Agent</p></div></div>
+        <div class="panel-title"><div><h3>协作流程</h3><p>完成后展示后端真实 Agent 事件；不使用前端计时动画冒充执行进度</p></div></div>
+        <el-alert v-if="running" class="running-alert" title="后端正在执行画像、检索、双方案生成和仲裁，请保持页面打开。" type="info" :closable="false" show-icon />
         <div class="pipeline">
-          <div v-for="(agent,index) in agents" :key="agent.code" :class="['agent',statusFor(index)]">
+          <div v-for="(agent,index) in agents" :key="agent.code" :class="['agent',statusFor(agent.code)]">
             <span>{{ index+1 }}</span>
             <div><b>{{ agent.name }}</b><small>{{ agent.desc }}</small></div>
-            <i>{{ statusText(index) }}</i>
+            <i>{{ statusText(agent.code) }}</i>
           </div>
         </div>
       </section>
@@ -89,7 +105,7 @@
     <section v-if="result" class="panel result">
       <div class="panel-title">
         <div><h3>生成完成</h3><p>{{ result.goal }} · {{ result.route_match.track_name }}</p></div>
-        <el-tag type="success">{{ result.status }}</el-tag>
+        <el-tag type="success">已完成</el-tag>
       </div>
       <div class="metric-row">
         <button v-for="(value,key) in result.quality_metrics" :key="key" @click="openMetric(String(key),value)">
@@ -131,29 +147,32 @@
 
     <DetailModal v-model="detail.visible" :title="detail.title">
       <p class="metric-explain">{{ detail.explain }}</p>
-      <pre>{{ JSON.stringify(detail.value,null,2) }}</pre>
+      <HumanDetail :value="detail.value" :hint="detail.explain" />
     </DetailModal>
   </AppShell>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import AppShell from '@/components/layout/AppShell.vue'
 import DetailModal from '@/components/common/DetailModal.vue'
+import HumanDetail from '@/components/common/HumanDetail.vue'
 import { getData, postData } from '@/api'
-import type { LearningSession, TrackSummary } from '@/types/domain'
+import type { LearningSession, PathwayVariant, TrackSummary } from '@/types/domain'
 
 const router = useRouter()
+const route = useRoute()
 const tracks = ref<TrackSummary[]>([])
+const pathways = ref<PathwayVariant[]>([])
 const configs = ref<any[]>([])
 const sourceModes = ref<any[]>([])
 const running = ref(false)
-const progress = ref(0)
 const result = ref<(LearningSession & { source_audit?: any }) | null>(null)
 const form = reactive({
   track_code: 'agent_engineering',
+  pathway_id: null as string | null,
   goal: '完成一个可评测、可观测的多智能体项目',
   topic: '状态图、工具调用与轨迹评测',
   source_mode: 'knowledge_only',
@@ -174,6 +193,7 @@ const searchConfigs = computed(() => configs.value.filter((item) => item.service
 const needsLlm = computed(() => ['knowledge_ai', 'full'].includes(form.source_mode))
 const needsSearch = computed(() => ['knowledge_web', 'full'].includes(form.source_mode))
 const needsExternal = computed(() => needsLlm.value || needsSearch.value)
+const selectedPathway = computed(() => pathways.value.find((item) => item.id === form.pathway_id))
 
 onMounted(async () => {
   const [trackData, integrationData, catalog] = await Promise.all([
@@ -184,38 +204,50 @@ onMounted(async () => {
   tracks.value = trackData.items
   configs.value = integrationData.items
   sourceModes.value = catalog.source_modes
+  if (typeof route.query.track === 'string' && tracks.value.some((item) => item.code === route.query.track)) {
+    form.track_code = route.query.track
+  }
+  await loadPathways()
+  if (typeof route.query.pathway === 'string' && pathways.value.some((item) => item.id === route.query.pathway)) {
+    form.pathway_id = route.query.pathway
+  }
 })
+
+async function loadPathways() {
+  const data = await getData<{items: PathwayVariant[]}>(`/tracks/${form.track_code}/pathways`)
+  pathways.value = data.items
+  if (!pathways.value.some((item) => item.id === form.pathway_id)) {
+    form.pathway_id = pathways.value[0]?.id || null
+  }
+}
 
 async function generate() {
   if (!form.goal.trim()) return ElMessage.warning('请填写本次目标')
   running.value = true
   result.value = null
-  progress.value = 0
-  const timer = setInterval(() => progress.value = Math.min(5, progress.value + 1), 220)
   try {
     result.value = await postData<any>('/sessions', form)
-    progress.value = 6
     ElMessage.success(result.value?.source_audit?.fallback_triggered ? '生成完成，部分外部能力已安全降级' : '六 Agent 闭环已完成')
   } catch (error: any) {
     ElMessage.error(error.response?.data?.detail || '生成失败')
   } finally {
-    clearInterval(timer)
     running.value = false
   }
 }
-function statusFor(index: number) { return progress.value > index ? 'done' : progress.value === index && running.value ? 'running' : 'waiting' }
-function statusText(index: number) { return progress.value > index ? '完成' : progress.value === index && running.value ? '运行中' : '等待' }
-function metricLabel(key: string) { return ({ total:'质量总分', knowledge_coverage:'知识覆盖', citation_coverage:'引用覆盖', profile_fit:'画像适配', prerequisite_violations:'前置冲突', hallucination_risk:'幻觉风险' } as any)[key] || key }
-function formatMetric(key: string, value: any) { return ['knowledge_coverage','citation_coverage','profile_fit','hallucination_risk'].includes(key) ? `${Math.round(Number(value) * 100)}%` : value }
+function eventFor(code: string) { return result.value?.events?.find((item) => item.agent_code === code) }
+function statusFor(code: string) { return eventFor(code) ? 'done' : running.value ? 'queued' : 'waiting' }
+function statusText(code: string) { return eventFor(code) ? '已完成' : running.value ? '后端处理中' : '等待任务' }
+function metricLabel(key: string) { return ({ total:'质量总分', knowledge_coverage:'知识覆盖', citation_coverage:'引用覆盖', citation_integrity:'引用完整性', profile_fit:'画像适配', prerequisite_violations:'前置冲突', hallucination_risk:'未引用风险估计' } as any)[key] || key }
+function formatMetric(key: string, value: any) { return ['knowledge_coverage','citation_coverage','citation_integrity','profile_fit','hallucination_risk'].includes(key) ? `${Math.round(Number(value) * 100)}%` : value }
 function modeName(code: string) { return sourceModes.value.find((item) => item.code === code)?.name || code }
 function openMetric(key: string, value: any) {
   detail.title = metricLabel(key)
   detail.value = value
-  detail.explain = ({ knowledge_coverage:'正式路线专项技能被内容覆盖的比例。', citation_coverage:'讲义章节具有有效知识片段引用的比例。', profile_fit:'内容难度与当前画像深度的匹配程度。', prerequisite_violations:'学习顺序违反技能 DAG 前置关系的数量。', hallucination_risk:'基于缺失引用估算的风险上界。', total:'仲裁器对覆盖、引用、适配和前置关系的加权结果。' } as any)[key] || ''
+  detail.explain = ({ knowledge_coverage:'正式路线专项技能被内容覆盖的比例。', citation_coverage:'讲义章节具有有效知识片段引用的比例。', citation_integrity:'所有章节引用均能在本次检索证据集中找到的比例。', profile_fit:'内容难度与当前画像深度的匹配程度。', prerequisite_violations:'学习顺序违反技能 DAG 前置关系的数量。', hallucination_risk:'基于缺失引用估算的风险上界，不冒充真实幻视率测试。', total:'仲裁器对覆盖、引用、适配和前置关系的加权结果。' } as any)[key] || ''
   detail.visible = true
 }
 </script>
 
 <style scoped>
-.generate-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.el-select{width:100%}.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}.mode-grid label{display:block;padding:13px;border:1px solid var(--line);border-radius:13px;background:#f8fafd;cursor:pointer;transition:.2s}.mode-grid label.selected{border-color:#3168ee;background:#eef4ff;box-shadow:0 0 0 3px rgba(49,104,238,.08)}.mode-grid input{display:none}.mode-grid b,.mode-grid span{display:block}.mode-grid span{color:var(--muted);font-size:12px;line-height:1.5;margin-top:4px}.external-config{padding:14px;border-radius:14px;background:#f7f9fd;margin-bottom:15px}.audit-alert{margin-top:14px}.run{width:100%;height:46px;margin-top:20px}.pipeline{display:grid;gap:10px}.agent{display:grid;grid-template-columns:38px 1fr 60px;gap:12px;align-items:center;padding:14px;border-radius:14px;background:#f7f9fd;border:1px solid var(--line);transition:.3s}.agent>span{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#e7edf8;color:#6f7d94}.agent b,.agent small{display:block}.agent small{color:var(--muted);margin-top:4px}.agent i{font-style:normal;font-size:12px}.agent.running{border-color:#3168ee;box-shadow:0 0 0 3px rgba(49,104,238,.1);transform:translateX(4px)}.agent.running>span{background:#3168ee;color:white}.agent.done>span{background:#17a673;color:white}.agent.done i{color:#17a673}.result{margin-top:18px}.metric-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.metric-row button{border:1px solid var(--line);background:#f7f9fd;border-radius:14px;padding:14px;cursor:pointer}.metric-row span,.metric-row strong{display:block}.metric-row span{font-size:12px;color:var(--muted)}.metric-row strong{font-size:22px;margin-top:7px}.source-audit{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.source-audit div{padding:12px 16px;border-radius:12px;background:#eef4ff}.source-audit span,.source-audit b{display:block}.source-audit span{font-size:11px;color:var(--muted);margin-bottom:4px}.fallback{margin-top:10px}.actions{margin-top:20px}.metric-explain{font-size:16px;line-height:1.8}pre{white-space:pre-wrap;background:#f7f9fd;padding:15px;border-radius:12px}@media(max-width:1000px){.generate-layout{grid-template-columns:1fr}.metric-row{grid-template-columns:repeat(3,1fr)}}@media(max-width:600px){.mode-grid,.metric-row{grid-template-columns:1fr 1fr}}
+.generate-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.el-select{width:100%}.pathway-preview{padding:14px;border:1px solid #cddcff;border-radius:14px;background:#f3f7ff;margin:-4px 0 18px}.pathway-preview>div{display:flex;justify-content:space-between;gap:12px}.pathway-preview span,.pathway-preview p,.pathway-preview small{color:var(--muted)}.pathway-preview p{margin:8px 0;line-height:1.6}.pathway-preview small{display:block}.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:100%}.mode-grid label{display:block;padding:13px;border:1px solid var(--line);border-radius:13px;background:#f8fafd;cursor:pointer;transition:.2s}.mode-grid label.selected{border-color:#3168ee;background:#eef4ff;box-shadow:0 0 0 3px rgba(49,104,238,.08)}.mode-grid input{display:none}.mode-grid b,.mode-grid span{display:block}.mode-grid span{color:var(--muted);font-size:12px;line-height:1.5;margin-top:4px}.external-config{padding:14px;border-radius:14px;background:#f7f9fd;margin-bottom:15px}.audit-alert,.running-alert{margin-top:14px}.run{width:100%;height:46px;margin-top:20px}.pipeline{display:grid;gap:10px}.agent{display:grid;grid-template-columns:38px 1fr 92px;gap:12px;align-items:center;padding:14px;border-radius:14px;background:#f7f9fd;border:1px solid var(--line);transition:.3s}.agent>span{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#e7edf8;color:#6f7d94}.agent b,.agent small{display:block}.agent small{color:var(--muted);margin-top:4px}.agent i{font-style:normal;font-size:12px;text-align:right}.agent.queued{border-color:#b9caee;background:#f3f7ff}.agent.queued>span{background:#dce7ff;color:#3168ee}.agent.done>span{background:#17a673;color:white}.agent.done i{color:#17a673}.result{margin-top:18px}.metric-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.metric-row button{border:1px solid var(--line);background:#f7f9fd;border-radius:14px;padding:14px;cursor:pointer}.metric-row span,.metric-row strong{display:block}.metric-row span{font-size:12px;color:var(--muted)}.metric-row strong{font-size:22px;margin-top:7px}.source-audit{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.source-audit div{padding:12px 16px;border-radius:12px;background:#eef4ff}.source-audit span,.source-audit b{display:block}.source-audit span{font-size:11px;color:var(--muted);margin-bottom:4px}.fallback{margin-top:10px}.actions{margin-top:20px}.metric-explain{font-size:16px;line-height:1.8}@media(max-width:1000px){.generate-layout{grid-template-columns:1fr}.metric-row{grid-template-columns:repeat(3,1fr)}}@media(max-width:600px){.mode-grid,.metric-row{grid-template-columns:1fr 1fr}}
 </style>

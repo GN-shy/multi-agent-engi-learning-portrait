@@ -24,6 +24,7 @@ TRACK_ALIASES = {
     "network_security": ["网络安全", "安全攻防", "应急响应"],
     "database_systems": ["数据库内核", "查询优化", "事务系统"],
     "data_engineering": ["数据工程", "数据仓库", "批流处理"],
+    "uiux": ["ui", "ux", "交互设计", "用户研究", "设计系统", "figma"],
 }
 
 
@@ -76,7 +77,8 @@ class RouteEngine:
                 [track["name"], track["role"], track["code"].replace("_", " ")]
             ) - generic_tokens
             explicit_alias_hit = any(
-                alias.lower() in interest_text for alias in TRACK_ALIASES[track["code"]]
+                alias.lower() in interest_text
+                for alias in TRACK_ALIASES.get(track["code"], [])
             )
             explicit_label_hit = explicit_alias_hit or bool(interests & label_tokens)
             interest = min(
@@ -120,6 +122,17 @@ class RouteEngine:
                     "explicit_label_hit": explicit_label_hit,
                     "skill_gaps": gaps,
                     "project": track["project"],
+                    "pathway_variants": [
+                        {
+                            "id": item["id"],
+                            "name": item["name"],
+                            "estimated_months": item["estimated_months"],
+                            "difficulty": item["difficulty"],
+                            "milestone": item["milestone"],
+                            "stage_count": len(item["stages"]),
+                        }
+                        for item in track.get("pathway_variants", [])
+                    ],
                     "why": self._explain(
                         track, readiness, interest, feasibility, keyword_hits, gaps
                     ),

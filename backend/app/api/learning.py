@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from html import escape
+import re
 from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import select
@@ -26,6 +28,132 @@ from app.domain.catalog import get_catalog
 from app.schemas import AssessmentSubmitInput, CheckinInput
 
 router = APIRouter(tags=["learning"])
+
+
+EVIDENCE_LABELS = {
+    "repository": "代码仓库地址",
+    "commit": "提交哈希",
+    "test": "测试结果",
+    "deployment": "部署地址",
+    "screenshot_note": "截图说明",
+    "note": "文字说明",
+}
+
+
+def _valid_http_url(value: str) -> bool:
+    parsed = urlparse(value.strip())
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _review_practice_evidence(
+    raw_evidence: list[Any],
+    valid_step_ids: set[str],
+    completed_step_ids: set[str],
+) -> tuple[list[dict[str, Any]], float, float]:
+    """Review evidence shape and strength without pretending external URLs were verified."""
+    rows: list[dict[str, Any]] = []
+    quality_by_step: dict[str, float] = {}
+    type_weights = {
+        "repository": 0.8,
+        "commit": 0.85,
+        "test": 1.0,
+        "deployment": 0.9,
+        "screenshot_note": 0.55,
+        "note": 0.35,
+    }
+    for raw in raw_evidence:
+        if isinstance(raw, str):
+            item = {"step_id": "", "type": "note", "value": raw}
+        elif isinstance(raw, dict):
+            item = raw
+        else:
+            continue
+        evidence_type = str(item.get("type", "note")).strip()
+        step_id = str(item.get("step_id", "")).strip()
+        value = str(item.get("value", "")).strip()
+        accepted = True
+        reason = "格式有效，已纳入证据质量计算"
+
+        if not value:
+            accepted, reason = False, "证据内容为空"
+        elif step_id and step_id not in valid_step_ids:
+            accepted, reason = False, "关联步骤不存在"
+        elif step_id and step_id not in completed_step_ids:
+            accepted, reason = False, "该步骤尚未标记完成"
+        elif evidence_type in {"repository", "deployment"} and not _valid_http_url(value):
+            accepted, reason = False, "链接格式无效，需要 http 或 https 地址"
+        elif evidence_type == "commit" and not re.fullmatch(r"[0-9a-fA-F]{7,40}", value):
+            accepted, reason = False, "提交哈希应为 7 至 40 位十六进制字符"
+        elif evidence_type == "test" and len(value) < 12:
+            accepted, reason = False, "测试证据过短，请写明测试数量、结果或关键输出"
+        elif evidence_type == "screenshot_note" and len(value) < 10:
+            accepted, reason = False, "截图说明过短，请说明画面与验收条件的对应关系"
+        elif evidence_type not in type_weights:
+            accepted, reason = False, "暂不支持该证据类型"
+
+        rows.append(
+            {
+                "step_id": step_id or None,
+                "type": evidence_type,
+                "label": EVIDENCE_LABELS.get(evidence_type, "其他证据"),
+                "accepted": accepted,
+                "reason": reason,
+                "verification_scope": "仅校验格式与描述完整性，未访问外部链接",
+            }
+        )
+        if accepted and step_id:
+            quality_by_step[step_id] = max(
+                quality_by_step.get(step_id, 0),
+                type_weights[evidence_type],
+            )
+    evidence_coverage = len(quality_by_step) / max(1, len(completed_step_ids))
+    evidence_quality = (
+        sum(quality_by_step.values()) / max(1, len(completed_step_ids))
+        if completed_step_ids
+        else 0
+    )
+    return rows, min(1.0, evidence_coverage), min(1.0, evidence_quality)
+
+
+ASSESSMENT_DIMENSIONS = {
+    "action": {
+        "label": "可执行行动",
+        "terms": ["实现", "设计", "配置", "编写", "部署", "运行", "步骤", "接口", "数据"],
+    },
+    "validation": {
+        "label": "客观验证",
+        "terms": ["测试", "验证", "断言", "指标", "日志", "通过", "结果", "检查"],
+    },
+    "boundary": {
+        "label": "异常边界",
+        "terms": ["边界", "异常", "失败", "超时", "回滚", "错误", "风险", "降级"],
+    },
+    "reasoning": {
+        "label": "技术取舍",
+        "terms": ["因为", "取舍", "权衡", "原因", "依赖", "前置", "相比", "选择"],
+    },
+}
+
+
+def _score_assessment_answer(answer: str, max_score: float) -> tuple[float, dict[str, float], list[str]]:
+    scores: dict[str, float] = {}
+    missing: list[str] = []
+    for code, dimension in ASSESSMENT_DIMENSIONS.items():
+        matches = sum(term in answer for term in dimension["terms"])
+        score = min(2.5, matches * 1.25)
+        if len(answer) >= 80 and matches:
+            score = min(2.5, score + 0.5)
+        scores[code] = round(score, 1)
+        if score < 1.5:
+            missing.append(code)
+
+    raw_score = sum(scores.values())
+    if len(answer) < 25:
+        raw_score = min(raw_score, 3.0)
+    elif len(answer) < 50:
+        raw_score = min(raw_score, 6.0)
+    score = round(min(max_score, raw_score / 10 * max_score), 1)
+    return score, scores, missing
 
 
 def _resource_view(item: LearningResource, detail: bool = False) -> dict[str, Any]:
@@ -87,20 +215,48 @@ def submit_practice(
     ):
         raise HTTPException(status_code=404, detail="实操任务不存在")
     evidence = body.get("evidence", [])
-    completed_steps = body.get("completed_step_ids", [])
-    total_steps = len(resource.content.get("steps", []))
-    completion = len(set(completed_steps)) / max(1, total_steps)
-    evidence_score = min(1.0, len(evidence) / max(1, total_steps))
-    score = round((completion * 0.65 + evidence_score * 0.35) * 100, 1)
+    steps = resource.content.get("steps", [])
+    valid_step_ids = {str(step["id"]) for step in steps}
+    completed_steps = {
+        str(step_id)
+        for step_id in body.get("completed_step_ids", [])
+        if str(step_id) in valid_step_ids
+    }
+    completion = len(completed_steps) / max(1, len(valid_step_ids))
+    evidence_review, evidence_coverage, evidence_quality = _review_practice_evidence(
+        evidence,
+        valid_step_ids,
+        completed_steps,
+    )
+    score = round(
+        (completion * 0.5 + evidence_coverage * 0.25 + evidence_quality * 0.25) * 100,
+        1,
+    )
+    has_verifiable_evidence = any(
+        row["accepted"] and row["type"] in {"repository", "commit", "test", "deployment"}
+        for row in evidence_review
+    )
+    passed = score >= 70 and has_verifiable_evidence
     feedback = {
         "score": score,
         "completion": round(completion, 3),
-        "evidence_completeness": round(evidence_score, 3),
-        "passed": score >= 70,
+        "evidence_completeness": round(evidence_coverage, 3),
+        "passed": passed,
+        "score_breakdown": {
+            "step_completion": round(completion, 3),
+            "evidence_coverage": round(evidence_coverage, 3),
+            "evidence_quality": round(evidence_quality, 3),
+        },
+        "evidence_review": evidence_review,
+        "verification_notice": "平台已检查证据格式、步骤关联和描述完整性；外部仓库与链接仍需评审者复核。",
         "next_action": (
-            "进入分阶测试并提交项目复盘"
-            if score >= 70
-            else "补齐未完成步骤及对应运行证据"
+            "进入分阶段测评，并在项目复盘中说明关键取舍。"
+            if passed
+            else (
+                "请至少补充一条代码、提交、测试或部署证据。"
+                if not has_verifiable_evidence
+                else "补齐未完成步骤，并让每个已完成步骤都有对应证据。"
+            )
         ),
     }
     db.add(
@@ -109,7 +265,11 @@ def submit_practice(
             session_id=resource.session_id,
             feedback_type="practice_submission",
             rating=None,
-            payload=body,
+            payload={
+                **body,
+                "resource_id": resource.id,
+                "resource_title": resource.title,
+            },
             adjustment=feedback,
         )
     )
@@ -136,25 +296,27 @@ def submit_assessment(
     skill_updates = {}
     for question in questions:
         answer = str(body.answers.get(question["id"], "")).strip()
-        length_score = min(4.0, len(answer) / 35)
-        evidence_terms = ["测试", "验证", "边界", "失败", "指标", "运行"]
-        term_score = min(3.0, sum(term in answer for term in evidence_terms))
-        structure_score = (
-            3.0
-            if any(mark in answer for mark in ["1.", "一、", "\n", "标准"])
-            else 1.0
+        score, rubric_scores, missing_dimensions = _score_assessment_answer(
+            answer,
+            float(question["max_score"]),
         )
-        score = round(min(question["max_score"], length_score + term_score + structure_score), 1)
+        skill = get_catalog().get_skill(question["skill_code"])
+        missing_labels = [
+            ASSESSMENT_DIMENSIONS[code]["label"] for code in missing_dimensions
+        ]
         details.append(
             {
                 "question_id": question["id"],
                 "skill_code": question["skill_code"],
+                "skill_name": skill["name"],
                 "score": score,
                 "max_score": question["max_score"],
+                "rubric_scores": rubric_scores,
+                "missing_dimensions": missing_dimensions,
                 "feedback": (
-                    "证据与通过标准较完整"
-                    if score >= 7
-                    else "需要补充可执行步骤、边界条件和客观通过标准"
+                    "四类能力证据较完整，回答具备可执行、可验证和可复盘性。"
+                    if score >= 7 and not missing_dimensions
+                    else f"需要补充：{'、'.join(missing_labels) or '更具体的技术细节'}。"
                 ),
             }
         )
@@ -247,11 +409,18 @@ def checkin(
     plan = db.get(LearningPlan, plan_id)
     if not plan or plan.user_id != user.id:
         raise HTTPException(status_code=404, detail="学习计划不存在")
-    valid_ids = {
-        f"{phase['id']}:{skill}"
-        for phase in plan.phases
-        for skill in phase.get("skills", [])
-    }
+    def phase_task_ids(phase: dict[str, Any]) -> set[str]:
+        if phase.get("tasks"):
+            return {
+                f"{phase['id']}:{task['id']}"
+                for task in phase["tasks"]
+            }
+        return {
+            f"{phase['id']}:{skill}"
+            for skill in phase.get("skills", [])
+        }
+
+    valid_ids = set().union(*(phase_task_ids(phase) for phase in plan.phases))
     accepted = sorted(set(body.completed_task_ids) & valid_ids)
     checkins = list(plan.checkins)
     checkins.append(
@@ -263,7 +432,7 @@ def checkin(
     phases = []
     for phase in plan.phases:
         phase_copy = dict(phase)
-        phase_tasks = {f"{phase['id']}:{skill}" for skill in phase.get("skills", [])}
+        phase_tasks = phase_task_ids(phase)
         done = len(phase_tasks & completed)
         phase_copy["progress"] = round(done / max(1, len(phase_tasks)) * 100, 1)
         phase_copy["status"] = (
@@ -292,6 +461,15 @@ def _report_data(user: User, db: Session) -> dict[str, Any]:
         select(AssessmentAttempt)
         .where(AssessmentAttempt.user_id == user.id)
         .order_by(AssessmentAttempt.created_at.desc())
+        .limit(10)
+    ).all()
+    practice_submissions = db.scalars(
+        select(Feedback)
+        .where(
+            Feedback.user_id == user.id,
+            Feedback.feedback_type == "practice_submission",
+        )
+        .order_by(Feedback.created_at.desc())
         .limit(10)
     ).all()
     selected = db.scalar(
@@ -340,8 +518,52 @@ def printable_report(
     db: Session = Depends(get_db),
 ):
     report = _report_data(user, db)
+    labels = {
+        "programming_and_algorithms": "编程与算法",
+        "systems_foundation": "系统基础",
+        "software_engineering": "软件工程",
+        "architecture_and_security": "架构与安全",
+        "engineering_delivery": "工程交付",
+        "route_specific": "方向专项",
+        "chosen_track": "推荐方向",
+        "track_code": "方向",
+        "reasons": "推荐理由",
+        "skill_gaps": "能力差距",
+        "score": "匹配分",
+        "total": "质量总分",
+        "knowledge_coverage": "知识覆盖率",
+        "citation_coverage": "引用覆盖率",
+        "citation_integrity": "引用完整性",
+        "profile_fit": "画像适配度",
+        "prerequisite_violations": "前置冲突",
+        "hallucination_risk": "未引用风险估计",
+    }
+
+    def render_value(value: Any, key: str = "") -> str:
+        if isinstance(value, dict):
+            rows = "".join(
+                f"<div class='evidence-row'><b>{escape(labels.get(str(child_key), str(child_key)))}</b>"
+                f"<span>{render_value(child_value, str(child_key))}</span></div>"
+                for child_key, child_value in value.items()
+            )
+            return f"<div class='evidence-grid'>{rows}</div>"
+        if isinstance(value, list):
+            if not value:
+                return "<span class='muted'>暂无</span>"
+            return "<ul>" + "".join(f"<li>{render_value(item)}</li>" for item in value) + "</ul>"
+        if isinstance(value, float) and key in {
+            "knowledge_coverage",
+            "citation_coverage",
+            "citation_integrity",
+            "profile_fit",
+            "hallucination_risk",
+        }:
+            return f"{round(value * 100, 1)}%"
+        return escape(str(value if value not in {None, ""} else "暂无"))
+
     dimensions = "".join(
-        f"<li>{escape(name)}：{score}</li>" for name, score in report["dimensions"].items()
+        f"<li><span>{escape(labels.get(name, name))}</span><b>{score}</b></li>"
+        for name, score in report["dimensions"].items()
     )
     blind_spots = "".join(
         f"<li>{escape(item['name'])}（{item['score']}）</li>"
@@ -349,17 +571,26 @@ def printable_report(
     )
     html = f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
     <title>工学智链学习报告</title><style>
-    body{{font-family:system-ui;max-width:900px;margin:40px auto;color:#17233d;line-height:1.7}}
-    .card{{border:1px solid #dbe5f4;border-radius:16px;padding:22px;margin:16px 0}}
-    h1,h2{{color:#2458d3}}@media print{{body{{margin:0}}.no-print{{display:none}}}}
+    body{{font-family:system-ui;max-width:900px;margin:40px auto;color:#17233d;line-height:1.7;background:#f5f8fd}}
+    .card{{border:1px solid #dbe5f4;border-radius:16px;padding:22px;margin:16px 0;background:white}}
+    .hero{{padding:28px;border-radius:20px;color:white;background:linear-gradient(135deg,#2458d3,#6b4bd9)}}
+    .hero h1{{color:white;margin:0}}.hero p{{margin:7px 0 0;opacity:.84}}
+    .score{{font-size:42px;color:#2458d3}}.dimensions{{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0;list-style:none}}
+    .dimensions li,.evidence-row{{display:flex;justify-content:space-between;gap:16px;padding:10px 12px;border-radius:10px;background:#f6f9ff}}
+    .evidence-grid{{display:grid;gap:8px}}.evidence-row>span{{text-align:right;max-width:70%}}ul{{padding-left:22px}}.muted{{color:#78849a}}
+    h1,h2{{color:#2458d3}}.no-print{{border:0;border-radius:10px;padding:10px 16px;background:#2458d3;color:white;cursor:pointer;margin-bottom:14px}}
+    @media print{{body{{margin:0;background:white}}.no-print{{display:none}}.card{{break-inside:avoid}}}}
     </style></head><body>
     <button class="no-print" onclick="window.print()">打印 / 另存为 PDF</button>
-    <h1>工学智链 · {escape(user.username)} 的学习报告</h1>
-    <p>生成时间：{escape(report['generated_at'])}</p>
-    <div class="card"><h2>综合能力 {report['comprehensive_score']}</h2><ul>{dimensions}</ul></div>
+    <section class="hero"><h1>工学智链 · {escape(user.username)} 的学习报告</h1>
+    <p>生成时间：{escape(report['generated_at'])} · 画像版本 V{report['profile_version']}</p></section>
+    <div class="card"><h2>综合能力 <span class="score">{report['comprehensive_score']}</span></h2><ul class="dimensions">{dimensions}</ul></div>
     <div class="card"><h2>关键盲区</h2><ul>{blind_spots}</ul></div>
-    <div class="card"><h2>路线依据</h2><pre>{escape(str(report['route']))}</pre></div>
-    <div class="card"><h2>质量证据</h2><pre>{escape(str(report['quality_metrics']))}</pre></div>
+    <div class="card"><h2>路线依据</h2>{render_value(report['route'])}</div>
+    <div class="card"><h2>内容质量证据</h2>
+      <p class="muted">“未引用风险估计”仅由引用覆盖推算，不代表独立事实核验结果。</p>
+      {render_value(report['quality_metrics'])}
+    </div>
     </body></html>"""
     return Response(content=html, media_type="text/html")
 
@@ -397,9 +628,26 @@ def records(
             "type": "assessment",
             "title": f"{get_catalog().get_track(item.track_code)['name']} 测试 · {item.score} 分",
             "track_code": item.track_code,
+            "score": item.score,
+            "passed": item.score >= 70,
             "created_at": item.created_at.isoformat(),
         }
         for item in attempts
+    ] + [
+        {
+            "id": item.id,
+            "type": "practice_submission",
+            "title": item.payload.get("resource_title", "项目实操证据提交"),
+            "track_code": (
+                db.get(LearningSession, item.session_id).track_code
+                if db.get(LearningSession, item.session_id)
+                else ""
+            ),
+            "score": item.adjustment.get("score"),
+            "passed": item.adjustment.get("passed", False),
+            "created_at": item.created_at.isoformat(),
+        }
+        for item in practice_submissions
     ]
     items.sort(key=lambda item: item["created_at"], reverse=True)
     return success({"items": items[:limit]})

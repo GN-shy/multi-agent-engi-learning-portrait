@@ -16,6 +16,27 @@ export interface TrackSummary {
   keywords: string[]
   skill_count: number
   project: string
+  pathway_count: number
+  pathway_names: string[]
+  estimated_months: string[]
+}
+
+export interface PathwayStage {
+  title: string
+  duration: string
+  topics: string[]
+}
+
+export interface PathwayVariant {
+  id: string
+  track_code: string
+  name: string
+  estimated_months: string
+  difficulty: number
+  demand: number
+  suitable_for: string
+  milestone: string
+  stages: PathwayStage[]
 }
 
 export interface TrackCluster {
@@ -68,6 +89,14 @@ export interface RouteMatch {
     highest_cost_skill: string
     switch_cost: number
   }
+  pathway_variants: Array<{
+    id: string
+    name: string
+    estimated_months: string
+    difficulty: number
+    milestone: string
+    stage_count: number
+  }>
 }
 
 export interface Profile {

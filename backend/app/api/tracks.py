@@ -139,6 +139,20 @@ def skill_graph(track_code: str):
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.get("/{track_code}/pathways")
+def pathways(track_code: str):
+    try:
+        track = get_catalog().get_track(track_code)
+        return success(
+            {
+                "track": get_catalog().track_summary(track),
+                "items": track["pathway_variants"],
+            }
+        )
+    except CatalogError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.get("/{track_code}/diagnostic")
 def diagnostic(track_code: str):
     try:
