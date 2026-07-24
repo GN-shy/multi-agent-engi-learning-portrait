@@ -1,0 +1,27 @@
+{
+  "learner_id": "learner_001",
+  "profile": {
+    "background": "大一学生，专业为机械工程，无编程基础，仅上过大学计算机基础课",
+    "self_assessment": {
+      "Python": "完全不会",
+      "编程基础": "了解基本概念",
+      "数学基础": "一般",
+      "英语水平": "CET-4"
+    },
+    "pre_test_results": {
+      "计算机基础概念": 65,
+      "逻辑思维测试": 55,
+      "数学基础测试": 70
+    },
+    "learning_goals": ["掌握Python基础语法", "能编写简单脚本", "为后续数据分析课程做准备"],
+    "expected_profile": {
+      "knowledge_breadth": 0.1,
+      "knowledge_depth": 0.05,
+      "learning_style": "balanced",
+      "engineering_ability": 0.05,
+      "cognitive_load": 0.6,
+      "knowledge_blindspots": ["变量与数据类型", "控制流", "函数定义", "面向对象"],
+      "strength_areas": ["数学基础", "逻辑思维"]
+    }
+  }
+}

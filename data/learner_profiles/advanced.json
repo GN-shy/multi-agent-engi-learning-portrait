@@ -1,0 +1,29 @@
+{
+  "learner_id": "learner_003",
+  "profile": {
+    "background": "研究生，研究方向为机器学习，有3年Python开发经验，参与过2个开源项目",
+    "self_assessment": {
+      "Python": "精通",
+      "机器学习框架": "熟练",
+      "软件工程": "良好",
+      "系统设计": "有一定经验"
+    },
+    "pre_test_results": {
+      "Python高级特性": 90,
+      "并发编程": 75,
+      "设计模式": 70,
+      "系统架构": 65,
+      "数据科学工具链": 85
+    },
+    "learning_goals": ["深入理解Python并发模型", "学习CPython内部机制", "优化大规模数据处理pipeline"],
+    "expected_profile": {
+      "knowledge_breadth": 0.85,
+      "knowledge_depth": 0.8,
+      "learning_style": "theory_first",
+      "engineering_ability": 0.75,
+      "cognitive_load": 0.25,
+      "knowledge_blindspots": ["GIL底层实现", "C扩展开发"],
+      "strength_areas": ["Python核心", "机器学习", "数据处理"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[project]
+name = "gxlian"
+version = "0.1.0"
+description = "工学智链 - 领域知识个性化生成与多智能体协同决策系统"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"

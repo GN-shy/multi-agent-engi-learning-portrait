@@ -1,0 +1,321 @@
+{
+  "version": "2026.07",
+  "domain": "computer_science_engineering",
+  "clusters": [
+    {
+      "code": "software",
+      "name": "软件研发与交付",
+      "description": "从用户界面、服务端到云端交付的完整软件工程路线。"
+    },
+    {
+      "code": "ai",
+      "name": "人工智能与算法",
+      "description": "从算法基础到机器学习、LLM 应用和 Agent 工程。"
+    },
+    {
+      "code": "systems",
+      "name": "系统与基础设施",
+      "description": "深入硬件、操作系统、网络、安全、数据库内核与数据基础设施。"
+    }
+  ],
+  "core_skills": [
+    {
+      "code": "core.programming",
+      "name": "程序设计",
+      "description": "变量、控制流、函数、抽象、调试与复杂度意识。",
+      "prerequisites": [],
+      "difficulty": 1
+    },
+    {
+      "code": "core.data_structures",
+      "name": "数据结构与算法",
+      "description": "线性结构、树、图、排序、搜索与复杂度分析。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.os",
+      "name": "操作系统基础",
+      "description": "进程线程、内存、文件系统、并发与系统调用。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.network",
+      "name": "计算机网络",
+      "description": "TCP/IP、HTTP、DNS、路由与常见网络故障定位。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.database",
+      "name": "数据库基础",
+      "description": "数据建模、SQL、索引、事务与查询优化。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.software_engineering",
+      "name": "软件工程",
+      "description": "需求、设计、版本控制、测试、评审和持续交付。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.linux",
+      "name": "Linux 与命令行",
+      "description": "Shell、进程、权限、日志、网络和服务管理。",
+      "prerequisites": ["core.os"],
+      "difficulty": 2
+    },
+    {
+      "code": "core.git",
+      "name": "Git 协作",
+      "description": "分支、提交、合并、代码评审与冲突处理。",
+      "prerequisites": ["core.programming"],
+      "difficulty": 1
+    }
+  ],
+  "tracks": [
+    {
+      "code": "web_frontend",
+      "cluster": "software",
+      "name": "Web 前端开发",
+      "role": "前端工程师",
+      "description": "构建可访问、高性能、可维护的 Web 交互产品。",
+      "keywords": ["界面", "交互", "视觉", "浏览器", "JavaScript", "TypeScript"],
+      "skills": [
+        {"code": "fe.web_platform", "name": "Web 平台基础", "description": "HTML 语义、CSS 布局、浏览器渲染和 Web API。", "prerequisites": ["core.programming"], "difficulty": 2},
+        {"code": "fe.typescript", "name": "TypeScript 工程", "description": "类型系统、模块化、构建工具与代码质量。", "prerequisites": ["fe.web_platform", "core.git"], "difficulty": 2},
+        {"code": "fe.framework", "name": "现代前端框架", "description": "组件、状态、路由、响应式和服务端渲染。", "prerequisites": ["fe.typescript"], "difficulty": 3},
+        {"code": "fe.quality", "name": "前端质量与性能", "description": "可访问性、测试、性能指标、安全与监控。", "prerequisites": ["fe.framework", "core.network"], "difficulty": 3}
+      ],
+      "project": {"title": "可访问的学习路线仪表盘", "deliverables": ["响应式页面", "状态管理", "组件测试", "性能报告"], "acceptance": "核心流程可键盘操作，关键交互有自动化测试，性能指标可复现。"},
+      "sources": [{"id": "src-mdn", "title": "MDN Web Docs", "url": "https://developer.mozilla.org/", "version": "living-standard"}, {"id": "src-wcag", "title": "Web Content Accessibility Guidelines", "url": "https://www.w3.org/WAI/standards-guidelines/wcag/", "version": "2.2"}]
+    },
+    {
+      "code": "backend",
+      "cluster": "software",
+      "name": "后端开发",
+      "role": "后端工程师",
+      "description": "设计可靠 API、数据模型、并发任务与可观测服务。",
+      "keywords": ["接口", "服务", "数据库", "并发", "分布式", "性能"],
+      "skills": [
+        {"code": "be.api", "name": "API 设计", "description": "REST、校验、错误模型、幂等与版本治理。", "prerequisites": ["core.network", "core.programming"], "difficulty": 2},
+        {"code": "be.persistence", "name": "持久化与事务", "description": "ORM、事务边界、索引、缓存与一致性。", "prerequisites": ["core.database"], "difficulty": 3},
+        {"code": "be.concurrency", "name": "并发与异步任务", "description": "线程、协程、队列、超时、重试和背压。", "prerequisites": ["core.os", "be.api"], "difficulty": 3},
+        {"code": "be.observability", "name": "服务可靠性", "description": "日志、指标、追踪、限流、熔断与容量规划。", "prerequisites": ["be.concurrency", "core.linux"], "difficulty": 4}
+      ],
+      "project": {"title": "可观测的学习任务 API", "deliverables": ["认证 API", "事务数据模型", "后台任务", "压测与监控"], "acceptance": "接口具备权限、幂等、错误处理和端到端测试，关键指标可观察。"},
+      "sources": [{"id": "src-http", "title": "HTTP Semantics", "url": "https://www.rfc-editor.org/rfc/rfc9110", "version": "RFC 9110"}, {"id": "src-postgres", "title": "PostgreSQL Documentation", "url": "https://www.postgresql.org/docs/", "version": "current"}]
+    },
+    {
+      "code": "fullstack",
+      "cluster": "software",
+      "name": "全栈开发",
+      "role": "全栈工程师",
+      "description": "独立完成产品从交互、服务、数据到部署的工程闭环。",
+      "keywords": ["产品", "全栈", "独立开发", "前后端", "创业", "交付"],
+      "skills": [
+        {"code": "fs.product", "name": "产品与需求拆解", "description": "用户故事、领域模型、验收标准与范围控制。", "prerequisites": ["core.software_engineering"], "difficulty": 2},
+        {"code": "fs.integration", "name": "前后端集成", "description": "契约设计、认证、状态同步、异常与边界处理。", "prerequisites": ["fe.framework", "be.api"], "difficulty": 3},
+        {"code": "fs.delivery", "name": "端到端交付", "description": "数据库迁移、容器化、CI/CD 和环境配置。", "prerequisites": ["fs.integration", "core.linux"], "difficulty": 3},
+        {"code": "fs.architecture", "name": "全栈架构演进", "description": "模块边界、性能、安全、可观测和成本权衡。", "prerequisites": ["fs.delivery"], "difficulty": 4}
+      ],
+      "project": {"title": "学习成长 SaaS 最小可售产品", "deliverables": ["用户闭环", "全栈代码", "自动部署", "运营指标"], "acceptance": "真实用户可完成注册、使用、反馈和复访，数据与部署可复现。"},
+      "sources": [{"id": "src-web", "title": "Web Platform Documentation", "url": "https://developer.mozilla.org/", "version": "living-standard"}, {"id": "src-12factor", "title": "The Twelve-Factor App", "url": "https://12factor.net/", "version": "current"}]
+    },
+    {
+      "code": "mobile",
+      "cluster": "software",
+      "name": "移动端开发",
+      "role": "移动端工程师",
+      "description": "开发关注设备能力、离线体验和性能的移动应用。",
+      "keywords": ["移动端", "Android", "iOS", "跨端", "设备", "应用"],
+      "skills": [
+        {"code": "mobile.ui", "name": "移动交互与生命周期", "description": "页面生命周期、导航、适配与无障碍。", "prerequisites": ["core.programming"], "difficulty": 2},
+        {"code": "mobile.data", "name": "移动数据与网络", "description": "API、缓存、离线同步、权限和安全存储。", "prerequisites": ["mobile.ui", "core.network"], "difficulty": 3},
+        {"code": "mobile.arch", "name": "移动架构", "description": "状态管理、模块化、依赖注入和可测试性。", "prerequisites": ["mobile.data", "core.software_engineering"], "difficulty": 3},
+        {"code": "mobile.release", "name": "质量与发布", "description": "性能、电量、崩溃分析、签名与灰度发布。", "prerequisites": ["mobile.arch"], "difficulty": 4}
+      ],
+      "project": {"title": "离线优先学习伴侣 App", "deliverables": ["移动客户端", "离线同步", "设备测试", "发布清单"], "acceptance": "断网可完成核心任务，恢复网络后正确合并，关键机型测试通过。"},
+      "sources": [{"id": "src-android", "title": "Android Developers", "url": "https://developer.android.com/", "version": "current"}, {"id": "src-apple-dev", "title": "Apple Developer Documentation", "url": "https://developer.apple.com/documentation/", "version": "current"}]
+    },
+    {
+      "code": "quality_engineering",
+      "cluster": "software",
+      "name": "测试与质量工程",
+      "role": "测试开发工程师",
+      "description": "用风险模型、自动化和质量数据保障复杂软件交付。",
+      "keywords": ["测试", "质量", "自动化", "可靠性", "缺陷", "评测"],
+      "skills": [
+        {"code": "qa.strategy", "name": "测试策略", "description": "风险分析、测试分层、边界与探索式测试。", "prerequisites": ["core.software_engineering"], "difficulty": 2},
+        {"code": "qa.automation", "name": "自动化测试", "description": "单元、接口、UI、契约和数据驱动测试。", "prerequisites": ["qa.strategy", "core.programming"], "difficulty": 3},
+        {"code": "qa.performance", "name": "性能与可靠性测试", "description": "负载模型、容量、故障注入和稳定性验证。", "prerequisites": ["qa.automation", "core.os"], "difficulty": 3},
+        {"code": "qa.platform", "name": "质量平台", "description": "流水线门禁、覆盖率、缺陷分析和质量度量。", "prerequisites": ["qa.automation", "core.git"], "difficulty": 4}
+      ],
+      "project": {"title": "跨层质量门禁平台", "deliverables": ["测试策略", "自动化套件", "质量看板", "缺陷复盘"], "acceptance": "高风险用户路径被自动化覆盖，失败能定位，质量门禁接入 CI。"},
+      "sources": [{"id": "src-istqb", "title": "ISTQB Syllabi", "url": "https://www.istqb.org/certifications/certified-tester-foundation-level", "version": "current"}, {"id": "src-playwright", "title": "Playwright Documentation", "url": "https://playwright.dev/docs/intro", "version": "current"}]
+    },
+    {
+      "code": "devops",
+      "cluster": "software",
+      "name": "云原生与 DevOps",
+      "role": "DevOps / SRE 工程师",
+      "description": "建设自动化交付、可观测和弹性可靠的云端系统。",
+      "keywords": ["云", "容器", "运维", "SRE", "部署", "可观测"],
+      "skills": [
+        {"code": "ops.container", "name": "容器与镜像", "description": "镜像分层、容器网络、存储与安全。", "prerequisites": ["core.linux"], "difficulty": 2},
+        {"code": "ops.cicd", "name": "持续交付", "description": "流水线、制品、环境、回滚与变更治理。", "prerequisites": ["ops.container", "core.git"], "difficulty": 3},
+        {"code": "ops.k8s", "name": "容器编排", "description": "工作负载、服务发现、配置、伸缩和调度。", "prerequisites": ["ops.container", "core.network"], "difficulty": 3},
+        {"code": "ops.sre", "name": "SRE 与可观测", "description": "SLI/SLO、告警、追踪、事件响应和容量。", "prerequisites": ["ops.k8s"], "difficulty": 4}
+      ],
+      "project": {"title": "具备 SLO 的云原生服务", "deliverables": ["容器化", "CI/CD", "监控告警", "故障演练"], "acceptance": "可一键部署与回滚，SLO 有数据支撑，故障演练留有报告。"},
+      "sources": [{"id": "src-k8s", "title": "Kubernetes Documentation", "url": "https://kubernetes.io/docs/", "version": "current"}, {"id": "src-sre", "title": "Google SRE Books", "url": "https://sre.google/books/", "version": "current"}]
+    },
+    {
+      "code": "algorithms",
+      "cluster": "ai",
+      "name": "算法与竞赛",
+      "role": "算法工程师",
+      "description": "建立建模、证明、复杂度分析和高质量实现能力。",
+      "keywords": ["算法", "竞赛", "复杂度", "数学", "建模", "刷题"],
+      "skills": [
+        {"code": "algo.analysis", "name": "复杂度与正确性", "description": "渐近分析、循环不变式、归纳与反例。", "prerequisites": ["core.data_structures"], "difficulty": 2},
+        {"code": "algo.paradigms", "name": "算法范式", "description": "分治、贪心、动态规划、回溯与随机化。", "prerequisites": ["algo.analysis"], "difficulty": 3},
+        {"code": "algo.graph", "name": "图与组合算法", "description": "最短路、生成树、网络流、匹配与高级结构。", "prerequisites": ["algo.paradigms"], "difficulty": 4},
+        {"code": "algo.problem_solving", "name": "问题求解训练", "description": "题意建模、边界构造、实现验证与复盘迁移。", "prerequisites": ["algo.paradigms", "core.git"], "difficulty": 3}
+      ],
+      "project": {"title": "可解释算法训练与评测器", "deliverables": ["题目集", "标准解", "复杂度证明", "自动评测"], "acceptance": "覆盖多种算法范式，边界用例可复现，解法有正确性与复杂度说明。"},
+      "sources": [{"id": "src-cp", "title": "Competitive Programming Algorithms", "url": "https://cp-algorithms.com/", "version": "current"}, {"id": "src-oiwiki", "title": "OI Wiki", "url": "https://oi-wiki.org/", "version": "current"}]
+    },
+    {
+      "code": "machine_learning",
+      "cluster": "ai",
+      "name": "机器学习与深度学习",
+      "role": "机器学习工程师",
+      "description": "完成数据、建模、实验、评估到部署监控的机器学习闭环。",
+      "keywords": ["机器学习", "深度学习", "模型", "数据", "训练", "实验"],
+      "skills": [
+        {"code": "ml.math", "name": "数学与统计基础", "description": "线性代数、概率、优化与统计推断。", "prerequisites": ["core.data_structures"], "difficulty": 2},
+        {"code": "ml.modeling", "name": "监督与无监督学习", "description": "特征、模型选择、正则化和偏差方差。", "prerequisites": ["ml.math"], "difficulty": 3},
+        {"code": "ml.deep_learning", "name": "深度学习", "description": "反向传播、表示学习、卷积、序列与注意力。", "prerequisites": ["ml.modeling"], "difficulty": 4},
+        {"code": "ml.ops", "name": "机器学习工程", "description": "数据版本、实验追踪、部署、漂移和监控。", "prerequisites": ["ml.modeling", "core.software_engineering"], "difficulty": 4}
+      ],
+      "project": {"title": "可复现实验的分类服务", "deliverables": ["数据卡", "训练流水线", "评估报告", "推理服务"], "acceptance": "实验可复现，指标与基线比较，数据泄漏受控，线上行为可监控。"},
+      "sources": [{"id": "src-sklearn", "title": "scikit-learn User Guide", "url": "https://scikit-learn.org/stable/user_guide.html", "version": "current"}, {"id": "src-pytorch", "title": "PyTorch Documentation", "url": "https://pytorch.org/docs/stable/", "version": "current"}]
+    },
+    {
+      "code": "llm_application",
+      "cluster": "ai",
+      "name": "LLM 应用开发",
+      "role": "LLM 应用工程师",
+      "description": "构建有评测、可追溯、可控成本的生成式 AI 应用。",
+      "keywords": ["LLM", "大模型", "RAG", "提示词", "评测", "生成式AI"],
+      "skills": [
+        {"code": "llm.prompting", "name": "模型交互与结构化输出", "description": "消息设计、工具调用、结构化输出、重试与防护。", "prerequisites": ["core.programming"], "difficulty": 2},
+        {"code": "llm.rag", "name": "检索增强生成", "description": "切分、索引、召回、重排、引用和权限过滤。", "prerequisites": ["llm.prompting", "core.database"], "difficulty": 3},
+        {"code": "llm.evaluation", "name": "LLM 应用评测", "description": "冻结集、人工标注、事实性、相关性和回归测试。", "prerequisites": ["llm.rag", "qa.strategy"], "difficulty": 4},
+        {"code": "llm.production", "name": "LLM 生产工程", "description": "网关、缓存、成本、延迟、观测、安全和降级。", "prerequisites": ["llm.evaluation", "be.api"], "difficulty": 4}
+      ],
+      "project": {"title": "有引用与评测的专业问答系统", "deliverables": ["RAG 管线", "引用证据", "冻结评测集", "质量看板"], "acceptance": "回答可追溯，事实性和覆盖率可计算，模型失败有降级策略。"},
+      "sources": [{"id": "src-openai", "title": "OpenAI API Documentation", "url": "https://platform.openai.com/docs/", "version": "current"}, {"id": "src-nist-ai", "title": "NIST AI Risk Management Framework", "url": "https://www.nist.gov/itl/ai-risk-management-framework", "version": "1.0"}]
+    },
+    {
+      "code": "agent_engineering",
+      "cluster": "ai",
+      "name": "Agent 全栈开发",
+      "role": "智能体应用工程师",
+      "description": "设计具备状态、工具、协作、评测和安全边界的智能体系统。",
+      "keywords": ["Agent", "智能体", "工具调用", "工作流", "多智能体", "自动化"],
+      "skills": [
+        {"code": "agent.workflow", "name": "状态机与工作流", "description": "状态定义、条件路由、检查点、超时和恢复。", "prerequisites": ["llm.prompting", "core.software_engineering"], "difficulty": 3},
+        {"code": "agent.tools", "name": "工具与上下文工程", "description": "工具契约、权限、上下文选择、记忆和错误处理。", "prerequisites": ["agent.workflow", "be.api"], "difficulty": 3},
+        {"code": "agent.multi", "name": "多智能体协作", "description": "角色分工、共享状态、冲突仲裁和终止条件。", "prerequisites": ["agent.tools", "llm.rag"], "difficulty": 4},
+        {"code": "agent.eval", "name": "智能体评测与治理", "description": "轨迹评测、任务成功率、权限审计和人工接管。", "prerequisites": ["agent.multi", "llm.evaluation"], "difficulty": 4}
+      ],
+      "project": {"title": "多智能体软件研发工作台", "deliverables": ["状态图", "工具集", "仲裁机制", "轨迹评测"], "acceptance": "至少三类智能体完成闭环，事件可审计，失败可恢复，评测可重复。"},
+      "sources": [{"id": "src-langgraph", "title": "LangGraph Documentation", "url": "https://langchain-ai.github.io/langgraph/", "version": "current"}, {"id": "src-owasp-llm", "title": "OWASP Top 10 for LLM Applications", "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications/", "version": "current"}]
+    },
+    {
+      "code": "embedded_iot",
+      "cluster": "systems",
+      "name": "嵌入式与物联网",
+      "role": "嵌入式工程师",
+      "description": "在资源约束设备上完成驱动、实时控制、通信和调试。",
+      "keywords": ["嵌入式", "物联网", "单片机", "硬件", "驱动", "实时"],
+      "skills": [
+        {"code": "emb.c", "name": "C 与底层编程", "description": "指针、内存布局、位操作、编译链接和未定义行为。", "prerequisites": ["core.programming"], "difficulty": 2},
+        {"code": "emb.mcu", "name": "微控制器与外设", "description": "GPIO、中断、定时器、ADC、总线与数据手册。", "prerequisites": ["emb.c"], "difficulty": 3},
+        {"code": "emb.rtos", "name": "实时系统", "description": "任务调度、同步、时序、资源约束和可靠性。", "prerequisites": ["emb.mcu", "core.os"], "difficulty": 4},
+        {"code": "emb.iot", "name": "设备联网与安全", "description": "协议、OTA、设备身份、功耗与远程诊断。", "prerequisites": ["emb.rtos", "core.network"], "difficulty": 4}
+      ],
+      "project": {"title": "可远程升级的环境监测终端", "deliverables": ["固件", "驱动", "通信协议", "测试报告"], "acceptance": "实时采集稳定，断网恢复正确，OTA 可回滚，功耗和时序有实测数据。"},
+      "sources": [{"id": "src-arm", "title": "Arm Developer Documentation", "url": "https://developer.arm.com/documentation", "version": "current"}, {"id": "src-freertos", "title": "FreeRTOS Documentation", "url": "https://www.freertos.org/Documentation/", "version": "current"}]
+    },
+    {
+      "code": "operating_systems",
+      "cluster": "systems",
+      "name": "操作系统与系统编程",
+      "role": "系统软件工程师",
+      "description": "理解并实现进程、内存、文件、并发和系统接口。",
+      "keywords": ["操作系统", "系统编程", "内核", "Linux", "并发", "性能"],
+      "skills": [
+        {"code": "sys.c", "name": "系统级 C/C++", "description": "内存、ABI、编译链接、调试和性能剖析。", "prerequisites": ["core.programming"], "difficulty": 2},
+        {"code": "sys.process", "name": "进程与并发", "description": "进程线程、调度、同步、IPC 和死锁。", "prerequisites": ["sys.c", "core.os"], "difficulty": 3},
+        {"code": "sys.memory", "name": "内存与文件系统", "description": "虚拟内存、页表、缓存、文件和持久化。", "prerequisites": ["sys.process"], "difficulty": 4},
+        {"code": "sys.kernel", "name": "内核机制与观测", "description": "系统调用、驱动、网络栈、跟踪与故障定位。", "prerequisites": ["sys.memory", "core.linux"], "difficulty": 4}
+      ],
+      "project": {"title": "教学型用户态操作系统", "deliverables": ["进程调度", "虚拟内存", "文件系统", "内核测试"], "acceptance": "关键机制可运行，边界与并发测试齐全，设计取舍有实验数据。"},
+      "sources": [{"id": "src-linux", "title": "Linux Kernel Documentation", "url": "https://docs.kernel.org/", "version": "current"}, {"id": "src-xv6", "title": "xv6 Teaching Operating System", "url": "https://pdos.csail.mit.edu/6.1810/2023/xv6.html", "version": "current"}]
+    },
+    {
+      "code": "network_security",
+      "cluster": "systems",
+      "name": "网络与安全",
+      "role": "网络安全工程师",
+      "description": "理解协议行为、威胁模型、防护工程和安全运营。",
+      "keywords": ["网络", "安全", "攻防", "协议", "密码", "漏洞"],
+      "skills": [
+        {"code": "sec.protocols", "name": "网络协议分析", "description": "分层、抓包、路由、传输、应用协议与故障定位。", "prerequisites": ["core.network"], "difficulty": 2},
+        {"code": "sec.crypto", "name": "密码学工程基础", "description": "哈希、认证、加密、密钥管理和 TLS。", "prerequisites": ["sec.protocols"], "difficulty": 3},
+        {"code": "sec.app", "name": "应用安全", "description": "威胁建模、身份权限、常见漏洞和安全测试。", "prerequisites": ["sec.crypto", "be.api"], "difficulty": 3},
+        {"code": "sec.operations", "name": "安全运营与响应", "description": "日志检测、漏洞管理、事件响应和合规证据。", "prerequisites": ["sec.app", "core.linux"], "difficulty": 4}
+      ],
+      "project": {"title": "零信任实验服务与攻防报告", "deliverables": ["威胁模型", "安全实现", "自动扫描", "事件响应手册"], "acceptance": "高风险威胁有控制措施，安全测试可复现，敏感操作有审计。"},
+      "sources": [{"id": "src-owasp", "title": "OWASP Application Security Verification Standard", "url": "https://owasp.org/www-project-application-security-verification-standard/", "version": "current"}, {"id": "src-nist-csf", "title": "NIST Cybersecurity Framework", "url": "https://www.nist.gov/cyberframework", "version": "2.0"}]
+    },
+    {
+      "code": "database_systems",
+      "cluster": "systems",
+      "name": "数据库系统与内核",
+      "role": "数据库研发工程师",
+      "description": "深入存储、查询、事务、并发控制和分布式数据系统。",
+      "keywords": ["数据库", "内核", "存储", "事务", "查询优化", "分布式"],
+      "skills": [
+        {"code": "db.storage", "name": "存储与索引", "description": "页、记录、缓冲池、B+树、LSM 与压缩。", "prerequisites": ["core.database", "core.os"], "difficulty": 3},
+        {"code": "db.query", "name": "查询执行与优化", "description": "关系代数、算子、统计信息、代价与执行计划。", "prerequisites": ["db.storage", "core.data_structures"], "difficulty": 4},
+        {"code": "db.transaction", "name": "事务与并发控制", "description": "隔离级别、锁、MVCC、日志和恢复。", "prerequisites": ["db.storage", "core.os"], "difficulty": 4},
+        {"code": "db.distributed", "name": "分布式数据库", "description": "复制、分片、一致性、共识与故障恢复。", "prerequisites": ["db.transaction", "core.network"], "difficulty": 5}
+      ],
+      "project": {"title": "支持事务的迷你关系数据库", "deliverables": ["存储引擎", "索引", "事务", "基准测试"], "acceptance": "基本 SQL 可执行，崩溃可恢复，并发异常有测试，性能基线可重复。"},
+      "sources": [{"id": "src-pg-internals", "title": "PostgreSQL Documentation", "url": "https://www.postgresql.org/docs/current/internals.html", "version": "current"}, {"id": "src-cmu-db", "title": "CMU Database Group Courses", "url": "https://15445.courses.cs.cmu.edu/", "version": "current"}]
+    },
+    {
+      "code": "data_engineering",
+      "cluster": "systems",
+      "name": "数据工程",
+      "role": "数据工程师",
+      "description": "建设可靠、可治理、可观测的批流一体数据平台。",
+      "keywords": ["数据工程", "数据仓库", "ETL", "流处理", "数据平台", "治理"],
+      "skills": [
+        {"code": "de.modeling", "name": "数据建模与仓库", "description": "维度建模、分层、指标口径和数据契约。", "prerequisites": ["core.database"], "difficulty": 2},
+        {"code": "de.pipeline", "name": "批处理数据管道", "description": "采集、转换、调度、幂等、回填和数据质量。", "prerequisites": ["de.modeling", "core.linux"], "difficulty": 3},
+        {"code": "de.streaming", "name": "流处理", "description": "事件时间、窗口、状态、一致性和消息系统。", "prerequisites": ["de.pipeline", "core.network"], "difficulty": 4},
+        {"code": "de.governance", "name": "数据治理与平台化", "description": "血缘、目录、权限、质量、成本和可观测。", "prerequisites": ["de.pipeline", "core.software_engineering"], "difficulty": 4}
+      ],
+      "project": {"title": "可追溯的实时学习行为数据平台", "deliverables": ["数据契约", "批流管道", "质量规则", "血缘看板"], "acceptance": "数据可回放、可校验、可追溯，迟到与重复事件处理有测试。"},
+      "sources": [{"id": "src-airflow", "title": "Apache Airflow Documentation", "url": "https://airflow.apache.org/docs/", "version": "current"}, {"id": "src-flink", "title": "Apache Flink Documentation", "url": "https://flink.apache.org/what-is-flink/flink-architecture/", "version": "current"}]
+    }
+  ]
+}

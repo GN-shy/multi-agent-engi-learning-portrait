@@ -1,0 +1,32 @@
+# 环境
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# 数据
+data/chroma/
+*.db
+
+# 构建
+dist/
+build/
+*.egg-info/
+
+# Docker
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 密钥
+*.pem
+*.key
+credentials.json

@@ -1,0 +1,87 @@
+{
+  "dataset_id": "gongxue-frozen-evaluation-v1",
+  "version": "1.0.0",
+  "frozen_at": "2026-07-24",
+  "rubric_version": "computer-growth-rubric-v1",
+  "notes": [
+    "共 60 个冻结任务：15 条正式路线各 4 个任务。",
+    "覆盖画像诊断、路线决策、内容生成、前置依赖审计四类核心任务。",
+    "当前可离线复算六 Agent 系统；直接 LLM 与单 Agent RAG 对照必须在相同模型、参数和知识快照下另行运行，未运行时不得伪造分数。"
+  ],
+  "tasks": [
+    {"id":"EV001","persona_id":"P01_zero_beginner","cluster":"software","track_code":"web_frontend","task_type":"profile_diagnosis","goal":"完成可访问的学习路线仪表盘","expected":{"min_evidence_count":3,"requires_blind_spots":true}},
+    {"id":"EV002","persona_id":"P01_zero_beginner","cluster":"software","track_code":"web_frontend","task_type":"route_decision","goal":"学习前端并完成可访问的学习路线仪表盘","expected":{"target_track":"web_frontend","top_k":3}},
+    {"id":"EV003","persona_id":"P01_zero_beginner","cluster":"software","track_code":"web_frontend","task_type":"content_generation","goal":"完成可访问的学习路线仪表盘","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV004","persona_id":"P01_zero_beginner","cluster":"software","track_code":"web_frontend","task_type":"dependency_audit","goal":"从零建立前端工程能力","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV005","persona_id":"P02_career_switcher","cluster":"software","track_code":"backend","task_type":"profile_diagnosis","goal":"完成可观测的学习任务 API","expected":{"min_evidence_count":4,"requires_blind_spots":true}},
+    {"id":"EV006","persona_id":"P02_career_switcher","cluster":"software","track_code":"backend","task_type":"route_decision","goal":"转向后端服务并构建认证、事务和监控完整的 API","expected":{"target_track":"backend","top_k":3}},
+    {"id":"EV007","persona_id":"P02_career_switcher","cluster":"software","track_code":"backend","task_type":"content_generation","goal":"完成可观测的学习任务 API","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV008","persona_id":"P02_career_switcher","cluster":"software","track_code":"backend","task_type":"dependency_audit","goal":"按前置关系学习后端服务","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV009","persona_id":"P06_fullstack_agent","cluster":"software","track_code":"fullstack","task_type":"profile_diagnosis","goal":"完成学习成长 SaaS 最小可售产品","expected":{"min_evidence_count":7,"requires_blind_spots":true}},
+    {"id":"EV010","persona_id":"P06_fullstack_agent","cluster":"software","track_code":"fullstack","task_type":"route_decision","goal":"以全栈方式交付完整 SaaS 产品","expected":{"target_track":"fullstack","top_k":3}},
+    {"id":"EV011","persona_id":"P06_fullstack_agent","cluster":"software","track_code":"fullstack","task_type":"content_generation","goal":"完成学习成长 SaaS 最小可售产品","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV012","persona_id":"P06_fullstack_agent","cluster":"software","track_code":"fullstack","task_type":"dependency_audit","goal":"按技能依赖完成全栈交付","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV013","persona_id":"P01_zero_beginner","cluster":"software","track_code":"mobile","task_type":"profile_diagnosis","goal":"完成跨端学习打卡应用","expected":{"min_evidence_count":3,"requires_blind_spots":true}},
+    {"id":"EV014","persona_id":"P01_zero_beginner","cluster":"software","track_code":"mobile","task_type":"route_decision","goal":"学习移动端并完成跨端学习打卡应用","expected":{"target_track":"mobile","top_k":3}},
+    {"id":"EV015","persona_id":"P01_zero_beginner","cluster":"software","track_code":"mobile","task_type":"content_generation","goal":"完成跨端学习打卡应用","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV016","persona_id":"P01_zero_beginner","cluster":"software","track_code":"mobile","task_type":"dependency_audit","goal":"从基础到移动端工程交付","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV017","persona_id":"P01_zero_beginner","cluster":"software","track_code":"quality_engineering","task_type":"profile_diagnosis","goal":"为学习平台建立自动化质量体系","expected":{"min_evidence_count":3,"requires_blind_spots":true}},
+    {"id":"EV018","persona_id":"P01_zero_beginner","cluster":"software","track_code":"quality_engineering","task_type":"route_decision","goal":"学习软件测试、自动化测试和质量工程","expected":{"target_track":"quality_engineering","top_k":3}},
+    {"id":"EV019","persona_id":"P01_zero_beginner","cluster":"software","track_code":"quality_engineering","task_type":"content_generation","goal":"为学习平台建立自动化质量体系","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV020","persona_id":"P01_zero_beginner","cluster":"software","track_code":"quality_engineering","task_type":"dependency_audit","goal":"建立从测试基础到质量平台的路径","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV021","persona_id":"P02_career_switcher","cluster":"software","track_code":"devops","task_type":"profile_diagnosis","goal":"完成可观测的持续交付平台","expected":{"min_evidence_count":4,"requires_blind_spots":true}},
+    {"id":"EV022","persona_id":"P02_career_switcher","cluster":"software","track_code":"devops","task_type":"route_decision","goal":"学习云原生、容器、CI/CD 和可观测性","expected":{"target_track":"devops","top_k":3}},
+    {"id":"EV023","persona_id":"P02_career_switcher","cluster":"software","track_code":"devops","task_type":"content_generation","goal":"完成可观测的持续交付平台","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV024","persona_id":"P02_career_switcher","cluster":"software","track_code":"devops","task_type":"dependency_audit","goal":"按依赖建立云原生交付能力","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV025","persona_id":"P03_theory_strong","cluster":"ai","track_code":"algorithms","task_type":"profile_diagnosis","goal":"完成可解释的算法题型实验室","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV026","persona_id":"P03_theory_strong","cluster":"ai","track_code":"algorithms","task_type":"route_decision","goal":"深入算法、复杂度和数据结构并形成可解释实验","expected":{"target_track":"algorithms","top_k":3}},
+    {"id":"EV027","persona_id":"P03_theory_strong","cluster":"ai","track_code":"algorithms","task_type":"content_generation","goal":"完成可解释的算法题型实验室","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV028","persona_id":"P03_theory_strong","cluster":"ai","track_code":"algorithms","task_type":"dependency_audit","goal":"按知识依赖建立算法能力","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV029","persona_id":"P03_theory_strong","cluster":"ai","track_code":"machine_learning","task_type":"profile_diagnosis","goal":"完成可复现实验的分类服务","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV030","persona_id":"P03_theory_strong","cluster":"ai","track_code":"machine_learning","task_type":"route_decision","goal":"学习机器学习、特征工程、实验评估和 MLOps","expected":{"target_track":"machine_learning","top_k":3}},
+    {"id":"EV031","persona_id":"P03_theory_strong","cluster":"ai","track_code":"machine_learning","task_type":"content_generation","goal":"完成可复现实验的分类服务","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV032","persona_id":"P03_theory_strong","cluster":"ai","track_code":"machine_learning","task_type":"dependency_audit","goal":"建立无数据泄漏的机器学习路径","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV033","persona_id":"P05_ai_transition","cluster":"ai","track_code":"llm_application","task_type":"profile_diagnosis","goal":"完成有引用与评测的专业问答系统","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV034","persona_id":"P05_ai_transition","cluster":"ai","track_code":"llm_application","task_type":"route_decision","goal":"学习 LLM 应用、RAG、提示工程和评测","expected":{"target_track":"llm_application","top_k":3}},
+    {"id":"EV035","persona_id":"P05_ai_transition","cluster":"ai","track_code":"llm_application","task_type":"content_generation","goal":"完成有引用与评测的专业问答系统","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV036","persona_id":"P05_ai_transition","cluster":"ai","track_code":"llm_application","task_type":"dependency_audit","goal":"先评测后上线 LLM 应用","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV037","persona_id":"P06_fullstack_agent","cluster":"ai","track_code":"agent_engineering","task_type":"profile_diagnosis","goal":"完成可审计的多智能体工程平台","expected":{"min_evidence_count":8,"requires_blind_spots":true}},
+    {"id":"EV038","persona_id":"P06_fullstack_agent","cluster":"ai","track_code":"agent_engineering","task_type":"route_decision","goal":"学习 Agent 全栈、多智能体编排、工具调用和治理","expected":{"target_track":"agent_engineering","top_k":3}},
+    {"id":"EV039","persona_id":"P06_fullstack_agent","cluster":"ai","track_code":"agent_engineering","task_type":"content_generation","goal":"完成可审计的多智能体工程平台","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV040","persona_id":"P06_fullstack_agent","cluster":"ai","track_code":"agent_engineering","task_type":"dependency_audit","goal":"按前置关系掌握多智能体系统","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV041","persona_id":"P04_practice_strong","cluster":"systems","track_code":"embedded_iot","task_type":"profile_diagnosis","goal":"完成低功耗环境监测终端","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV042","persona_id":"P04_practice_strong","cluster":"systems","track_code":"embedded_iot","task_type":"route_decision","goal":"学习嵌入式、物联网、驱动和实时系统","expected":{"target_track":"embedded_iot","top_k":3}},
+    {"id":"EV043","persona_id":"P04_practice_strong","cluster":"systems","track_code":"embedded_iot","task_type":"content_generation","goal":"完成低功耗环境监测终端","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV044","persona_id":"P04_practice_strong","cluster":"systems","track_code":"embedded_iot","task_type":"dependency_audit","goal":"从 C 与电子基础到嵌入式交付","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV045","persona_id":"P03_theory_strong","cluster":"systems","track_code":"operating_systems","task_type":"profile_diagnosis","goal":"完成支持并发的教学内核","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV046","persona_id":"P03_theory_strong","cluster":"systems","track_code":"operating_systems","task_type":"route_decision","goal":"深入操作系统、并发、内存和文件系统","expected":{"target_track":"operating_systems","top_k":3}},
+    {"id":"EV047","persona_id":"P03_theory_strong","cluster":"systems","track_code":"operating_systems","task_type":"content_generation","goal":"完成支持并发的教学内核","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV048","persona_id":"P03_theory_strong","cluster":"systems","track_code":"operating_systems","task_type":"dependency_audit","goal":"按前置关系完成教学内核","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV049","persona_id":"P04_practice_strong","cluster":"systems","track_code":"network_security","task_type":"profile_diagnosis","goal":"完成可审计的校园网防护实验室","expected":{"min_evidence_count":5,"requires_blind_spots":true}},
+    {"id":"EV050","persona_id":"P04_practice_strong","cluster":"systems","track_code":"network_security","task_type":"route_decision","goal":"学习网络协议、安全测试、应用安全和应急响应","expected":{"target_track":"network_security","top_k":3}},
+    {"id":"EV051","persona_id":"P04_practice_strong","cluster":"systems","track_code":"network_security","task_type":"content_generation","goal":"完成可审计的校园网防护实验室","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV052","persona_id":"P04_practice_strong","cluster":"systems","track_code":"network_security","task_type":"dependency_audit","goal":"合法合规地建立网络安全能力","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV053","persona_id":"P02_career_switcher","cluster":"systems","track_code":"database_systems","task_type":"profile_diagnosis","goal":"完成支持事务的迷你关系数据库","expected":{"min_evidence_count":4,"requires_blind_spots":true}},
+    {"id":"EV054","persona_id":"P02_career_switcher","cluster":"systems","track_code":"database_systems","task_type":"route_decision","goal":"深入数据库内核、索引、事务与查询优化","expected":{"target_track":"database_systems","top_k":3}},
+    {"id":"EV055","persona_id":"P02_career_switcher","cluster":"systems","track_code":"database_systems","task_type":"content_generation","goal":"完成支持事务的迷你关系数据库","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV056","persona_id":"P02_career_switcher","cluster":"systems","track_code":"database_systems","task_type":"dependency_audit","goal":"按前置关系实现数据库内核","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV057","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"profile_diagnosis","goal":"完成可追溯的学习行为数据平台","expected":{"min_evidence_count":4,"requires_blind_spots":true}},
+    {"id":"EV058","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"route_decision","goal":"学习数据工程、批流处理、数据建模和质量治理","expected":{"target_track":"data_engineering","top_k":3}},
+    {"id":"EV059","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"content_generation","goal":"完成可追溯的学习行为数据平台","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV060","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"dependency_audit","goal":"建立可追溯的数据工程学习路径","expected":{"max_prerequisite_violations":0}}
+  ]
+}

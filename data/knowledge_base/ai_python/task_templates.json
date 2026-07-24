@@ -1,0 +1,44 @@
+{
+  "domain": "ai_python",
+  "templates": [
+    {
+      "id": "task_001",
+      "title": "Python基础计算器",
+      "difficulty": "easy",
+      "description": "创建一个命令行计算器，支持加减乘除四种运算",
+      "knowledge_points": ["变量", "函数", "输入输出", "条件判断"],
+      "steps": [
+        "定义四个运算函数",
+        "获取用户输入",
+        "根据运算符调用对应函数",
+        "输出结果"
+      ]
+    },
+    {
+      "id": "task_002",
+      "title": "学生信息管理系统",
+      "difficulty": "medium",
+      "description": "使用面向对象编程创建一个学生信息管理系统",
+      "knowledge_points": ["类", "继承", "列表", "文件操作"],
+      "steps": [
+        "定义Student类",
+        "实现增删改查方法",
+        "数据持久化到文件",
+        "提供命令行交互界面"
+      ]
+    },
+    {
+      "id": "task_003",
+      "title": "异步Web爬虫",
+      "difficulty": "hard",
+      "description": "使用asyncio和aiohttp创建异步Web爬虫",
+      "knowledge_points": ["asyncio", "aiohttp", "并发", "异常处理"],
+      "steps": [
+        "设计爬虫架构",
+        "实现异步HTTP请求",
+        "数据解析与清洗",
+        "数据存储"
+      ]
+    }
+  ]
+}

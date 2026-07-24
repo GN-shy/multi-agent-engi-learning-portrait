@@ -1,0 +1,119 @@
+{
+  "domain": "ai_python",
+  "documents": [
+    {
+      "id": "doc_001",
+      "title": "Python基础语法入门",
+      "chunks": [
+        {
+          "chunk_id": "kb_001",
+          "title": "Python变量与数据类型",
+          "content": "Python是动态类型语言，变量不需要声明类型。基本数据类型包括：整数(int)、浮点数(float)、字符串(str)、布尔值(bool)。Python使用赋值语句创建变量，如 x = 10。",
+          "difficulty": "easy",
+          "keywords": ["变量", "数据类型", "int", "float", "str", "bool", "动态类型"]
+        },
+        {
+          "chunk_id": "kb_002",
+          "title": "Python控制流",
+          "content": "Python使用if-elif-else进行条件判断，使用for和while进行循环。for循环常用于遍历序列(列表、元组、字符串)。range()函数生成整数序列。",
+          "difficulty": "easy",
+          "keywords": ["if", "for", "while", "循环", "条件判断", "range"]
+        },
+        {
+          "chunk_id": "kb_003",
+          "title": "Python函数定义",
+          "content": "使用def关键字定义函数。Python函数支持位置参数、关键字参数、默认参数和可变参数(*args, **kwargs)。函数可以有返回值，使用return语句。",
+          "difficulty": "medium",
+          "keywords": ["def", "函数", "参数", "return", "args", "kwargs"]
+        }
+      ]
+    },
+    {
+      "id": "doc_002",
+      "title": "Python面向对象编程",
+      "chunks": [
+        {
+          "chunk_id": "kb_004",
+          "title": "Python面向对象编程",
+          "content": "Python支持面向对象编程。使用class关键字定义类。__init__方法是构造函数。类支持继承、多态。实例方法第一个参数必须是self。",
+          "difficulty": "medium",
+          "keywords": ["class", "面向对象", "继承", "多态", "self", "__init__"]
+        },
+        {
+          "chunk_id": "kb_005",
+          "title": "Python装饰器",
+          "content": "装饰器是Python的一种设计模式，用于在不修改原函数的情况下增加功能。本质是一个接受函数作为参数并返回新函数的高阶函数。常用@语法糖。",
+          "difficulty": "hard",
+          "keywords": ["装饰器", "@", "高阶函数", "设计模式"]
+        }
+      ]
+    },
+    {
+      "id": "doc_003",
+      "title": "Python高级特性",
+      "chunks": [
+        {
+          "chunk_id": "kb_006",
+          "title": "Python列表推导式",
+          "content": "列表推导式是Python中创建列表的简洁方式。语法为 [expression for item in iterable if condition]。它比传统的for循环更高效、更Pythonic。",
+          "difficulty": "medium",
+          "keywords": ["列表推导式", "list comprehension", "Pythonic"]
+        },
+        {
+          "chunk_id": "kb_007",
+          "title": "Python异常处理",
+          "content": "Python使用try-except-finally处理异常。try块包含可能抛出异常的代码，except捕获特定异常，finally无论是否异常都会执行。可以使用raise抛出异常。",
+          "difficulty": "medium",
+          "keywords": ["try", "except", "finally", "异常", "raise"]
+        }
+      ]
+    },
+    {
+      "id": "doc_004",
+      "title": "Python并发编程",
+      "chunks": [
+        {
+          "chunk_id": "kb_008",
+          "title": "Python文件操作",
+          "content": "使用open()函数打开文件。with语句可以自动管理文件资源。文件模式包括'r'(读)、'w'(写)、'a'(追加)、'rb'(二进制读)。",
+          "difficulty": "easy",
+          "keywords": ["open", "文件", "with", "读写"]
+        },
+        {
+          "chunk_id": "kb_009",
+          "title": "Python多线程与并发",
+          "content": "Python的threading模块支持多线程编程。由于GIL的存在，CPU密集型任务推荐使用multiprocessing。IO密集型任务使用asyncio可以获得更好的性能。",
+          "difficulty": "hard",
+          "keywords": ["线程", "GIL", "asyncio", "multiprocessing", "并发"]
+        }
+      ]
+    },
+    {
+      "id": "doc_005",
+      "title": "Python数据科学生态",
+      "chunks": [
+        {
+          "chunk_id": "kb_010",
+          "title": "Python常用标准库",
+          "content": "Python标准库包含os(操作系统接口)、sys(系统参数)、json(JSON编解码)、re(正则表达式)、datetime(日期时间)、collections(容器数据类型)。",
+          "difficulty": "medium",
+          "keywords": ["os", "sys", "json", "re", "datetime", "标准库"]
+        },
+        {
+          "chunk_id": "kb_011",
+          "title": "NumPy数组基础",
+          "content": "NumPy是Python科学计算的基础库。ndarray是多维数组对象。支持向量化运算、广播机制。常用函数：np.array(), np.zeros(), np.arange(), np.reshape()。",
+          "difficulty": "medium",
+          "keywords": ["NumPy", "ndarray", "数组", "向量化", "广播"]
+        },
+        {
+          "chunk_id": "kb_012",
+          "title": "Pandas数据处理",
+          "content": "Pandas提供DataFrame和Series数据结构。支持数据读取(CSV/Excel/SQL)、数据清洗(缺失值处理)、数据聚合(groupby)、数据合并(merge/concat)。",
+          "difficulty": "medium",
+          "keywords": ["Pandas", "DataFrame", "数据清洗", "groupby", "merge"]
+        }
+      ]
+    }
+  ]
+}

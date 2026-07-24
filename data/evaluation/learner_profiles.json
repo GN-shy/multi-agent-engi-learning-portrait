@@ -1,0 +1,86 @@
+{
+  "dataset_id": "gongxue-computer-personas-v1",
+  "version": "1.0.0",
+  "frozen_at": "2026-07-24",
+  "license": "CC-BY-4.0",
+  "data_card": {
+    "origin": "面向比赛评测构造的合成学习者画像，不对应任何真实个人",
+    "privacy": "不含姓名、联系方式、设备标识或真实学习记录",
+    "intended_use": "路线匹配、难度适配、技能缺口和反馈策略的离线回归评测",
+    "limitations": "合成画像不能替代真实用户研究，正式效果报告需补充双人盲评与真实用户测试"
+  },
+  "profiles": [
+    {
+      "id": "P01_zero_beginner",
+      "name": "零基础探索者",
+      "background": "非计算机专业，对编程感兴趣但没有项目经验",
+      "learning_goals": ["建立计算机基础并完成第一个可展示的软件项目"],
+      "preferences": ["可视化反馈", "前端", "移动端", "循序渐进"],
+      "weekly_hours": 8,
+      "learning_style": "visual_practice",
+      "self_assessment": {"core.programming": 15, "core.data_structures": 8, "core.git": 5},
+      "diagnostic_results": {"core.programming": 18, "core.data_structures": 10, "core.git": 8},
+      "expected_traits": ["低知识广度", "高认知负荷", "需要前置补齐"]
+    },
+    {
+      "id": "P02_career_switcher",
+      "name": "转行工程实践者",
+      "background": "有业务经验，能写基础脚本，希望转向企业后端、云原生或数据工程",
+      "learning_goals": ["形成可就业的工程交付能力"],
+      "preferences": ["后端", "DevOps", "数据库", "数据工程", "项目驱动"],
+      "weekly_hours": 14,
+      "learning_style": "project_first",
+      "self_assessment": {"core.programming": 58, "core.database": 45, "core.linux": 35, "core.git": 52},
+      "diagnostic_results": {"core.programming": 62, "core.database": 48, "core.linux": 40, "core.git": 55},
+      "expected_traits": ["中等基础", "工程路线兴趣强", "系统基础待加强"]
+    },
+    {
+      "id": "P03_theory_strong",
+      "name": "理论强实践弱学习者",
+      "background": "计算机专业，算法和理论课程成绩较好，但缺少工程项目与部署经验",
+      "learning_goals": ["把理论能力转化为可复现实验和系统项目"],
+      "preferences": ["算法", "机器学习", "操作系统", "严谨推导"],
+      "weekly_hours": 12,
+      "learning_style": "theory_first",
+      "self_assessment": {"core.programming": 78, "core.data_structures": 88, "core.os": 76, "core.git": 35, "core.software_engineering": 30},
+      "diagnostic_results": {"core.programming": 82, "core.data_structures": 90, "core.os": 80, "core.git": 38, "core.software_engineering": 32},
+      "expected_traits": ["理论优势明显", "工程成熟度偏低", "适合证据化项目"]
+    },
+    {
+      "id": "P04_practice_strong",
+      "name": "实践强基础弱学习者",
+      "background": "参加过电子制作和网络运维实践，能照教程完成任务但原理与安全基础薄弱",
+      "learning_goals": ["补齐系统原理并形成可解释、可验证的工程能力"],
+      "preferences": ["嵌入式", "物联网", "网络安全", "动手实践"],
+      "weekly_hours": 10,
+      "learning_style": "practice_first",
+      "self_assessment": {"core.programming": 48, "core.network": 50, "core.os": 35, "core.linux": 52, "core.git": 42},
+      "diagnostic_results": {"core.programming": 45, "core.network": 54, "core.os": 32, "core.linux": 56, "core.git": 45},
+      "expected_traits": ["实践意愿强", "原理基础薄弱", "需要失败案例反推原理"]
+    },
+    {
+      "id": "P05_ai_transition",
+      "name": "AI 应用转向者",
+      "background": "会 Python 和常见 Web API，希望进入 LLM 应用、RAG 和智能体开发",
+      "learning_goals": ["完成有引用、有评测、可部署的 LLM 应用"],
+      "preferences": ["LLM", "RAG", "Agent", "评测", "Python"],
+      "weekly_hours": 15,
+      "learning_style": "balanced",
+      "self_assessment": {"core.programming": 76, "be.api": 68, "core.database": 58, "llm.rag": 32, "llm.evaluation": 20},
+      "diagnostic_results": {"core.programming": 80, "be.api": 72, "core.database": 60, "llm.rag": 35, "llm.evaluation": 22},
+      "expected_traits": ["编程基础较好", "AI 工程专项不足", "需要来源与评测治理"]
+    },
+    {
+      "id": "P06_fullstack_agent",
+      "name": "全栈进阶学习者",
+      "background": "有前后端项目经验，希望掌握复杂系统架构和多智能体全栈交付",
+      "learning_goals": ["独立交付可观测、可评测的多智能体产品"],
+      "preferences": ["全栈", "Agent 全栈", "架构", "质量", "部署"],
+      "weekly_hours": 18,
+      "learning_style": "challenge_driven",
+      "self_assessment": {"core.programming": 86, "core.database": 74, "core.network": 70, "core.git": 82, "core.software_engineering": 78, "be.api": 80, "fe.framework": 76},
+      "diagnostic_results": {"core.programming": 88, "core.database": 76, "core.network": 72, "core.git": 85, "core.software_engineering": 80, "be.api": 82, "fe.framework": 78, "agent.workflow": 40},
+      "expected_traits": ["工程基础扎实", "适合进阶挑战", "需要复杂编排与治理"]
+    }
+  ]
+}

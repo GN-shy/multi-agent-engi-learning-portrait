@@ -1,0 +1,29 @@
+{
+  "learner_id": "learner_002",
+  "profile": {
+    "background": "大三学生，专业为计算机科学，已修过C语言和数据结构，有Java项目经验",
+    "self_assessment": {
+      "Python": "基本会用",
+      "C/Java": "熟练",
+      "算法基础": "良好",
+      "项目经验": "做过两个课程项目"
+    },
+    "pre_test_results": {
+      "Python语法基础": 75,
+      "面向对象概念": 80,
+      "数据结构": 70,
+      "算法基础测试": 65,
+      "Web开发基础": 30
+    },
+    "learning_goals": ["系统学习Python高级特性", "掌握Python面向对象编程", "学习Python数据分析"],
+    "expected_profile": {
+      "knowledge_breadth": 0.5,
+      "knowledge_depth": 0.55,
+      "learning_style": "practice_first",
+      "engineering_ability": 0.45,
+      "cognitive_load": 0.4,
+      "knowledge_blindspots": ["装饰器", "多线程与并发", "NumPy/Pandas"],
+      "strength_areas": ["面向对象", "数据结构", "基本语法"]
+    }
+  }
+}

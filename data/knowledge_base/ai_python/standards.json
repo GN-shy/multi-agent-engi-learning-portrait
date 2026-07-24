@@ -1,0 +1,26 @@
+{
+  "domain": "ai_python",
+  "standards": [
+    {
+      "id": "std_001",
+      "name": "PEP 8 Python代码风格指南",
+      "description": "Python官方推荐的代码风格规范",
+      "key_rules": [
+        "使用4个空格缩进",
+        "每行不超过79字符",
+        "函数和类之间空两行",
+        "导入语句放在文件顶部"
+      ]
+    },
+    {
+      "id": "std_002",
+      "name": "Python类型注解规范 (PEP 484)",
+      "description": "Python的类型提示标准",
+      "key_rules": [
+        "函数参数和返回值添加类型注解",
+        "使用typing模块的泛型类型",
+        "使用Optional表示可为None的值"
+      ]
+    }
+  ]
+}

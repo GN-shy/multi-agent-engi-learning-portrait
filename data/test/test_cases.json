@@ -1,0 +1,62 @@
+{
+  "e2e_tests": [
+    {
+      "id": "E2E-001",
+      "scenario": "Python初学者",
+      "input_learner_id": "learner_001",
+      "expected": {
+        "content_type": "基础讲义",
+        "difficulty_level": "easy",
+        "knowledge_covered": ["变量", "数据类型", "控制流"],
+        "debate_triggered": false
+      }
+    },
+    {
+      "id": "E2E-002",
+      "scenario": "Python进阶者",
+      "input_learner_id": "learner_002",
+      "expected": {
+        "content_type": "进阶讲义",
+        "difficulty_level": "medium",
+        "knowledge_covered": ["面向对象", "装饰器", "异常处理"],
+        "debate_triggered": false
+      }
+    },
+    {
+      "id": "E2E-003",
+      "scenario": "无辩论触发",
+      "input_learner_id": "learner_001",
+      "expected": {
+        "debate_triggered": false,
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "E2E-004",
+      "scenario": "触发辩论",
+      "input_mock": "有争议知识点",
+      "expected": {
+        "debate_triggered": true,
+        "max_rounds": 3,
+        "has_verdict": true
+      }
+    },
+    {
+      "id": "E2E-005",
+      "scenario": "辩论超时",
+      "input_mock": "模拟LLM响应慢",
+      "expected": {
+        "debate_triggered": true,
+        "timeout_handled": true,
+        "fallback": "上一轮共识结果",
+        "confidence": "low"
+      }
+    }
+  ],
+  "quality_metrics": {
+    "hallucination_rate_target": "< 5%",
+    "adaptation_accuracy_target": ">= 85%",
+    "knowledge_coverage_target": ">= 90%",
+    "response_time_target": "<= 30s"
+  }
+}

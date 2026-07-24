@@ -1,0 +1,23 @@
+{
+  "domain": "ai_python",
+  "difficulty_distribution": {
+    "easy": 0.4,
+    "medium": 0.4,
+    "hard": 0.2
+  },
+  "question_types": {
+    "single_choice": 0.3,
+    "multi_choice": 0.1,
+    "fill_blank": 0.2,
+    "coding": 0.3,
+    "open_ended": 0.1
+  },
+  "knowledge_weights": {
+    "Python基础语法": 0.25,
+    "函数与模块": 0.2,
+    "面向对象编程": 0.2,
+    "高级特性": 0.15,
+    "并发与IO": 0.1,
+    "数据科学生态": 0.1
+  }
+}
