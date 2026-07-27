@@ -44,7 +44,7 @@ FastAPI 应用
 
 ## 3. 领域数据
 
-`data/computer_domain/catalog.json` 是版本化计算机领域目录，包含三大方向簇、15 条正式路线、每条路线的技能、依赖、诊断题、项目和审核来源。`data/evaluation/` 包含 6 个合成学习者和 60 条冻结评测任务。
+`data/computer_domain/catalog.json` 是版本化计算机领域目录，包含三大方向簇、16 个主方向、技能、依赖、诊断题、项目和审核来源；`pathways.json` 提供 29 条可组合的细分技术路线；`career_profiles.json` 提供岗位、工作内容、薪资参考、学历竞争力、市场判断和作品集要求。组合器最多接收 6 条路线，按阶段交错编排并对公共技术去重。`data/evaluation/` 包含 6 个合成学习者和 60 条冻结评测任务。
 
 ## 4. 来源与外部能力
 

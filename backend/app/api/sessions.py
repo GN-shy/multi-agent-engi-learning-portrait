@@ -286,10 +286,17 @@ def create_session(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    selected_pathway_ids = body.pathway_ids or (
+        [body.pathway_id] if body.pathway_id else []
+    )
     try:
         get_catalog().get_track(body.track_code)
-        if body.pathway_id:
-            get_catalog().get_pathway(body.pathway_id, body.track_code)
+        if selected_pathway_ids:
+            first_pathway = get_catalog().get_pathway(selected_pathway_ids[0])
+            if first_pathway["track_code"] != body.track_code:
+                raise CatalogError("主方向必须与第一条细分路线一致")
+            for pathway_id in selected_pathway_ids:
+                get_catalog().get_pathway(pathway_id)
     except CatalogError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -340,6 +347,7 @@ def create_session(
                 "knowledge": {
                     "status": "used",
                     "catalog_version": get_catalog().version,
+                    "selected_pathway_ids": selected_pathway_ids,
                     "reviewed_contribution_count": len(extra_evidence),
                 }
             },
@@ -356,7 +364,8 @@ def create_session(
             body.goal,
             body.topic,
             extra_evidence=extra_evidence,
-            pathway_id=body.pathway_id,
+            pathway_id=selected_pathway_ids[0] if selected_pathway_ids else None,
+            pathway_ids=selected_pathway_ids,
         )
         _apply_ai_enhancement(body, user, db, row.id, result, source_audit)
         web_used = source_audit["layers"].get("web", {}).get("status") == "used"

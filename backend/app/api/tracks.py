@@ -12,7 +12,7 @@ from app.core.models import LearnerProfile, TrackSelection, User
 from app.domain.catalog import CatalogError, get_catalog
 from app.domain.profile import ProfileEngine
 from app.domain.routing import RouteEngine
-from app.schemas import RouteCompareInput, TrackSelectInput
+from app.schemas import PathwayComposeInput, RouteCompareInput, TrackSelectInput
 
 router = APIRouter(prefix="/tracks", tags=["tracks"])
 
@@ -47,6 +47,31 @@ def tree():
 def list_tracks():
     catalog = get_catalog()
     return success({"items": [catalog.track_summary(item) for item in catalog.tracks]})
+
+
+@router.get("/pathways/catalog")
+def pathway_catalog():
+    catalog = get_catalog()
+    return success(
+        {
+            "version": catalog.version,
+            "items": catalog.list_pathways(),
+            "max_selection": 6,
+        }
+    )
+
+
+@router.post("/pathways/compose")
+def compose_pathways(body: PathwayComposeInput):
+    try:
+        return success(
+            get_catalog().compose_pathways(
+                body.pathway_ids,
+                weekly_hours=body.weekly_hours,
+            )
+        )
+    except CatalogError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.post("/compare")

@@ -1,0 +1,238 @@
+{
+  "version": "2026.08",
+  "salary_scope": "中国一线/新一线城市税前月薪参考区间，单位 K/月；实际薪资受城市、经验、学历、行业和企业规模影响，求职时应结合实时招聘数据复核。",
+  "profiles": {
+    "react-frontend": {
+      "roles": ["React 前端工程师", "Web 前端工程师", "大前端工程师", "前端架构方向"],
+      "work_content": ["开发组件化 Web 产品", "维护状态、路由与数据请求层", "解决性能、兼容性和可访问性问题", "与设计、后端和测试协作完成上线"],
+      "salary_range": "12–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科更普遍", "note": "大型企业通常更重视本科背景；可运行作品、工程质量和项目深度可显著提高竞争力。"},
+      "market_outlook": "岗位基数大，React、TypeScript、Next.js、性能优化和工程化能力是主要差异点。",
+      "portfolio": ["生产级管理后台或 SaaS", "性能优化前后指标", "测试与自动部署", "可访问性与异常状态"]
+    },
+    "vue-frontend": {
+      "roles": ["Vue 前端工程师", "企业应用前端工程师", "中后台开发工程师", "前端全栈工程师"],
+      "work_content": ["开发 Vue 3 中后台和业务页面", "封装组件、表单与权限系统", "维护 Axios 请求、Pinia 状态和路由", "完成构建优化、监控和部署"],
+      "salary_range": "10–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科更普遍", "note": "国内企业岗位较多，完整项目和业务复杂度比只会页面切图更重要。"},
+      "market_outlook": "国内企业级项目采用广泛；Vue 3、TypeScript、Vite、Nuxt 和复杂业务建模更有竞争力。",
+      "portfolio": ["Vue 3 企业后台", "动态权限和路由", "Axios 错误治理", "ECharts 与性能优化", "Docker/Nginx 部署"]
+    },
+    "java-backend": {
+      "roles": ["Java 后端工程师", "微服务工程师", "平台研发工程师", "服务端架构方向"],
+      "work_content": ["设计业务领域模型和 REST API", "开发 Spring Boot/Cloud 服务", "优化数据库、缓存与消息链路", "处理高并发、稳定性和可观测性"],
+      "salary_range": "15–45K/月",
+      "education": {"minimum": "本科岗位最普遍", "competitive": "本科/硕士", "note": "金融、央国企和大型平台通常有明确学历筛选；系统设计和高并发项目决定中高阶竞争力。"},
+      "market_outlook": "企业需求稳定、岗位量大，竞争点已从 CRUD 转向分布式、性能、业务建模和稳定性。",
+      "portfolio": ["高并发交易或订单系统", "缓存与消息一致性", "压测报告", "监控告警与故障演练"]
+    },
+    "python-backend": {
+      "roles": ["Python 后端工程师", "FastAPI/Django 工程师", "AI 平台后端工程师", "数据服务工程师"],
+      "work_content": ["构建 Web/API 服务", "开发异步任务和数据处理服务", "接入 AI、搜索或数据能力", "负责测试、部署和运行监控"],
+      "salary_range": "12–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "AI 公司和数据平台更看重 Python 工程化、异步、数据库与模型服务经验。"},
+      "market_outlook": "在 AI 应用、数据服务和创业团队中需求较强，单纯脚本能力不足以覆盖生产岗位。",
+      "portfolio": ["FastAPI/Django SaaS API", "认证权限", "异步任务", "缓存与数据库", "自动测试和容器部署"]
+    },
+    "go-backend": {
+      "roles": ["Go 后端工程师", "云原生研发工程师", "基础设施工程师", "高并发服务工程师"],
+      "work_content": ["开发高并发服务和微服务", "建设 RPC、消息与服务治理能力", "参与云原生平台开发", "进行性能分析和故障定位"],
+      "salary_range": "18–45K/月",
+      "education": {"minimum": "本科岗位更普遍", "competitive": "本科/硕士", "note": "岗位数量少于 Java，但云原生、基础设施和中高阶岗位单价通常更高。"},
+      "market_outlook": "云原生、基础设施、即时通信和高并发场景需求稳定，要求系统与网络基础扎实。",
+      "portfolio": ["Go 微服务系统", "gRPC 与服务治理", "性能基准", "Kubernetes 部署", "故障恢复"]
+    },
+    "node-backend": {
+      "roles": ["Node.js 后端工程师", "BFF 工程师", "TypeScript 全栈工程师", "实时应用工程师"],
+      "work_content": ["开发 NestJS/Express API", "建设 BFF 和实时通信服务", "维护任务队列与缓存", "统一前后端类型和工程规范"],
+      "salary_range": "12–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "更适合有前端基础的学习者；仅会 Express CRUD 竞争力有限。"},
+      "market_outlook": "全栈、BFF、出海和实时产品中常见，TypeScript、NestJS、数据库和生产治理是关键。",
+      "portfolio": ["NestJS 企业 API", "OpenAPI/GraphQL", "队列与缓存", "WebSocket", "测试与监控"]
+    },
+    "cpp-rust-backend": {
+      "roles": ["C++ 服务端工程师", "Rust 工程师", "高性能系统工程师", "数据库/音视频/游戏服务端工程师"],
+      "work_content": ["开发高性能低延迟服务", "管理内存、并发与网络 IO", "参与存储引擎或基础软件研发", "进行 Profiling 和性能优化"],
+      "salary_range": "20–60K/月",
+      "education": {"minimum": "本科更普遍", "competitive": "本科/硕士", "note": "底层、量化、数据库和音视频岗位对计算机基础、学历和项目深度要求较高。"},
+      "market_outlook": "岗位相对少但技术壁垒和上限高，适合长期投入系统、网络、存储和性能工程。",
+      "portfolio": ["高性能 KV 存储", "网络服务器", "并发与崩溃恢复", "Benchmark 与火焰图", "设计文档"]
+    },
+    "ios-mobile": {
+      "roles": ["iOS 工程师", "Apple 生态开发工程师", "移动端架构方向"],
+      "work_content": ["开发 Swift/SwiftUI 应用", "处理网络、持久化、推送和系统能力", "优化启动、流畅度和耗电", "完成签名、测试和商店发布"],
+      "salary_range": "15–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "岗位总量有限但原生深度、性能和 Apple 生态经验有明显价值。"},
+      "market_outlook": "原生高质量应用、出海产品和大型客户端团队保持需求，需具备上架和性能经验。",
+      "portfolio": ["可上架 iOS App", "离线与同步", "Widget/推送", "性能数据", "TestFlight 记录"]
+    },
+    "android-mobile": {
+      "roles": ["Android 工程师", "移动客户端工程师", "车载/智能终端 Android 工程师"],
+      "work_content": ["开发 Kotlin/Compose 应用", "设计数据层和客户端架构", "适配设备与系统版本", "优化性能、稳定性和发布流程"],
+      "salary_range": "15–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "大厂客户端、车载和智能设备岗位更重视系统原理、性能和工程经验。"},
+      "market_outlook": "移动互联网岗位趋稳，Compose、性能、架构和多端/车载能力更具竞争力。",
+      "portfolio": ["Compose 完整 App", "Room 与离线缓存", "网络与错误恢复", "性能分析", "发布流水线"]
+    },
+    "flutter-mobile": {
+      "roles": ["Flutter 工程师", "跨平台客户端工程师", "出海应用工程师"],
+      "work_content": ["用 Flutter 开发多端界面", "维护状态、网络和本地数据", "接入原生平台能力", "进行性能优化和双端发布"],
+      "salary_range": "12–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "创业、出海和多端团队更看重独立交付能力以及原生问题处理能力。"},
+      "market_outlook": "岗位量中等，适合快速多端交付；需要补足 iOS/Android 构建、调试和发布知识。",
+      "portfolio": ["双端 Flutter App", "复杂动画", "原生插件", "离线与推送", "商店发布"]
+    },
+    "react-native-mobile": {
+      "roles": ["React Native 工程师", "跨平台客户端工程师", "React 大前端工程师"],
+      "work_content": ["用 React Native/Expo 开发应用", "接入设备能力和原生模块", "治理状态与离线数据", "优化启动、列表和动画性能"],
+      "salary_range": "12–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "具有 React Web 基础、原生调试能力和发布经验时更有优势。"},
+      "market_outlook": "在出海和 React 技术团队中较常见，岗位更偏复合型而非单一 RN。",
+      "portfolio": ["Expo/RN 双端应用", "相机与推送", "离线缓存", "原生模块", "性能与发布"]
+    },
+    "typescript-fullstack": {
+      "roles": ["TypeScript 全栈工程师", "Next.js 工程师", "独立开发者", "SaaS 产品工程师"],
+      "work_content": ["负责前端、服务端和数据库完整链路", "实现鉴权、支付和业务后台", "进行部署、监控与增长实验", "快速验证并持续迭代产品"],
+      "salary_range": "18–50K/月",
+      "education": {"minimum": "大专/本科均有机会", "competitive": "本科或强作品集", "note": "创业和出海团队更看重独立交付；大型企业仍普遍偏好本科。"},
+      "market_outlook": "复合型需求增长，能从需求到上线并处理安全、支付和运维的人才更稀缺。",
+      "portfolio": ["可付费 SaaS", "账号与权限", "数据库设计", "测试与监控", "真实用户或部署证据"]
+    },
+    "vue-java-fullstack": {
+      "roles": ["Vue + Java 全栈工程师", "企业应用工程师", "政企项目工程师", "技术实施研发"],
+      "work_content": ["开发企业中后台前端与 Java 服务", "完成权限、流程和数据业务", "负责联调、部署和问题排查", "维护日志、文档和交付版本"],
+      "salary_range": "15–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "政企和大型企业通常更重视学历、规范化交付和完整业务经验。"},
+      "market_outlook": "国内企业项目覆盖面广，竞争点在复杂业务、权限、流程、稳定性和部署能力。",
+      "portfolio": ["企业管理系统", "RBAC 权限", "复杂表单流程", "导入导出", "Docker/Linux 部署"]
+    },
+    "react-python-fullstack": {
+      "roles": ["React + Python 全栈工程师", "AI 产品工程师", "数据平台全栈工程师", "创业团队研发"],
+      "work_content": ["开发 React 前端与 Python API", "集成 AI/数据能力", "设计异步任务和实时交互", "负责容器部署和线上观测"],
+      "salary_range": "15–45K/月",
+      "education": {"minimum": "大专/本科均有机会", "competitive": "本科", "note": "AI 创业团队关注快速交付和模型应用能力，大型平台仍偏好扎实工程基础。"},
+      "market_outlook": "AI 产品化和数据应用中需求强，适合产品意识与工程能力兼具的学习者。",
+      "portfolio": ["AI SaaS", "React 流式界面", "FastAPI 后端", "任务队列", "监控、预算与部署"]
+    },
+    "algorithm-engineer": {
+      "roles": ["机器学习算法工程师", "深度学习工程师", "模型训练工程师", "算法研究工程师"],
+      "work_content": ["处理和治理训练数据", "训练、调优和评测模型", "复现实验与论文方案", "与工程团队完成部署和监控"],
+      "salary_range": "25–60K/月",
+      "education": {"minimum": "本科可进入部分工程岗", "competitive": "硕士及以上更普遍", "note": "研究型、大模型核心算法和头部岗位通常显著偏好硕博、论文或高质量竞赛成果。"},
+      "market_outlook": "高薪但高门槛，岗位向大模型、多模态、推理优化和模型工程集中。",
+      "portfolio": ["可复现实验", "数据卡与模型卡", "基线对比", "训练/微调项目", "推理服务与评测"]
+    },
+    "nlp-engineer": {
+      "roles": ["NLP 算法工程师", "大模型算法工程师", "搜索/推荐语义工程师", "对话系统工程师"],
+      "work_content": ["构建文本数据和评测集", "训练或微调语言模型", "开发检索、分类、生成和对话能力", "分析事实性、偏差与安全问题"],
+      "salary_range": "25–60K/月",
+      "education": {"minimum": "本科可进入应用工程岗", "competitive": "硕士及以上", "note": "核心算法和研究岗位通常要求硕士/博士；应用 NLP 可用强项目和工程能力补足。"},
+      "market_outlook": "岗位与 LLM 深度融合，纯传统 NLP 收缩，数据、对齐、RAG 和评测能力更重要。",
+      "portfolio": ["中文领域微调", "RAG 与对话系统", "评测集", "错误分析", "技术报告"]
+    },
+    "computer-vision": {
+      "roles": ["计算机视觉算法工程师", "多模态算法工程师", "图像/视频算法工程师", "视觉部署工程师"],
+      "work_content": ["构建和标注视觉数据", "训练检测、分割、生成或多模态模型", "评估鲁棒性和误差", "进行模型压缩与端云部署"],
+      "salary_range": "25–60K/月",
+      "education": {"minimum": "本科可进入部分工程岗", "competitive": "硕士及以上", "note": "自动驾驶、医疗影像和研究岗通常对学历、论文和竞赛要求更高。"},
+      "market_outlook": "多模态、工业视觉、自动驾驶和 AIGC 保持需求，要求算法与部署并重。",
+      "portfolio": ["自定义数据集项目", "检测/分割/生成模型", "误差分析", "部署加速", "Web/API Demo"]
+    },
+    "agent-fullstack": {
+      "roles": ["AI Agent 工程师", "智能体全栈工程师", "AI 应用工程师", "自动化平台工程师"],
+      "work_content": ["设计 Agent 状态和工具协议", "建设 RAG、记忆与上下文链路", "开发多 Agent 协作和人工接管", "进行评测、安全、成本和部署治理"],
+      "salary_range": "20–50K/月",
+      "education": {"minimum": "本科更普遍，强作品集可放宽", "competitive": "本科/硕士", "note": "新兴岗位名称不统一，企业更看重完整产品、评测和生产治理，而非只会框架调用。"},
+      "market_outlook": "需求增长快但标准变化快；全栈、LLM、工作流、评测和领域理解的组合最有价值。",
+      "portfolio": ["多 Agent 生产平台", "工具与权限", "RAG 引用", "轨迹评测", "失败恢复和成本看板"]
+    },
+    "data-analysis": {
+      "roles": ["数据分析师", "商业分析师", "产品数据分析师", "运营分析师"],
+      "work_content": ["定义指标和分析问题", "使用 SQL/Python 清洗分析数据", "建设 BI 看板和分析报告", "设计实验并支持业务决策"],
+      "salary_range": "12–30K/月",
+      "education": {"minimum": "本科岗位最普遍", "competitive": "本科/硕士", "note": "统计、数学、计算机、经管背景均可；业务理解和可量化案例非常重要。"},
+      "market_outlook": "岗位覆盖行业广，基础报表岗位竞争激烈，统计推断、实验和业务建模更有价值。",
+      "portfolio": ["端到端分析项目", "SQL 与数据清洗", "A/B 测试", "BI 看板", "结论与行动建议"]
+    },
+    "devops-sre": {
+      "roles": ["DevOps 工程师", "SRE 工程师", "云原生工程师", "平台工程师"],
+      "work_content": ["建设 CI/CD 和基础设施自动化", "管理容器与 Kubernetes", "建设监控、日志和追踪", "处理容量、故障和可靠性目标"],
+      "salary_range": "18–45K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "高级 SRE 更重视系统、网络、编程和真实故障经验。"},
+      "market_outlook": "云原生进入成熟期，岗位从运维执行转向平台工程、可观测和可靠性治理。",
+      "portfolio": ["IaC 云环境", "Kubernetes 平台", "GitOps", "SLI/SLO", "故障演练与复盘"]
+    },
+    "cyber-security": {
+      "roles": ["安全工程师", "渗透测试工程师", "安全研发工程师", "安全运营/SOC 工程师"],
+      "work_content": ["开展授权安全测试和威胁建模", "修复漏洞并建设安全控制", "分析日志、告警和事件", "参与安全开发生命周期与合规"],
+      "salary_range": "15–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "必须遵守授权和法律边界；大型企业更看重学历、认证、攻防与安全开发能力。"},
+      "market_outlook": "合规、云安全、供应链和 AI 安全持续增长，单纯工具使用不足以胜任中高阶岗位。",
+      "portfolio": ["合法靶场报告", "威胁模型", "安全修复验证", "DevSecOps 流水线", "事件响应手册"]
+    },
+    "uiux-design": {
+      "roles": ["UI 设计师", "UX/交互设计师", "产品体验设计师", "设计系统工程师"],
+      "work_content": ["开展用户研究和任务分析", "设计信息架构、流程与原型", "建设视觉和组件规范", "通过可用性与数据指标验证方案"],
+      "salary_range": "12–30K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科或高质量作品集", "note": "作品集质量、问题定义和过程证据通常比工具熟练度更关键。"},
+      "market_outlook": "纯视觉执行岗位承压，用户研究、复杂交互、设计系统和数据验证更具竞争力。",
+      "portfolio": ["完整案例研究", "用户研究", "交互原型", "设计系统", "可用性测试与量化结果"]
+    },
+    "quality-engineering": {
+      "roles": ["测试开发工程师", "自动化测试工程师", "质量工程师", "性能测试工程师"],
+      "work_content": ["设计分层测试策略", "开发接口/UI 自动化和测试平台", "建设质量门禁与报告", "进行性能、可靠性和根因分析"],
+      "salary_range": "10–30K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "测试开发岗位要求编程、架构和平台能力，薪资明显高于单纯手工测试。"},
+      "market_outlook": "手工测试岗位收缩，测试开发、质量平台、性能和 AI 测试需求更强。",
+      "portfolio": ["自动化测试框架", "CI 质量门禁", "性能基线", "缺陷闭环", "质量看板"]
+    },
+    "algorithm-competition": {
+      "roles": ["软件研发工程师", "算法工程师", "竞赛教练/题库研发", "高性能研发工程师"],
+      "work_content": ["将业务问题抽象为算法模型", "分析复杂度和正确性", "实现并验证边界用例", "通过训练提升编码与问题求解能力"],
+      "salary_range": "12–35K/月（作为研发基础能力）",
+      "education": {"minimum": "本科岗位最普遍", "competitive": "本科/硕士及竞赛经历", "note": "算法竞赛通常是能力增强路线，不等同于单一岗位；需与软件、AI 或系统方向组合。"},
+      "market_outlook": "对校招和高要求研发岗位有明显加成，但必须结合工程项目和具体职业方向。",
+      "portfolio": ["专题题库", "标准解与证明", "自动评测器", "训练复盘", "竞赛/刷题记录"]
+    },
+    "llm-application": {
+      "roles": ["LLM 应用工程师", "RAG 工程师", "生成式 AI 产品工程师", "AI 平台工程师"],
+      "work_content": ["接入和治理模型接口", "建设 RAG 与引用链路", "设计评测集和质量门禁", "优化成本、延迟、安全和降级"],
+      "salary_range": "18–50K/月",
+      "education": {"minimum": "本科更普遍，强项目可放宽", "competitive": "本科/硕士", "note": "应用岗位不一定要求训练大模型，但要求后端、检索、评测和生产工程能力。"},
+      "market_outlook": "需求活跃且迭代快，企业正在从 Demo 转向有评测、可追溯、可控成本的生产应用。",
+      "portfolio": ["有引用的 RAG 系统", "冻结评测集", "质量与成本看板", "模型网关", "降级与安全"]
+    },
+    "embedded-iot": {
+      "roles": ["嵌入式软件工程师", "固件工程师", "IoT 工程师", "驱动/RTOS 工程师"],
+      "work_content": ["开发 MCU 固件和外设驱动", "设计实时任务和通信协议", "进行软硬件联调和功耗测试", "实现 OTA、诊断和设备安全"],
+      "salary_range": "12–35K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "芯片、汽车电子和高端嵌入式岗位更重视电子、自动化或计算机基础与硬件经验。"},
+      "market_outlook": "汽车电子、机器人、IoT 和智能硬件保持需求，底层、实时、安全和量产经验更稀缺。",
+      "portfolio": ["真实板卡固件", "驱动与协议", "RTOS", "OTA 回滚", "功耗/时序测试报告"]
+    },
+    "operating-systems": {
+      "roles": ["系统软件工程师", "Linux/内核工程师", "基础软件工程师", "性能工程师"],
+      "work_content": ["开发或调试系统级软件", "分析进程、内存、文件和网络栈", "进行内核跟踪和性能定位", "编写底层测试与设计文档"],
+      "salary_range": "20–55K/月",
+      "education": {"minimum": "本科更普遍", "competitive": "本科/硕士", "note": "内核、编译器和基础软件岗位技术门槛高，学历与系统项目通常都很重要。"},
+      "market_outlook": "岗位量较少但壁垒高，国产基础软件、云基础设施和高性能系统提供长期机会。",
+      "portfolio": ["教学操作系统", "系统调用/调度/内存", "并发测试", "Tracing/Profiling", "设计与实验报告"]
+    },
+    "database-systems": {
+      "roles": ["数据库研发工程师", "存储引擎工程师", "数据库内核工程师", "分布式存储工程师"],
+      "work_content": ["开发存储、索引和查询执行模块", "实现事务、并发与恢复", "分析性能和一致性问题", "参与分布式复制与故障恢复"],
+      "salary_range": "20–60K/月",
+      "education": {"minimum": "本科更普遍", "competitive": "硕士及以上更有优势", "note": "内核岗位数量少、要求高，扎实系统基础、论文/课程和可运行数据库项目非常关键。"},
+      "market_outlook": "云数据库、向量数据库和国产数据库带来机会，核心岗位技术壁垒与薪资上限高。",
+      "portfolio": ["迷你数据库", "B+Tree/LSM", "查询优化", "事务恢复", "并发测试和 Benchmark"]
+    },
+    "data-engineering": {
+      "roles": ["数据工程师", "大数据开发工程师", "实时计算工程师", "数据平台工程师"],
+      "work_content": ["建设批流数据管道", "设计仓库分层和数据模型", "治理质量、血缘和权限", "维护实时计算与数据平台可靠性"],
+      "salary_range": "15–40K/月",
+      "education": {"minimum": "大专/本科均有岗位", "competitive": "本科", "note": "大型数据平台更重视分布式系统、SQL、Java/Scala/Python 和生产经验。"},
+      "market_outlook": "数据基础设施需求稳定，岗位从 ETL 开发升级为实时、湖仓、治理和平台工程。",
+      "portfolio": ["批流一体平台", "Kafka/Flink", "Airflow", "数据质量与血缘", "SLA 和故障复盘"]
+    }
+  }
+}

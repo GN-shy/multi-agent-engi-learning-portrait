@@ -130,9 +130,49 @@ class RouteEngine:
                             "difficulty": item["difficulty"],
                             "milestone": item["milestone"],
                             "stage_count": len(item["stages"]),
+                            "technology_count": sum(
+                                len(stage["topics"]) for stage in item["stages"]
+                            ),
+                            "career": item.get("career", {}),
+                            "salary_scope": item.get("salary_scope", ""),
                         }
                         for item in track.get("pathway_variants", [])
                     ],
+                    "career_summary": {
+                        "roles": list(
+                            dict.fromkeys(
+                                role
+                                for item in track.get("pathway_variants", [])
+                                for role in item.get("career", {}).get("roles", [])
+                            )
+                        )[:8],
+                        "salary_ranges": list(
+                            dict.fromkeys(
+                                item.get("career", {}).get("salary_range", "")
+                                for item in track.get("pathway_variants", [])
+                                if item.get("career", {}).get("salary_range")
+                            )
+                        ),
+                        "education": list(
+                            dict.fromkeys(
+                                item.get("career", {})
+                                .get("education", {})
+                                .get("competitive", "")
+                                for item in track.get("pathway_variants", [])
+                                if item.get("career", {})
+                                .get("education", {})
+                                .get("competitive")
+                            )
+                        ),
+                        "salary_scope": next(
+                            (
+                                item.get("salary_scope", "")
+                                for item in track.get("pathway_variants", [])
+                                if item.get("salary_scope")
+                            ),
+                            "",
+                        ),
+                    },
                     "why": self._explain(
                         track, readiness, interest, feasibility, keyword_hits, gaps
                     ),

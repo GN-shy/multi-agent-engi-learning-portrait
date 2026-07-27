@@ -12,12 +12,12 @@
       "suitable_for": "喜欢组件化思维、对 UI 与交互敏感，希望从事现代 Web 前端开发的学习者。",
       "milestone": "完成包含鉴权、权限、数据看板、主题切换和自动部署的 SaaS 管理后台。",
       "stages": [
-        {"title": "HTML5 与 CSS3 地基", "duration": "2-3周", "topics": ["HTML 语义化", "Flexbox", "Grid", "响应式设计", "CSS 动画", "Sass"]},
-        {"title": "JavaScript 与 TypeScript 核心", "duration": "5-7周", "topics": ["ES6+", "异步编程", "闭包与原型链", "TypeScript", "DOM", "模块化", "Git"]},
-        {"title": "React 生态深入", "duration": "7-9周", "topics": ["React 核心", "Hooks", "状态管理", "React Router", "组件库", "测试"]},
-        {"title": "工程化与性能优化", "duration": "5-7周", "topics": ["构建工具", "浏览器渲染", "性能优化", "监控埋点", "CI/CD", "代码质量"]},
-        {"title": "架构与生产交付", "duration": "6-8周", "topics": ["Next.js", "微前端", "BFF", "前端安全", "跨端基础", "WebAssembly"]},
-        {"title": "作品集与面试", "duration": "持续", "topics": ["手写题", "前端系统设计", "项目深挖", "作品集", "面试复盘"]}
+        {"title": "HTML5 与 CSS3 地基", "duration": "2-3周", "topics": ["HTML5 语义标签", "表单与可访问性", "CSS3 盒模型", "Flexbox", "CSS Grid", "响应式布局", "CSS 动画", "Sass"]},
+        {"title": "JavaScript 与 TypeScript 核心", "duration": "5-7周", "topics": ["JavaScript ES6+", "DOM 与事件机制", "Promise/async-await", "闭包与原型链", "TypeScript 类型系统", "ES Modules", "Git/GitHub", "npm/pnpm"]},
+        {"title": "React 应用开发", "duration": "7-9周", "topics": ["React JSX 与组件", "Hooks", "组件通信", "React Router", "Axios/Fetch", "TanStack Query", "Zustand/Redux Toolkit", "Ant Design"]},
+        {"title": "工程化、测试与性能", "duration": "5-7周", "topics": ["Vite/Webpack", "ESLint/Prettier", "Vitest/Jest", "React Testing Library", "Playwright", "代码分割", "懒加载", "虚拟列表", "Lighthouse", "性能监控"]},
+        {"title": "架构与生产交付", "duration": "6-8周", "topics": ["Next.js App Router", "SSR/SSG/RSC", "微前端", "BFF", "XSS/CSRF/CSP", "Nginx", "Docker", "GitHub Actions CI/CD", "Vercel/云服务器部署"]},
+        {"title": "作品集与面试", "duration": "持续", "topics": ["React 原理", "手写组件与 Hooks", "前端系统设计", "性能数据报告", "线上作品集", "面试复盘"]}
       ]
     },
     {
@@ -30,11 +30,11 @@
       "suitable_for": "偏好渐进式框架和中文生态，希望进入国内企业前端岗位的学习者。",
       "milestone": "使用 Vue 3、Nuxt 和组件库完成带权限、图表、国际化与主题系统的企业后台。",
       "stages": [
-        {"title": "Web 与 TypeScript 基础", "duration": "3-4周", "topics": ["HTML", "CSS", "JavaScript", "TypeScript", "Git"]},
-        {"title": "Vue 3 核心", "duration": "5-7周", "topics": ["Composition API", "响应式原理", "组件化", "Vue Router", "Pinia", "Vite"]},
-        {"title": "Vue 工程生态", "duration": "4-6周", "topics": ["组件库", "TailwindCSS", "表单表格", "VueUse", "测试", "DevTools"]},
-        {"title": "Nuxt 与生产优化", "duration": "5-7周", "topics": ["Nuxt", "数据获取", "SSR", "性能优化", "CI/CD"]},
-        {"title": "作品集与面试", "duration": "持续", "topics": ["Vue 原理", "手写题", "前端安全", "项目深挖", "跨端拓展"]}
+        {"title": "Web 与 TypeScript 基础", "duration": "3-4周", "topics": ["HTML5 语义化", "CSS3 盒模型", "Flexbox/Grid", "响应式设计", "JavaScript ES6+", "DOM 与事件", "Promise/async-await", "TypeScript", "Git/GitHub", "npm/pnpm"]},
+        {"title": "Vue 3 核心应用", "duration": "5-7周", "topics": ["Vue 3 单文件组件", "Composition API", "响应式原理", "Props/Emits/Slots", "Vue Router", "Pinia", "Axios 拦截/取消/异常处理", "Vite 环境配置"]},
+        {"title": "Vue 工程生态与质量", "duration": "4-6周", "topics": ["Element Plus", "TailwindCSS", "ECharts", "复杂表单与表格", "权限指令与动态路由", "VueUse", "Vitest", "Vue Test Utils", "Playwright", "ESLint/Prettier"]},
+        {"title": "性能优化与生产部署", "duration": "5-7周", "topics": ["路由懒加载", "代码分割", "虚拟列表", "图片优化", "浏览器缓存", "Lighthouse", "Nuxt 3", "SSR/SSG", "Nginx", "Docker", "GitHub Actions CI/CD"]},
+        {"title": "作品集与面试", "duration": "持续", "topics": ["Vue 响应式原理", "手写组件/Composable", "XSS/CSRF/CSP", "性能数据报告", "线上部署作品", "项目深挖", "UniApp 跨端拓展"]}
       ]
     },
     {

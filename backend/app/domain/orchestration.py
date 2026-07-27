@@ -11,6 +11,7 @@ from typing import Any, TypedDict
 from langgraph.graph import END, StateGraph
 
 from app.domain.content import ContentEngine
+from app.domain.catalog import get_catalog
 from app.domain.knowledge import get_knowledge_engine
 from app.domain.profile import ProfileEngine
 from app.domain.routing import RouteEngine
@@ -22,6 +23,7 @@ class WorkflowState(TypedDict, total=False):
     goal: str
     topic: str
     pathway_id: str
+    pathway_ids: list[str]
     profile: dict[str, Any]
     route_match: dict[str, Any]
     evidence: list[dict[str, Any]]
@@ -83,12 +85,28 @@ def krs_node(state: WorkflowState) -> dict[str, Any]:
     target_difficulty = 1 + profile["knowledge_depth"] * 4
     gap_names = " ".join(item["name"] for item in state["route_match"]["skill_gaps"][:4])
     query = " ".join([state.get("topic", ""), state["goal"], gap_names])
-    evidence = get_knowledge_engine().search(
-        query=query,
-        track_code=state["track_code"],
-        top_k=10,
-        target_difficulty=target_difficulty,
+    selected_pathways = [
+        get_catalog().get_pathway(pathway_id)
+        for pathway_id in state.get("pathway_ids", [])
+    ]
+    track_codes = list(
+        dict.fromkeys(
+            [state["track_code"]]
+            + [pathway["track_code"] for pathway in selected_pathways]
+        )
     )
+    evidence = []
+    per_track = max(4, 12 // max(1, len(track_codes)))
+    for track_code in track_codes:
+        evidence.extend(
+            get_knowledge_engine().search(
+                query=query,
+                track_code=track_code,
+                top_k=per_track,
+                target_difficulty=target_difficulty,
+            )
+        )
+    evidence = list({item["chunk_id"]: item for item in evidence}.values())
     known_ids = {item["chunk_id"] for item in evidence}
     evidence.extend(
         item
@@ -104,6 +122,7 @@ def krs_node(state: WorkflowState) -> dict[str, Any]:
             "按目标路线、技能缺口、难度与来源版本完成检索和重排。",
             {
                 "query": query,
+                "track_codes": track_codes,
                 "retrieved": len(evidence),
                 "source_ids": [item["chunk_id"] for item in evidence],
             },
@@ -121,6 +140,7 @@ def dgs_a_node(state: WorkflowState) -> dict[str, Any]:
         state["route_match"],
         state["evidence"],
         state.get("pathway_id"),
+        state.get("pathway_ids"),
     )
     return {
         "candidate_a": candidate,
@@ -147,6 +167,7 @@ def dgs_b_node(state: WorkflowState) -> dict[str, Any]:
         state["route_match"],
         state["evidence"],
         state.get("pathway_id"),
+        state.get("pathway_ids"),
     )
     return {
         "candidate_b": candidate,
@@ -243,6 +264,7 @@ def run_workflow(
     topic: str = "",
     extra_evidence: list[dict[str, Any]] | None = None,
     pathway_id: str | None = None,
+    pathway_ids: list[str] | None = None,
 ) -> WorkflowState:
     return orchestration_graph.invoke(
         {
@@ -251,6 +273,7 @@ def run_workflow(
             "goal": goal,
             "topic": topic,
             "pathway_id": pathway_id or "",
+            "pathway_ids": pathway_ids or ([pathway_id] if pathway_id else []),
             "events": [],
             "extra_evidence": extra_evidence or [],
         }

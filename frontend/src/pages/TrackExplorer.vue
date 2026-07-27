@@ -1,94 +1,333 @@
 <template>
   <AppShell>
-    <section class="intro panel">
-      <div><h2>计算机不是一条路</h2><p>系统会同时比较基础准备度、兴趣证据、时间可行性和补齐成本。</p></div>
-      <el-button type="primary" :loading="comparing" @click="compareSelected">比较所选方向（{{ selected.length }}）</el-button>
+    <section class="hero panel">
+      <div>
+        <span class="eyebrow">29 条细分路线 · 可自由组合</span>
+        <h2>先看清职业终点，再决定学什么</h2>
+        <p>比较岗位、薪资参考、学历要求和技术栈；最多选择 6 条路线，系统会去重公共基础并生成一条可执行的组合路线。</p>
+      </div>
+      <div class="hero-actions">
+        <el-input v-model="keyword" clearable placeholder="搜索方向、岗位或技术，例如 Vue、算法、嵌入式" />
+        <el-button type="primary" :loading="comparing" @click="compareSelected">
+          智能比较主方向（{{ selectedTracks.length }}）
+        </el-button>
+      </div>
     </section>
+
+    <section v-if="selectedPathways.length" class="route-cart panel">
+      <div class="cart-title">
+        <div>
+          <span class="eyebrow">我的组合路线</span>
+          <h3>已选择 {{ selectedPathways.length }}/6 个细分方向</h3>
+        </div>
+        <el-button link @click="clearPathways">清空选择</el-button>
+      </div>
+      <div class="selected-chips">
+        <button v-for="pathway in selectedPathways" :key="pathway.id" @click="openPathway(pathway)">
+          <span>{{ pathway.track_name }}</span>
+          <b>{{ pathway.name }}</b>
+          <i @click.stop="togglePathway(pathway)">×</i>
+        </button>
+      </div>
+      <div class="cart-footer">
+        <p>生成时会自动合并 HTML/CSS、Git、数据库等重复基础，并按依赖关系重排学习顺序。</p>
+        <el-button type="primary" size="large" @click="goGenerateSelected">生成最佳组合路线 →</el-button>
+      </div>
+    </section>
+
     <el-tabs v-model="activeCluster" class="cluster-tabs">
-      <el-tab-pane v-for="cluster in clusters" :key="cluster.code" :name="cluster.code" :label="cluster.name">
+      <el-tab-pane
+        v-for="cluster in visibleClusters"
+        :key="cluster.code"
+        :name="cluster.code"
+        :label="`${cluster.name} ${cluster.tracks.length}`"
+      >
         <p class="cluster-copy">{{ cluster.description }}</p>
         <div class="track-grid">
-          <article v-for="track in cluster.tracks" :key="track.code" class="track-card clickable" :class="{chosen:selected.includes(track.code)}" @click="openTrack(track)">
-            <div class="track-top"><el-checkbox :model-value="selected.includes(track.code)" @click.stop @change="toggle(track.code)" /><el-tag>{{ track.pathway_count }} 条细分路线</el-tag></div>
-            <h3>{{ track.name }}</h3><p>{{ track.description }}</p>
-            <div class="tag-row"><el-tag v-for="tag in track.keywords.slice(0,4)" :key="tag" type="info" effect="plain">{{ tag }}</el-tag></div>
-            <footer><span>{{ track.skill_count }} 项核心能力 · {{ track.estimated_months.join(' / ') }} 个月</span><b>查看路线 →</b></footer>
+          <article
+            v-for="track in cluster.tracks"
+            :key="track.code"
+            class="track-card"
+            :class="{ chosen: selectedTracks.includes(track.code) }"
+          >
+            <div class="track-top">
+              <el-checkbox
+                :model-value="selectedTracks.includes(track.code)"
+                @change="toggleTrack(track.code)"
+              >
+                加入主方向比较
+              </el-checkbox>
+              <el-tag effect="plain">{{ track.pathway_count }} 条细分路线</el-tag>
+            </div>
+            <button class="track-body" @click="openTrack(track)">
+              <h3>{{ track.name }}</h3>
+              <p>{{ track.description }}</p>
+              <div class="tag-row">
+                <el-tag v-for="tag in track.keywords.slice(0, 5)" :key="tag" type="info" effect="plain">{{ tag }}</el-tag>
+              </div>
+            </button>
+            <footer>
+              <span>{{ track.skill_count }} 项核心能力 · {{ track.estimated_months.join(' / ') }} 个月</span>
+              <el-button type="primary" link @click="openTrack(track)">查看技术栈与就业 →</el-button>
+            </footer>
           </article>
         </div>
       </el-tab-pane>
     </el-tabs>
 
     <section v-if="comparisons.length" class="panel comparison">
-      <div class="panel-title"><div><h3>路线比较结果</h3><p>点击任意结果查看缺口与反事实投入</p></div></div>
+      <div class="section-title">
+        <div><span class="eyebrow">基于你的画像</span><h3>主方向比较结果</h3></div>
+        <span>推荐结果不是替你决定，而是把选择依据完整呈现</span>
+      </div>
       <div class="compare-grid">
-        <article v-for="item in comparisons" :key="item.track_code" class="compare-card clickable" @click="openComparison(item)">
-          <div class="score">{{ item.score }}</div><h3>{{ item.track_name }}</h3>
-          <p>{{ item.role }} · 预计 {{ item.estimated_weeks }} 周</p>
+        <article v-for="(item, index) in comparisons" :key="item.track_code" class="compare-card">
+          <div class="rank" :class="{ first: index === 0 }">{{ index === 0 ? '最佳匹配' : `第 ${index + 1} 名` }}</div>
+          <div class="score">{{ item.score }}</div>
+          <h3>{{ item.track_name }}</h3>
+          <p>{{ item.role }} · 预计补齐 {{ item.estimated_weeks }} 周</p>
           <el-progress :percentage="item.score" :stroke-width="8" />
-          <div class="triple"><span>基础 {{ item.readiness }}</span><span>兴趣 {{ item.interest_fit }}</span><span>可行 {{ item.feasibility }}</span></div>
-          <el-button type="primary" plain @click.stop="selectTrack(item)">选择这条路线</el-button>
+          <div class="triple">
+            <span>基础 <b>{{ item.readiness }}</b></span>
+            <span>兴趣 <b>{{ item.interest_fit }}</b></span>
+            <span>可行 <b>{{ item.feasibility }}</b></span>
+          </div>
+          <div class="career-mini" v-if="item.career_summary">
+            <span>可就业：{{ item.career_summary.roles.slice(0, 3).join('、') }}</span>
+            <span>薪资参考：{{ item.career_summary.salary_ranges.slice(0, 2).join(' / ') }}</span>
+          </div>
+          <div class="compare-actions">
+            <el-button @click="openComparison(item)">查看依据</el-button>
+            <el-button type="primary" @click="openComparedTrack(item)">选择细分路线</el-button>
+          </div>
         </article>
       </div>
     </section>
 
     <DetailModal v-model="detail.visible" :title="detail.title">
-      <template v-if="detail.track">
+      <template v-if="detail.kind === 'track' && detail.track">
         <p class="detail-description">{{ detail.track.description }}</p>
-        <h4>代表项目</h4><p>{{ detail.track.project?.title || detail.track.project }}</p>
-        <ul v-if="detail.track.project?.deliverables"><li v-for="item in detail.track.project.deliverables" :key="item">{{ item }}</li></ul>
-        <h4 v-if="detail.track.skills">专项技能</h4>
-        <div class="skill-list"><div v-for="skill in detail.track.skills" :key="skill.code"><b>{{ skill.name }}</b><span>{{ skill.description }}</span></div></div>
-        <template v-if="detail.track.pathway_variants?.length">
-          <h4>可选择的细分学习路线</h4>
-          <el-collapse class="pathway-list">
-            <el-collapse-item v-for="pathway in detail.track.pathway_variants" :key="pathway.id" :name="pathway.id">
-              <template #title>
-                <div class="pathway-title">
+        <div class="track-summary">
+          <div><span>培养岗位</span><b>{{ detail.track.role }}</b></div>
+          <div><span>细分路线</span><b>{{ detail.track.pathway_variants?.length }} 条</b></div>
+          <div><span>代表项目</span><b>{{ detail.track.project?.title || detail.track.project }}</b></div>
+        </div>
+        <h4>选择你真正想学的技术路线</h4>
+        <el-collapse v-model="openPathways" class="pathway-list">
+          <el-collapse-item
+            v-for="pathway in detail.track.pathway_variants"
+            :key="pathway.id"
+            :name="pathway.id"
+          >
+            <template #title>
+              <div class="pathway-title">
+                <div>
                   <b>{{ pathway.name }}</b>
-                  <span>{{ pathway.estimated_months }} 个月 · 难度 {{ pathway.difficulty }}/5 · {{ pathway.stages?.length || pathway.stage_count }} 个阶段</span>
+                  <span>{{ pathway.estimated_months }} 个月 · {{ pathway.stages.length }} 个阶段 · {{ countTopics(pathway) }} 项技术</span>
                 </div>
-              </template>
-              <p v-if="pathway.suitable_for" class="pathway-fit">适合：{{ pathway.suitable_for }}</p>
-              <ol v-if="pathway.stages" class="stage-list">
-                <li v-for="stage in pathway.stages" :key="stage.title">
-                  <div><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></div>
-                  <p>{{ stage.topics.join(' · ') }}</p>
-                </li>
-              </ol>
-              <p class="milestone"><b>毕业里程碑：</b>{{ pathway.milestone }}</p>
-              <el-button type="primary" plain @click="goGenerate(detail.track.track_code || detail.track.code, pathway.id)">按此路线生成计划</el-button>
-            </el-collapse-item>
-          </el-collapse>
-        </template>
-        <template v-if="detail.track.why"><h4>推荐依据</h4><p v-for="reason in detail.track.why" :key="reason">✓ {{ reason }}</p><h4>反事实比较</h4><p>每周多投入 4 小时，预计可从 {{ detail.track.estimated_weeks }} 周缩短到 {{ detail.track.counterfactual.if_weekly_hours_plus_4 }} 周。</p></template>
+                <el-tag :type="isPathwaySelected(pathway.id) ? 'success' : 'info'">
+                  {{ isPathwaySelected(pathway.id) ? '已加入组合' : '展开查看' }}
+                </el-tag>
+              </div>
+            </template>
+            <p class="pathway-fit">适合：{{ pathway.suitable_for }}</p>
+            <section v-if="pathway.career" class="career-panel">
+              <div>
+                <span>就业岗位</span>
+                <b>{{ pathway.career.roles.join('、') }}</b>
+              </div>
+              <div>
+                <span>市场薪资参考</span>
+                <b>{{ pathway.career.salary_range }}</b>
+              </div>
+              <div>
+                <span>学历要求</span>
+                <b>{{ pathway.career.education.minimum }}；竞争力：{{ pathway.career.education.competitive }}</b>
+              </div>
+              <div>
+                <span>市场判断</span>
+                <b>{{ pathway.career.market_outlook }}</b>
+              </div>
+              <small>{{ pathway.salary_scope }}</small>
+            </section>
+            <ol class="stage-list">
+              <li v-for="(stage, index) in pathway.stages" :key="stage.title">
+                <span class="stage-number">{{ index + 1 }}</span>
+                <div>
+                  <header><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></header>
+                  <div class="topic-list"><i v-for="topic in stage.topics" :key="topic">{{ topic }}</i></div>
+                </div>
+              </li>
+            </ol>
+            <section v-if="pathway.career" class="portfolio">
+              <b>求职作品集必须证明</b>
+              <ul><li v-for="item in pathway.career.portfolio" :key="item">{{ item }}</li></ul>
+            </section>
+            <p class="milestone"><b>最终里程碑：</b>{{ pathway.milestone }}</p>
+            <el-button
+              :type="isPathwaySelected(pathway.id) ? 'success' : 'primary'"
+              @click="togglePathway(pathway)"
+            >
+              {{ isPathwaySelected(pathway.id) ? '已加入，点击移除' : '加入组合路线' }}
+            </el-button>
+            <el-button @click="generateSingle(pathway)">只生成这一条路线</el-button>
+          </el-collapse-item>
+        </el-collapse>
       </template>
-      <template #footer><el-button @click="detail.visible=false">关闭</el-button><el-button v-if="detail.track?.track_code || detail.track?.code" type="primary" @click="selectTrack(detail.track)">选择主方向</el-button></template>
+
+      <template v-else-if="detail.kind === 'pathway' && detail.pathway">
+        <p class="detail-description">{{ detail.pathway.suitable_for }}</p>
+        <section v-if="detail.pathway.career" class="career-panel">
+          <div><span>就业岗位</span><b>{{ detail.pathway.career.roles.join('、') }}</b></div>
+          <div><span>薪资参考</span><b>{{ detail.pathway.career.salary_range }}</b></div>
+          <div><span>学历要求</span><b>{{ detail.pathway.career.education.competitive }}</b></div>
+        </section>
+        <ol class="stage-list">
+          <li v-for="(stage, index) in detail.pathway.stages" :key="stage.title">
+            <span class="stage-number">{{ index + 1 }}</span>
+            <div><header><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></header><div class="topic-list"><i v-for="topic in stage.topics" :key="topic">{{ topic }}</i></div></div>
+          </li>
+        </ol>
+      </template>
+
+      <template v-else-if="detail.kind === 'comparison' && detail.comparison">
+        <div class="track-summary">
+          <div><span>综合匹配</span><b>{{ detail.comparison.score }} 分</b></div>
+          <div><span>预计周期</span><b>{{ detail.comparison.estimated_weeks }} 周</b></div>
+          <div><span>优先补齐</span><b>{{ detail.comparison.skill_gaps.slice(0, 2).map((x:any) => x.name).join('、') }}</b></div>
+        </div>
+        <h4>为什么推荐</h4>
+        <ul class="reason-list"><li v-for="reason in detail.comparison.why" :key="reason">{{ reason }}</li></ul>
+        <h4>投入变化会怎样</h4>
+        <p class="detail-description">每周多投入 4 小时，预计可从 {{ detail.comparison.estimated_weeks }} 周缩短到 {{ detail.comparison.counterfactual.if_weekly_hours_plus_4 }} 周。成本最高的能力是“{{ detail.comparison.counterfactual.highest_cost_skill }}”。</p>
+      </template>
+      <template #footer>
+        <el-button @click="detail.visible = false">关闭</el-button>
+        <el-button v-if="selectedPathways.length" type="primary" @click="goGenerateSelected">生成已选组合（{{ selectedPathways.length }}）</el-button>
+      </template>
     </DetailModal>
   </AppShell>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import AppShell from '@/components/layout/AppShell.vue'
 import DetailModal from '@/components/common/DetailModal.vue'
 import { getData, postData } from '@/api'
-import type { RouteMatch, TrackCluster, TrackSummary } from '@/types/domain'
+import type { PathwayVariant, RouteMatch, TrackCluster, TrackSummary } from '@/types/domain'
 
-const clusters=ref<TrackCluster[]>([]),activeCluster=ref('software'),selected=ref<string[]>(['web_frontend','backend','agent_engineering'])
-const router=useRouter()
-const comparisons=ref<RouteMatch[]>([]),comparing=ref(false)
-const detail=reactive({visible:false,title:'',track:null as any})
-onMounted(async()=>{clusters.value=(await getData<{clusters:TrackCluster[]}>('/tracks/tree')).clusters})
-function toggle(code:string){selected.value=selected.value.includes(code)?selected.value.filter(item=>item!==code):selected.value.length<6?[...selected.value,code]:selected.value}
-async function openTrack(track:TrackSummary){const full=await getData<any>(`/tracks/${track.code}`);detail.title=full.name;detail.track=full;detail.visible=true}
-async function compareSelected(){if(!selected.value.length)return ElMessage.warning('请至少选择一个方向');comparing.value=true;try{comparisons.value=(await postData<{items:RouteMatch[]}>('/tracks/compare',{track_codes:selected.value})).items}catch{ElMessage.error('比较失败，请先完成能力画像')}finally{comparing.value=false}}
-function openComparison(item:RouteMatch){detail.title=`${item.track_name} · 匹配依据`;detail.track=item;detail.visible=true}
-async function selectTrack(item:any){const code=item.track_code||item.code;const name=item.track_name||item.name;await postData('/tracks/select',{track_code:code});ElMessage.success(`已选择 ${name}`);detail.visible=false}
-function goGenerate(trackCode:string,pathwayId:string){detail.visible=false;router.push({path:'/generate',query:{track:trackCode,pathway:pathwayId}})}
+const router = useRouter()
+const clusters = ref<TrackCluster[]>([])
+const allPathways = ref<PathwayVariant[]>([])
+const activeCluster = ref('software')
+const keyword = ref('')
+const selectedTracks = ref<string[]>(['web_frontend', 'backend', 'agent_engineering'])
+const selectedPathwayIds = ref<string[]>([])
+const comparisons = ref<RouteMatch[]>([])
+const comparing = ref(false)
+const openPathways = ref<string[]>([])
+const detail = reactive({
+  visible: false,
+  title: '',
+  kind: '' as 'track' | 'comparison' | 'pathway',
+  track: null as any,
+  comparison: null as any,
+  pathway: null as PathwayVariant | null,
+})
+
+const selectedPathways = computed(() =>
+  selectedPathwayIds.value
+    .map((id) => allPathways.value.find((item) => item.id === id))
+    .filter(Boolean) as PathwayVariant[],
+)
+const visibleClusters = computed(() => {
+  const value = keyword.value.trim().toLowerCase()
+  if (!value) return clusters.value
+  return clusters.value
+    .map((cluster) => ({
+      ...cluster,
+      tracks: cluster.tracks.filter((track) => {
+        const paths = allPathways.value.filter((item) => item.track_code === track.code)
+        return [track.name, track.role, track.description, ...track.keywords,
+          ...paths.flatMap((item) => [item.name, ...(item.career?.roles || []), ...item.stages.flatMap((stage) => stage.topics)])]
+          .join(' ').toLowerCase().includes(value)
+      }),
+    }))
+    .filter((cluster) => cluster.tracks.length)
+})
+
+onMounted(async () => {
+  const [tree, pathData] = await Promise.all([
+    getData<{clusters: TrackCluster[]}>('/tracks/tree'),
+    getData<{items: PathwayVariant[]}>('/tracks/pathways/catalog'),
+  ])
+  clusters.value = tree.clusters
+  allPathways.value = pathData.items
+})
+
+function toggleTrack(code: string) {
+  if (selectedTracks.value.includes(code)) selectedTracks.value = selectedTracks.value.filter((item) => item !== code)
+  else if (selectedTracks.value.length < 6) selectedTracks.value.push(code)
+  else ElMessage.warning('主方向最多比较 6 个')
+}
+function isPathwaySelected(id: string) { return selectedPathwayIds.value.includes(id) }
+function togglePathway(pathway: PathwayVariant) {
+  if (isPathwaySelected(pathway.id)) {
+    selectedPathwayIds.value = selectedPathwayIds.value.filter((id) => id !== pathway.id)
+  } else if (selectedPathwayIds.value.length < 6) {
+    selectedPathwayIds.value.push(pathway.id)
+    ElMessage.success(`已加入：${pathway.name}`)
+  } else ElMessage.warning('组合路线最多选择 6 个细分方向')
+}
+function clearPathways() { selectedPathwayIds.value = [] }
+function countTopics(pathway: PathwayVariant) { return new Set(pathway.stages.flatMap((stage) => stage.topics)).size }
+async function openTrack(track: TrackSummary) {
+  const full = await getData<any>(`/tracks/${track.code}`)
+  detail.title = `${full.name}：技术路线与就业`
+  detail.kind = 'track'
+  detail.track = full
+  detail.visible = true
+  openPathways.value = full.pathway_variants?.length ? [full.pathway_variants[0].id] : []
+}
+function openPathway(pathway: PathwayVariant) {
+  detail.title = pathway.name
+  detail.kind = 'pathway'
+  detail.pathway = pathway
+  detail.visible = true
+}
+async function compareSelected() {
+  if (!selectedTracks.value.length) return ElMessage.warning('请至少选择一个主方向')
+  comparing.value = true
+  try {
+    comparisons.value = (await postData<{items: RouteMatch[]}>('/tracks/compare', { track_codes: selectedTracks.value })).items
+    comparisons.value[0] && ElMessage.success(`当前最佳匹配：${comparisons.value[0].track_name}`)
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.detail || '比较失败，请先完成学情画像')
+  } finally { comparing.value = false }
+}
+function openComparison(item: RouteMatch) {
+  detail.title = `${item.track_name}：推荐依据`
+  detail.kind = 'comparison'
+  detail.comparison = item
+  detail.visible = true
+}
+async function openComparedTrack(item: RouteMatch) {
+  const track = clusters.value.flatMap((cluster) => cluster.tracks).find((row) => row.code === item.track_code)
+  if (track) await openTrack(track)
+}
+function generateSingle(pathway: PathwayVariant) {
+  detail.visible = false
+  router.push({ path: '/generate', query: { pathways: pathway.id } })
+}
+function goGenerateSelected() {
+  if (!selectedPathwayIds.value.length) return ElMessage.warning('请先选择至少一条细分路线')
+  detail.visible = false
+  router.push({ path: '/generate', query: { pathways: selectedPathwayIds.value.join(',') } })
+}
 </script>
 
 <style scoped>
-.intro{display:flex;align-items:center;justify-content:space-between}.intro h2{font-size:28px;margin:0 0 8px}.intro p,.cluster-copy{color:var(--muted)}.cluster-tabs{margin-top:20px}.track-grid,.compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.track-card,.compare-card{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;transition:.2s ease}.track-card.chosen{border-color:#3168ee;box-shadow:0 0 0 3px rgba(49,104,238,.1)}.track-top,.track-card footer{display:flex;justify-content:space-between;align-items:center}.track-card h3{font-size:20px;margin:18px 0 8px}.track-card p{color:var(--muted);min-height:48px}.track-card footer{border-top:1px solid var(--line);margin-top:18px;padding-top:14px}.track-card footer b{color:#3168ee;font-size:13px}.comparison{margin-top:24px}.compare-card{text-align:center}.score{width:64px;height:64px;border-radius:20px;margin:0 auto;display:grid;place-items:center;background:#edf3ff;color:#2f64e5;font-size:26px;font-weight:800}.triple{display:flex;justify-content:space-between;font-size:12px;color:#758197;margin:13px 0 18px}.skill-list{display:grid;gap:10px}.skill-list div{padding:13px;background:#f6f8fc;border-radius:12px}.skill-list b,.skill-list span{display:block}.skill-list span{color:var(--muted);margin-top:5px}.detail-description{font-size:16px;line-height:1.7}.pathway-title{display:flex;flex-direction:column;align-items:flex-start;line-height:1.4}.pathway-title span,.pathway-fit{font-size:12px;color:var(--muted)}.stage-list{list-style:none;padding:0;display:grid;gap:9px}.stage-list li{padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8faff}.stage-list li>div{display:flex;justify-content:space-between;gap:12px}.stage-list li span{color:#3168ee}.stage-list p{margin:6px 0 0;color:var(--muted);line-height:1.6}.milestone{padding:12px;border-radius:12px;background:#eef8f5;line-height:1.7}@media(max-width:1100px){.track-grid,.compare-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.track-grid,.compare-grid{grid-template-columns:1fr}.intro{align-items:flex-start;gap:16px;flex-direction:column}}
+.hero{display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center;background:linear-gradient(125deg,#fff 0%,#f3f7ff 72%,#e9f1ff 100%)}.eyebrow{color:#2f67ee;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.hero h2{font-size:30px;margin:8px 0}.hero p,.cluster-copy,.section-title>span{color:var(--muted);line-height:1.7}.hero-actions{display:grid;grid-template-columns:1fr auto;gap:10px}.route-cart{margin-top:18px;border-color:#bdd0ff;background:linear-gradient(120deg,#fff,#f5f8ff)}.cart-title,.cart-footer,.section-title{display:flex;align-items:center;justify-content:space-between;gap:20px}.cart-title h3{margin:4px 0}.selected-chips{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.selected-chips button{display:grid;grid-template-columns:1fr auto;border:1px solid #cbd9fb;background:white;border-radius:12px;padding:9px 10px;text-align:left;color:inherit;cursor:pointer;min-width:170px}.selected-chips span{font-size:11px;color:#72809a}.selected-chips b{font-size:13px;margin-top:3px}.selected-chips i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:20px;color:#8190aa;padding-left:10px}.cart-footer p{margin:0;color:var(--muted);font-size:13px}.cluster-tabs{margin-top:22px}.track-grid,.compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.track-card,.compare-card{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;transition:.2s}.track-card:hover,.compare-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(31,61,123,.09)}.track-card.chosen{border-color:#3168ee;box-shadow:0 0 0 3px rgba(49,104,238,.09)}.track-top,.track-card footer{display:flex;justify-content:space-between;align-items:center;gap:10px}.track-body{width:100%;border:0;background:none;text-align:left;color:inherit;padding:0;cursor:pointer}.track-body h3{font-size:20px;margin:17px 0 8px}.track-body p{color:var(--muted);min-height:50px;line-height:1.6}.tag-row{display:flex;gap:6px;flex-wrap:wrap}.track-card footer{border-top:1px solid var(--line);margin-top:17px;padding-top:13px;font-size:12px;color:var(--muted)}.comparison{margin-top:24px}.section-title h3{margin:4px 0 14px;font-size:22px}.compare-card{text-align:center;position:relative}.rank{position:absolute;top:15px;left:15px;border-radius:8px;padding:4px 8px;background:#f1f3f7;color:#7c879b;font-size:11px}.rank.first{background:#fff0d9;color:#d27900}.score{width:64px;height:64px;border-radius:20px;margin:8px auto;display:grid;place-items:center;background:#edf3ff;color:#2f64e5;font-size:26px;font-weight:800}.compare-card>p{color:var(--muted)}.triple{display:flex;justify-content:space-between;font-size:12px;color:#758197;margin:13px 0}.triple b{color:#16213a}.career-mini{display:grid;gap:6px;background:#f7f9fc;border-radius:10px;padding:10px;text-align:left;font-size:12px;color:#5f6e86}.compare-actions{display:flex;justify-content:center;margin-top:14px}.detail-description{font-size:15px;line-height:1.75;color:#56647c}.track-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 22px}.track-summary>div{padding:12px;border-radius:12px;background:#f6f8fc}.track-summary span,.track-summary b{display:block}.track-summary span{font-size:11px;color:var(--muted);margin-bottom:5px}.pathway-title{width:100%;display:flex;justify-content:space-between;align-items:center;padding-right:12px}.pathway-title>div{display:flex;flex-direction:column;align-items:flex-start}.pathway-title span,.pathway-fit{font-size:12px;color:var(--muted)}.career-panel{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px;border:1px solid #cfe3db;background:#f4fbf8;border-radius:14px}.career-panel>div{display:grid;gap:4px}.career-panel span{font-size:11px;color:#628074}.career-panel b{font-size:13px;line-height:1.5}.career-panel small{grid-column:1/-1;color:#74827e;line-height:1.5}.stage-list{list-style:none;padding:0;display:grid;gap:10px}.stage-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fafbfe}.stage-number{width:28px;height:28px;border-radius:9px;background:#e8efff;color:#2862e9;display:grid;place-items:center;font-weight:800}.stage-list header{display:flex;justify-content:space-between;gap:12px}.stage-list header span{color:#3168ee;font-size:12px}.topic-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.topic-list i{font-style:normal;font-size:12px;padding:5px 8px;background:white;border:1px solid #e1e7f1;border-radius:7px;color:#536179}.portfolio,.milestone{padding:12px 14px;border-radius:12px;line-height:1.7}.portfolio{background:#fff8eb;margin:12px 0}.portfolio ul{margin:5px 0 0;padding-left:20px}.milestone{background:#eef5ff}.reason-list{line-height:1.9}@media(max-width:1100px){.hero{grid-template-columns:1fr}.track-grid,.compare-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.track-grid,.compare-grid,.track-summary,.career-panel{grid-template-columns:1fr}.hero-actions{grid-template-columns:1fr}.cart-footer,.section-title{align-items:flex-start;flex-direction:column}.pathway-title{align-items:flex-start;gap:8px;flex-direction:column}}
 </style>

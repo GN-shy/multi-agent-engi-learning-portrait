@@ -44,6 +44,11 @@ class RouteCompareInput(BaseModel):
     track_codes: list[str] = Field(default_factory=list, max_length=6)
 
 
+class PathwayComposeInput(BaseModel):
+    pathway_ids: list[str] = Field(min_length=1, max_length=6)
+    weekly_hours: int = Field(default=8, ge=1, le=80)
+
+
 class TrackSelectInput(BaseModel):
     track_code: str
 
@@ -51,6 +56,7 @@ class TrackSelectInput(BaseModel):
 class SessionCreateInput(BaseModel):
     track_code: str
     pathway_id: str | None = Field(default=None, max_length=120)
+    pathway_ids: list[str] = Field(default_factory=list, max_length=6)
     goal: str = Field(min_length=2, max_length=1000)
     topic: str = Field(default="", max_length=200)
     source_mode: Literal[

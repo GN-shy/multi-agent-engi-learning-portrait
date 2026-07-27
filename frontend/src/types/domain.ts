@@ -27,9 +27,24 @@ export interface PathwayStage {
   topics: string[]
 }
 
+export interface CareerProfile {
+  roles: string[]
+  work_content: string[]
+  salary_range: string
+  education: {
+    minimum: string
+    competitive: string
+    note: string
+  }
+  market_outlook: string
+  portfolio: string[]
+}
+
 export interface PathwayVariant {
   id: string
   track_code: string
+  track_name?: string
+  track_role?: string
   name: string
   estimated_months: string
   difficulty: number
@@ -37,6 +52,52 @@ export interface PathwayVariant {
   suitable_for: string
   milestone: string
   stages: PathwayStage[]
+  stage_count?: number
+  technology_count?: number
+  career?: CareerProfile
+  salary_scope?: string
+}
+
+export interface ComposedRouteTask {
+  title: string
+  pathway_id: string
+  pathway_name: string
+  stage_title: string
+  skill_code: string
+  learning_action: string
+  evidence_required: string
+  acceptance: string
+}
+
+export interface ComposedRoutePhase {
+  id: string
+  name: string
+  week_start: number
+  week_end: number
+  pathway_names: string[]
+  tasks: ComposedRouteTask[]
+  milestone: string
+}
+
+export interface ComposedRoute {
+  pathway_ids: string[]
+  pathways: PathwayVariant[]
+  strategy: string
+  weekly_hours: number
+  total_weeks: number
+  estimated_months: number
+  technology_count: number
+  stack_index: Array<{
+    pathway_id: string
+    pathway_name: string
+    track_code: string
+    track_name: string
+    estimated_months: string
+    technologies: string[]
+  }>
+  phases: ComposedRoutePhase[]
+  final_milestones: Array<{pathway_id?: string; pathway_name: string; milestone: string}>
+  optimization_notes?: string[]
 }
 
 export interface TrackCluster {
@@ -96,7 +157,16 @@ export interface RouteMatch {
     difficulty: number
     milestone: string
     stage_count: number
+    technology_count?: number
+    career?: CareerProfile
+    salary_scope?: string
   }>
+  career_summary?: {
+    roles: string[]
+    salary_ranges: string[]
+    education: string[]
+    salary_scope: string
+  }
 }
 
 export interface Profile {

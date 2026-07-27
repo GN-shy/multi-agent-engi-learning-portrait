@@ -21,8 +21,10 @@ class ContentEngine:
         route_match: dict[str, Any],
         evidence: list[dict[str, Any]],
         pathway_id: str | None = None,
+        pathway_ids: list[str] | None = None,
     ) -> dict[str, Any]:
-        track = self.catalog.get_track(track_code)
+        selected_pathways = pathway_ids or ([pathway_id] if pathway_id else [])
+        track = self._learning_scope(track_code, selected_pathways)
         ordered = self._ordered_skills(track)
         sections = []
         for skill in ordered:
@@ -60,6 +62,7 @@ class ContentEngine:
             evidence,
             practice_mode="specification_first",
             pathway_id=pathway_id,
+            pathway_ids=selected_pathways,
         )
 
     def generate_project_first(
@@ -70,8 +73,10 @@ class ContentEngine:
         route_match: dict[str, Any],
         evidence: list[dict[str, Any]],
         pathway_id: str | None = None,
+        pathway_ids: list[str] | None = None,
     ) -> dict[str, Any]:
-        track = self.catalog.get_track(track_code)
+        selected_pathways = pathway_ids or ([pathway_id] if pathway_id else [])
+        track = self._learning_scope(track_code, selected_pathways)
         skills = self._ordered_skills(track)
         sections = []
         for index, skill in enumerate(skills):
@@ -111,6 +116,7 @@ class ContentEngine:
             evidence,
             practice_mode="challenge_first",
             pathway_id=pathway_id,
+            pathway_ids=selected_pathways,
         )
 
     def _candidate(
@@ -125,16 +131,21 @@ class ContentEngine:
         evidence: list[dict[str, Any]],
         practice_mode: str,
         pathway_id: str | None = None,
+        pathway_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         weekly_hours = profile.get("weekly_hours", 8)
-        variants = track.get("pathway_variants", [])
-        pathway = (
-            next((item for item in variants if item["id"] == pathway_id), None)
-            if pathway_id
+        selected_ids = pathway_ids or ([pathway_id] if pathway_id else [])
+        pathways = track.get("selected_pathways", [])
+        pathway = pathways[0] if pathways else None
+        route_bundle = (
+            self.catalog.compose_pathways(selected_ids, weekly_hours, strategy)
+            if selected_ids
             else None
-        ) or (variants[0] if variants else None)
-        phases = self._plan_phases(
-            track, sections, weekly_hours, strategy, pathway
+        )
+        phases = (
+            route_bundle["phases"]
+            if route_bundle
+            else self._plan_phases(track, sections, weekly_hours, strategy, pathway)
         )
         quizzes = [
             {
@@ -162,6 +173,8 @@ class ContentEngine:
             "agent": agent,
             "strategy": strategy,
             "track_code": track["code"],
+            "track_codes": track.get("track_codes", [track["code"]]),
+            "target_skill_codes": [skill["code"] for skill in track["skills"]],
             "pathway": (
                 {
                     "id": pathway["id"],
@@ -172,15 +185,27 @@ class ContentEngine:
                 if pathway
                 else None
             ),
+            "pathways": [
+                {
+                    "id": item["id"],
+                    "name": item["name"],
+                    "track_code": item["track_code"],
+                    "estimated_months": item["estimated_months"],
+                    "milestone": item["milestone"],
+                }
+                for item in pathways
+            ],
+            "route_bundle": route_bundle,
             "title": (
-                f"{pathway['name']} · {goal}"
-                if pathway
+                f"{' + '.join(item['name'] for item in pathways)} · {goal}"
+                if pathways
                 else f"{track['name']} · {goal}"
             ),
             "learner_fit": {
                 "style": profile.get("learning_style", "balanced"),
                 "weekly_hours": weekly_hours,
                 "top_gaps": route_match.get("skill_gaps", [])[:3],
+                "selected_pathways": [item["name"] for item in pathways],
             },
             "lecture": {
                 "summary": track["description"],
@@ -302,8 +327,13 @@ class ContentEngine:
         profile: dict[str, Any],
     ) -> dict[str, Any]:
         sections = candidate["lecture"]["sections"]
-        track_skills = self.catalog.get_track(candidate["track_code"])["skills"]
-        target = {skill["code"] for skill in track_skills}
+        target = set(
+            candidate.get("target_skill_codes")
+            or [
+                skill["code"]
+                for skill in self.catalog.get_track(candidate["track_code"])["skills"]
+            ]
+        )
         covered = {section["skill_code"] for section in sections}
         valid_sources = {item["chunk_id"] for item in evidence}
         cited_sections = [
@@ -369,6 +399,52 @@ class ContentEngine:
                 ordered.append(item)
                 remaining.pop(item["code"])
         return ordered
+
+    def _learning_scope(
+        self,
+        primary_track_code: str,
+        pathway_ids: list[str],
+    ) -> dict[str, Any]:
+        primary = self.catalog.get_track(primary_track_code)
+        if not pathway_ids:
+            return primary
+        pathways = [self.catalog.get_pathway(pathway_id) for pathway_id in pathway_ids]
+        if pathways[0]["track_code"] != primary_track_code:
+            raise ValueError("主方向必须与第一条细分路线一致")
+        track_codes = list(dict.fromkeys(item["track_code"] for item in pathways))
+        tracks = [self.catalog.get_track(code) for code in track_codes]
+        skills = list(
+            {
+                skill["code"]: skill
+                for track in tracks
+                for skill in track["skills"]
+            }.values()
+        )
+        deliverables = [
+            f"{pathway['name']}：{pathway['milestone']}"
+            for pathway in pathways
+        ]
+        return {
+            **primary,
+            "name": " + ".join(pathway["name"] for pathway in pathways),
+            "description": (
+                "本组合路线按共同基础、方向核心、工程质量、性能部署和综合项目组织，"
+                "覆盖：" + "、".join(pathway["name"] for pathway in pathways) + "。"
+            ),
+            "track_codes": track_codes,
+            "selected_pathways": pathways,
+            "skills": skills,
+            "project": {
+                "title": "跨方向综合作品：" + " + ".join(
+                    pathway["name"] for pathway in pathways
+                ),
+                "deliverables": deliverables,
+                "acceptance": (
+                    "每条所选路线均完成对应里程碑；共同技术只验收一次，"
+                    "跨方向接口、部署、测试和关键取舍必须有可复现证据。"
+                ),
+            },
+        }
 
     @staticmethod
     def _evidence_for_skill(
