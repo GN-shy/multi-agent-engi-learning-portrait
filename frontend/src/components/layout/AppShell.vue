@@ -70,6 +70,7 @@ import {
   EditPen, Expand, Fold, Grid, Guide, Histogram, HomeFilled, List,
   MagicStick, Message, Reading, Search, Setting, Share,
 } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getData } from '@/api'
 
@@ -113,6 +114,15 @@ function goSearch() {
   if (search.value.trim()) router.push({ path: '/knowledge', query: { q: search.value.trim() } })
 }
 async function signOut() {
+  try {
+    await ElMessageBox.confirm('退出后需要重新登录，确认退出吗？', '退出登录', {
+      type: 'warning',
+      confirmButtonText: '确认退出',
+      cancelButtonText: '取消',
+    })
+  } catch {
+    return
+  }
   await user.logout()
   router.replace('/login')
 }

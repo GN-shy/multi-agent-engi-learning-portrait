@@ -66,7 +66,7 @@ function render() {
         style: { text: '图表暂不可用，请刷新重试', fill: '#d36a73', fontSize: 14 },
       }],
     })
-    console.error('EChart render failed', error)
+    if (import.meta.env.DEV) console.error('EChart render failed', error)
   }
 }
 

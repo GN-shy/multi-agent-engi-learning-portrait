@@ -3,26 +3,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import * as echarts from 'echarts'
+
+const props = withDefaults(defineProps<{
+  xData?: string[]
+  yData?: number[]
+  title?: string
+}>(), {
+  xData: () => [],
+  yData: () => [],
+})
 
 const chartRef = ref<HTMLElement>()
 let chart: echarts.ECharts | null = null
 
-onMounted(() => {
+function render() {
   if (!chartRef.value) return
-  chart = echarts.init(chartRef.value)
+  chart ??= echarts.init(chartRef.value)
   chart.setOption({
     tooltip: { trigger: 'axis' },
-    grid: { left: 40, right: 20, top: 20, bottom: 30 },
+    grid: { left: 40, right: 20, top: props.title ? 36 : 20, bottom: 30 },
     xAxis: {
       type: 'category',
-      data: ['7/1', '7/5', '7/10', '7/15', '7/20'],
+      data: props.xData.length ? props.xData : ['暂无数据'],
       axisLabel: { fontSize: 10 },
     },
-    yAxis: { type: 'value', min: 60, max: 100, axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', axisLabel: { fontSize: 10 } },
     series: [{
-      data: [70, 75, 78, 82, 86],
+      data: props.yData.length ? props.yData : [0],
       type: 'line',
       smooth: true,
       lineStyle: { color: '#4a7dff', width: 3 },
@@ -33,5 +42,8 @@ onMounted(() => {
       ])},
     }],
   })
-})
+}
+
+onMounted(render)
+watch([() => props.xData, () => props.yData], render)
 </script>

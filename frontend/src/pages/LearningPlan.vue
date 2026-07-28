@@ -26,7 +26,7 @@ import { onMounted,reactive,ref } from 'vue';import { useRouter } from 'vue-rout
 import AppShell from '@/components/layout/AppShell.vue';import DetailModal from '@/components/common/DetailModal.vue';import { getData,postData } from '@/api';import { valueLabel } from '@/utils/presentation'
 const router=useRouter(),plan=ref<any>(null),selected=ref(new Set<string>()),saving=ref(false),detail=reactive({visible:false,phase:null as any})
 onMounted(load)
-async function load(){try{plan.value=await getData('/plans/current');const previous=(plan.value.checkins||[]).flatMap((i:any)=>i.completed_task_ids);selected.value=new Set(previous)}catch{plan.value=null}}
+async function load(){try{plan.value=await getData('/plans/current');const previous=(plan.value.checkins||[]).flatMap((i:any)=>i.completed_task_ids);selected.value=new Set(previous)}catch{plan.value=null;ElMessage.error('学习计划加载失败，请稍后重试')}}
 function checked(id:string){return selected.value.has(id)}
 function toggle(id:string,value:any){const next=new Set(selected.value);value?next.add(id):next.delete(id);selected.value=next}
 async function save(){saving.value=true;try{const result=await postData<any>(`/plans/${plan.value.id}/checkin`,{completed_task_ids:[...selected.value]});plan.value.progress=result.progress;plan.value.phases=result.phases;ElMessage.success('学习进度已保存')}finally{saving.value=false}}
