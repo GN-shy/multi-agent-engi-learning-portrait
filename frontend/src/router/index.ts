@@ -22,6 +22,6 @@ export default createRouter({
     { path: '/integrations', component: () => import('@/pages/IntegrationsPage.vue'), meta: { title: 'AI 与搜索服务', eyebrow: 'BYOK、模型可替换、成本可治理' } },
     { path: '/session/:id', component: () => import('@/pages/SessionPage.vue'), meta: { title: '会话详情', eyebrow: '完整生成、仲裁与证据链' } },
     { path: '/admin', component: () => import('@/pages/AdminPage.vue'), meta: { title: '评测与治理', eyebrow: '质量指标和系统健康状态' } },
-    { path: '/:pathMatch(.*)*', redirect: '/' },
+    { path: '/:pathMatch(.*)*', component: () => import('@/pages/NotFound.vue'), meta: { title: '页面未找到', eyebrow: '请检查链接是否有效' } },
   ],
 })

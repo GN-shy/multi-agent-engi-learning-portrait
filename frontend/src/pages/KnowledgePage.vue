@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import AppShell from '@/components/layout/AppShell.vue'
@@ -220,6 +220,12 @@ const form = reactive({
 onMounted(async () => {
   tracks.value = (await getData<{ items: TrackSummary[] }>('/tracks')).items
   if (query.value) await search()
+})
+
+watch(() => route.query.q, (newQ) => {
+  const q = String(newQ || '')
+  query.value = q
+  if (q) search()
 })
 
 async function search() {

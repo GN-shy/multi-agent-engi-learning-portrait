@@ -140,16 +140,15 @@ const distributionOption = computed(() => {
 })
 
 onMounted(async () => {
-  try {
-    const [dashboardData, agentData, messageData] = await Promise.all([
-      getData('/dashboard'),
-      getData('/agents/status'),
-      getData<{items:any[]}>('/messages'),
-    ])
-    Object.assign(dashboard,dashboardData)
-    Object.assign(agents,agentData)
-    messages.value=messageData.items
-  } finally { loading.value=false }
+  const [dashboardResult, agentResult, messageResult] = await Promise.allSettled([
+    getData('/dashboard'),
+    getData('/agents/status'),
+    getData<{items:any[]}>('/messages'),
+  ])
+  if (dashboardResult.status === 'fulfilled') Object.assign(dashboard, dashboardResult.value)
+  if (agentResult.status === 'fulfilled') Object.assign(agents, agentResult.value)
+  if (messageResult.status === 'fulfilled') messages.value = messageResult.value.items
+  loading.value = false
 })
 function openMetric(title:string,data:any){detail.title=title;detail.data=data;detail.visible=true}
 function openChartDetail(params:any){openMetric(`图表数据 · ${params.name||params.seriesName}`,params)}
