@@ -186,6 +186,14 @@ export interface Profile {
   blind_spots: Array<{ skill_code: string; name: string; score: number }>
   strengths: Array<{ skill_code: string; name: string; score: number }>
   comprehensive_score: number
+  analysis_summary?: {
+    overview: string
+    strongest_dimension: {code: string; score: number}
+    weakest_dimension: {code: string; score: number}
+    evidence_count: number
+    confidence_level: string
+    next_actions: string[]
+  }
   updated_at: string
 }
 

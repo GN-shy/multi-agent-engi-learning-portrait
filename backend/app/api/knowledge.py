@@ -70,6 +70,12 @@ def search(
             "items": items,
             "total": len(items),
             "query": q,
+            "suggestions": (
+                []
+                if items
+                else ["Python", "Vue 3", "Java 后端", "Agent", "RAG", "Docker"]
+            ),
+            "popular_queries": ["Python", "Vue 3", "React", "Java", "Agent", "算法", "嵌入式"],
             "filters": {"track_code": track_code, "catalog_version": get_catalog().version},
         }
     )

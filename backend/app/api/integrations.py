@@ -274,6 +274,7 @@ def update_config(
     db: Session = Depends(get_db),
 ):
     row = get_owned_config(config_id, user, db)
+    previous_storage_mode = row.storage_mode
     expected = PROVIDER_DEFAULTS[body.provider]["service_type"]
     if body.provider not in {"openai_compatible", "custom"} and body.service_type != expected:
         raise HTTPException(status_code=422, detail="服务类型与厂商不匹配")
@@ -287,7 +288,6 @@ def update_config(
     row.provider = body.provider
     row.label = body.label.strip()
     row.model = body.model.strip()
-    row.storage_mode = body.storage_mode
     row.max_tokens_per_request = body.max_tokens_per_request
     row.daily_budget = body.daily_budget
     row.timeout_seconds = body.timeout_seconds
@@ -307,8 +307,9 @@ def update_config(
         else:
             row.encrypted_api_key = ""
             temporary_secrets.set(user.id, row.id, body.api_key)
-    elif row.storage_mode != body.storage_mode:
+    elif previous_storage_mode != body.storage_mode:
         raise HTTPException(status_code=422, detail="切换密钥保存方式时必须重新输入 API Key")
+    row.storage_mode = body.storage_mode
     db.commit()
     db.refresh(row)
     return success(config_view(row), "服务配置已更新")

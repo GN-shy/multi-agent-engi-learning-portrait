@@ -304,6 +304,8 @@ class ComputerCatalog:
             "technology_count": len(seen_topics),
             "stack_index": stack_index,
             "phases": phases,
+            # 兼容早期客户端使用的 stages 字段；两者均指向去重、重排后的组合阶段。
+            "stages": phases,
             "final_milestones": [
                 {"pathway_name": item["name"], "milestone": item["milestone"]}
                 for item in pathways

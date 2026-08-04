@@ -274,7 +274,7 @@ function trackName(code: string) {
   return tracks.value.find((item) => item.code === code)?.name || code
 }
 function healthLabel(key: string) {
-  return ({ version: '应用版本', environment: '运行环境', catalog_version: '目录版本', track_count: '路线数量', llm_enabled: '平台模型状态' } as Record<string, string>)[key] || key
+  return ({ version: '应用版本', environment: '运行环境', catalog_version: '目录版本', track_count: '主方向数量', pathway_count: '细分路线数量', database_status: '数据库连接', knowledge_index_status: '知识索引状态', knowledge_document_count: '可检索知识片段', vector_store_status: '检索引擎', llm_enabled: '平台模型状态' } as Record<string, string>)[key] || key
 }
 function evaluationMetricLabel(key: string) {
   return ({

@@ -28,6 +28,10 @@
         <el-form-item label="密码">
           <el-input v-model="form.password" type="password" show-password :autocomplete="mode === 'register' ? 'new-password' : 'off'" />
         </el-form-item>
+        <div v-if="mode === 'register'" class="password-strength">
+          <el-progress :percentage="passwordStrength" :show-text="false" :status="passwordStrength >= 100 ? 'success' : undefined" />
+          <span>至少 8 位，并包含大写、小写、数字、特殊字符中的三类</span>
+        </div>
         <el-alert v-if="user.error" :title="user.error" type="error" :closable="false" show-icon />
         <el-button class="submit" type="primary" native-type="submit" :loading="user.loading">
           {{ mode === 'login' ? '进入学习空间' : '注册并开始诊断' }}
@@ -40,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
@@ -49,6 +53,11 @@ const router = useRouter()
 const route = useRoute()
 const mode = ref<'login' | 'register'>('login')
 const form = reactive({ username: '', account: '', password: '' })
+const passwordStrength = computed(() => {
+  const value = form.password
+  const categories = [/[a-z]/.test(value), /[A-Z]/.test(value), /\d/.test(value), /[^A-Za-z0-9]/.test(value)].filter(Boolean).length
+  return Math.min(100, (value.length >= 8 ? 25 : Math.round(value.length / 8 * 25)) + categories * 25)
+})
 
 onMounted(async () => {
   if (route.query.reset === '1') {
@@ -73,6 +82,10 @@ function useDemo() {
   form.password = 'demo12345'
 }
 async function submit() {
+  if (mode.value === 'register' && (!form.username.trim() || passwordStrength.value < 100)) {
+    user.error = '请填写用户名，并使用至少 8 位且包含三类字符的密码'
+    return
+  }
   const ok = mode.value === 'login'
     ? await user.login(form.account, form.password)
     : await user.register({ username: form.username, email: form.account, password: form.password })
@@ -87,5 +100,6 @@ async function submit() {
 .proofs { display:flex;gap:34px;margin-top:38px }.proofs div { display:flex;flex-direction:column }.proofs strong { font-size:30px;color:#285fe2 }.proofs span { color:#778399;font-size:13px }
 .auth-card { background:rgba(255,255,255,.94);border:1px solid #e3eaf5;border-radius:26px;padding:34px;box-shadow:0 28px 80px rgba(32,63,112,.14);max-width:480px;width:100%;justify-self:center; }
 .auth-title { margin:28px 0 20px }.auth-title h2 { margin:0 0 8px;font-size:26px }.auth-title p,.privacy { color:#7b8799;font-size:13px;line-height:1.6 }.submit { width:100%;height:44px;margin-top:10px }.login-tools{display:flex;justify-content:center;gap:18px;margin:18px 0 8px}.login-tools button{border:0;background:none;color:#3168ee;cursor:pointer}
+.password-strength{margin:-8px 0 14px}.password-strength span{display:block;color:#7b8799;font-size:11px;margin-top:6px;line-height:1.5}
 @media(max-width:900px){.login-page{grid-template-columns:1fr;padding:24px}.story{display:none}}
 </style>

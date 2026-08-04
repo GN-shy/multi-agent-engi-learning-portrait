@@ -14,6 +14,19 @@
       <el-button type="primary" @click="editorVisible=true">更新画像证据</el-button>
     </section>
 
+    <section v-if="profile?.analysis_summary" class="panel interpretation">
+      <div class="interpret-title">
+        <span class="interpret-icon">析</span>
+        <div><h3>画像解读</h3><p>{{ profile.analysis_summary.overview }}</p></div>
+      </div>
+      <div class="interpret-metrics">
+        <p><span>当前优势</span><b>{{ label(profile.analysis_summary.strongest_dimension.code) }} · {{ profile.analysis_summary.strongest_dimension.score }} 分</b></p>
+        <p><span>优先补齐</span><b>{{ label(profile.analysis_summary.weakest_dimension.code) }} · {{ profile.analysis_summary.weakest_dimension.score }} 分</b></p>
+        <p><span>可信程度</span><b>{{ profile.analysis_summary.confidence_level }} · {{ profile.analysis_summary.evidence_count }} 项证据</b></p>
+      </div>
+      <ul><li v-for="action in profile.analysis_summary.next_actions" :key="action">{{ action }}</li></ul>
+    </section>
+
     <div class="profile-grid">
       <main>
         <div class="analysis-grid">
@@ -79,6 +92,12 @@
     </div>
 
     <el-dialog v-model="editorVisible" title="更新画像证据" width="min(820px,92vw)" class="profile-editor">
+      <el-steps :active="profile ? 2 : 0" simple class="onboarding-steps">
+        <el-step title="填写背景" />
+        <el-step title="能力自评" />
+        <el-step title="获得解读" />
+      </el-steps>
+      <el-alert v-if="!profile" title="首次画像只需 3–5 分钟：先填写真实背景和目标，再按当前实际能力自评；后续测评与项目证据会自动修正分数。" type="success" :closable="false" show-icon />
       <el-form label-position="top">
         <el-form-item label="学习背景"><el-input v-model="form.background" type="textarea" :rows="3" placeholder="专业、年级、做过的项目、常用语言…" /></el-form-item>
         <div class="grid two">
@@ -137,4 +156,6 @@ function levelLabel(score=0){return score>=70?'熟练':score>=45?'掌握':'入�
 <style scoped>
 .profile-banner{display:grid;grid-template-columns:minmax(360px,1.2fr) 1fr auto;gap:24px;align-items:center;background:linear-gradient(115deg,#fff,#f0f5ff)}.identity{display:flex;gap:17px;align-items:center}.name-row{display:flex;gap:10px;align-items:center}.name-row h2{margin:0}.identity p{margin:7px 0;color:#4e5b70}.identity span{font-size:11px;color:var(--muted)}.banner-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.banner-stats>div{padding:12px;border-left:1px solid var(--line)}.banner-stats span,.banner-stats strong,.banner-stats small{display:block}.banner-stats span,.banner-stats small{font-size:10px;color:var(--muted)}.banner-stats strong{font-size:22px;color:#2461e3;margin:3px 0}.banner-stats .level strong{font-size:14px}.profile-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:16px;margin-top:16px}.profile-grid>main{display:grid;gap:16px}.analysis-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}.middle-column{display:grid;gap:16px}.score-summary{display:flex;justify-content:space-between;padding:13px;background:#f6f9ff;border-radius:10px;font-size:12px;color:var(--muted)}.score-summary b{font-size:20px;color:#3168ee}.skill-matrix{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.skill-matrix button{border:1px solid var(--line);border-radius:9px;background:#f8faff;padding:10px;display:flex;justify-content:space-between;cursor:pointer}.skill-matrix span,.skill-matrix b{font-size:11px}.skill-matrix.mastered{border-color:#bce7d7;background:#f1fbf7;color:#16815d}.skill-matrix.growing{border-color:#cddcff;background:#f2f6ff;color:#2862dc}.skill-matrix.starter{border-color:#f3d1bc;background:#fff6ef;color:#c76737}.level-line{display:flex;justify-content:space-between;position:relative}.level-line:before{content:'';position:absolute;top:8px;left:4%;right:4%;border-top:2px solid #d8e1f0}.level-line span{z-index:1;padding-top:23px;font-size:10px;color:var(--muted);position:relative}.level-line span:before{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:#b7c2d8;top:2px;left:50%;transform:translateX(-50%)}.level-line span.active{color:#3168ee;font-weight:700}.level-line span.active:before{background:#3168ee;box-shadow:0 0 0 5px #e8efff}.level-progress{display:flex;gap:12px;align-items:center;margin-top:18px}.level-progress .el-progress{flex:1}.level-progress strong{font-size:12px;color:#3168ee}.bottom-grid{display:grid;grid-template-columns:1.1fr .7fr .8fr;gap:16px}.strength-groups{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.strength-groups>div{display:grid;gap:7px}.strength-groups button{display:grid;grid-template-columns:95px 1fr 36px;gap:7px;align-items:center;border:0;background:transparent;text-align:left;cursor:pointer;font-size:11px}.strength-groups p{font-size:11px;color:var(--muted)}.preference-ring{text-align:center}.preferences .tag-row{justify-content:center}.recent-evidence>div:not(.panel-title){display:grid;grid-template-columns:28px 1fr;gap:8px}.recent-evidence>div>span{width:25px;height:25px;border-radius:8px;display:grid;place-items:center;background:#edf3ff;color:#3168ee;font-size:9px}.recent-evidence p{margin:0 0 12px;font-size:10px;color:var(--muted)}.recent-evidence p b{display:block;font-size:12px;color:var(--text);margin-bottom:3px}.profile-rail{display:grid;align-content:start}.recommendations article{border:1px solid var(--line);border-radius:11px;padding:13px;margin-top:10px}.recommendations article header{display:flex;align-items:center;justify-content:space-between}.recommendations article header span{font-weight:700;font-size:12px}.recommendations article p,.recommendations article li{font-size:11px;line-height:1.7;color:#59667b}.recommendations article .el-button{width:100%}.slider-row{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}.slider-row b,.slider-row span{display:block}.slider-row span{font-size:11px;color:var(--muted);margin-top:3px}@media(max-width:1250px){.profile-banner{grid-template-columns:1fr auto}.banner-stats{grid-row:2;grid-column:1/-1}.profile-grid{grid-template-columns:1fr}.recommendations{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.recommendations>.panel-title{grid-column:1/-1}}@media(max-width:900px){.analysis-grid,.bottom-grid{grid-template-columns:1fr}.recommendations{display:block}}@media(max-width:650px){.profile-banner{grid-template-columns:1fr}.banner-stats{grid-template-columns:repeat(2,1fr)}.skill-matrix{grid-template-columns:repeat(2,1fr)}.strength-groups{grid-template-columns:1fr}.slider-row{grid-template-columns:1fr}}
 .skill-matrix button.mastered{border-color:#bce7d7;background:#f1fbf7;color:#16815d}.skill-matrix button.growing{border-color:#cddcff;background:#f2f6ff;color:#2862dc}.skill-matrix button.starter{border-color:#f3d1bc;background:#fff6ef;color:#c76737}
+.interpretation{margin-top:16px;display:grid;grid-template-columns:1.1fr 1.3fr 1.2fr;gap:18px;align-items:center;background:linear-gradient(120deg,#f8fbff,#fff)}.interpret-title{display:flex;gap:12px;align-items:center}.interpretation h3,.interpretation p{margin:3px 0}.interpretation p,.interpretation li{font-size:11px;line-height:1.65;color:var(--muted)}.interpret-icon{width:42px;height:42px;border-radius:13px;background:#3168ee;color:white;display:grid;place-items:center;font-weight:800}.interpret-metrics{display:grid;gap:7px}.interpret-metrics p{margin:0;padding:8px 10px;border-radius:9px;background:#f4f7fd}.interpret-metrics span,.interpret-metrics b{display:block}.interpret-metrics b{color:#35445e;margin-top:3px}.interpretation ul{margin:0;padding-left:18px}@media(max-width:900px){.interpretation{grid-template-columns:1fr}}
+.onboarding-steps{margin-bottom:14px}.profile-editor .el-alert{margin-bottom:16px}
 </style>

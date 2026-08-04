@@ -29,6 +29,7 @@ from app.core.database import SessionLocal, init_database
 from app.core.models import User
 from app.core.security import hash_password
 from app.domain.catalog import get_catalog
+from app.domain.knowledge import get_knowledge_engine
 
 logging.basicConfig(
     level=logging.INFO,
@@ -152,6 +153,14 @@ for api_router in (
 @app.get(f"{settings.api_prefix}/health", tags=["system"])
 def health():
     catalog = get_catalog()
+    database_status = "connected"
+    try:
+        with SessionLocal() as db:
+            db.execute(select(1))
+    except Exception:
+        logger.exception("数据库健康检查失败")
+        database_status = "unavailable"
+    knowledge_documents = len(get_knowledge_engine().documents)
     return {
         "code": 0,
         "message": "healthy",
@@ -160,6 +169,11 @@ def health():
             "environment": settings.environment,
             "catalog_version": catalog.version,
             "track_count": len(catalog.tracks),
+            "pathway_count": len(catalog.pathways),
+            "database_status": database_status,
+            "knowledge_index_status": "ready" if knowledge_documents else "empty",
+            "knowledge_document_count": knowledge_documents,
+            "vector_store_status": "local_index_active",
             "llm_enabled": settings.llm_enabled and bool(settings.llm_api_key),
         },
         "request_id": uuid.uuid4().hex[:12],

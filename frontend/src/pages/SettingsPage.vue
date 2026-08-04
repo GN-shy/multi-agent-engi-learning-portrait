@@ -39,6 +39,23 @@
         </el-form>
       </section>
 
+      <section class="panel api-settings-card">
+        <div class="panel-title">
+          <div><h3>外部 AI 与搜索 API</h3><p>接入自己的 DeepSeek 或任意 OpenAI-compatible 模型</p></div>
+          <el-tag :type="availableApiCount ? 'success' : 'info'">
+            {{ availableApiCount ? `${availableApiCount} 个可用` : '尚未配置' }}
+          </el-tag>
+        </div>
+        <div class="api-capabilities">
+          <div><b>用户自带密钥（BYOK）</b><span>支持临时使用或后端加密保存，前端永不取回明文</span></div>
+          <div><b>统一模型网关</b><span>填写服务地址、模型名称和 API Key，不绑定单一厂商</span></div>
+          <div><b>成本与失败治理</b><span>可限制 Token、每日预算、请求次数和超时，失败时自动降级</span></div>
+        </div>
+        <el-button type="primary" class="api-entry" @click="router.push('/integrations')">
+          {{ apiConfigs.length ? '管理外部 API' : '立即配置外部 API' }}
+        </el-button>
+      </section>
+
       <section class="panel">
         <div class="panel-title">
           <div><h3>数据权利</h3><p>导出平台保存的画像、路线、学习、评测和反馈数据</p></div>
@@ -103,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppShell from '@/components/layout/AppShell.vue'
@@ -117,9 +134,20 @@ const saving = ref(false)
 const changingPassword = ref(false)
 const exporting = ref(false)
 const deleting = ref(false)
+const apiConfigs = ref<any[]>([])
 const password = reactive({ current_password: '', new_password: '', confirm: '' })
 const accountDelete = reactive({ current_password: '', confirmation: '' })
 const roleLabel = computed(() => user.current?.role === 'admin' ? '治理管理员' : '学习者')
+const availableApiCount = computed(() => apiConfigs.value.filter((item) => item.enabled && item.key_available).length)
+
+onMounted(async () => {
+  try {
+    const result = await getData<{items: any[]}>('/integrations/providers')
+    apiConfigs.value = result.items
+  } catch {
+    apiConfigs.value = []
+  }
+})
 
 async function save() {
   if (username.value.trim().length < 2) {
@@ -209,5 +237,5 @@ async function deleteAccount() {
 </script>
 
 <style scoped>
-.settings{align-items:start}.setting-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}.setting-row b,.setting-row span{display:block}.setting-row span{color:var(--muted);font-size:12px;margin-top:5px}.export-button{margin-top:22px;width:100%}.danger-zone{border-color:#f2c9cf}.danger-zone h3{color:var(--danger)}.delete-form{margin-top:18px}
+.settings{align-items:start}.setting-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}.setting-row b,.setting-row span{display:block}.setting-row span{color:var(--muted);font-size:12px;margin-top:5px}.export-button{margin-top:22px;width:100%}.api-settings-card{background:linear-gradient(145deg,#f8fbff,#eef4ff);border-color:#d8e4ff}.api-capabilities{display:grid;gap:10px}.api-capabilities>div{padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.82);border:1px solid #e2eaff}.api-capabilities b,.api-capabilities span{display:block}.api-capabilities b{font-size:13px}.api-capabilities span{color:var(--muted);font-size:11px;line-height:1.55;margin-top:3px}.api-entry{width:100%;height:42px;margin-top:14px}.danger-zone{border-color:#f2c9cf}.danger-zone h3{color:var(--danger)}.delete-form{margin-top:18px}
 </style>

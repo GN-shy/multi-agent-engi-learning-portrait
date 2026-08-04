@@ -51,6 +51,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item @click="router.push('/profile')">学习画像</el-dropdown-item>
                 <el-dropdown-item @click="router.push('/settings')">个人设置</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/integrations')">外部 API 配置</el-dropdown-item>
                 <el-dropdown-item divided @click="signOut">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>

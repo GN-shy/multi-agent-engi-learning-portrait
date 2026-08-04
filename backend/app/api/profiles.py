@@ -16,30 +16,72 @@ from app.schemas import ProfileInput
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
+DIMENSION_DEFAULTS = {
+    "programming_and_algorithms": 0.0,
+    "systems_foundation": 0.0,
+    "software_engineering": 0.0,
+    "architecture_and_security": 0.0,
+    "engineering_delivery": 0.0,
+    "route_specific": 0.0,
+}
+
+
+def _analysis_summary(profile: LearnerProfile, dimensions: dict, skills: dict) -> dict:
+    ordered = sorted(dimensions.items(), key=lambda item: item[1], reverse=True)
+    strongest = ordered[0] if ordered else ("", 0)
+    weakest = ordered[-1] if ordered else ("", 0)
+    evidence_count = sum(float(score or 0) > 0 for score in skills.values())
+    confidence = "高" if evidence_count >= 20 else "中" if evidence_count >= 8 else "待补证据"
+    next_actions = []
+    if evidence_count < 8:
+        next_actions.append("先完成通用能力诊断，避免路线推荐过度依赖主观自评。")
+    if profile.blind_spots:
+        names = "、".join(item.get("name", "待提升能力") for item in profile.blind_spots[:3])
+        next_actions.append(f"优先补齐 {names}，并用代码、测试或项目结果证明掌握。")
+    next_actions.append("选择 1–3 条目标岗位路线，生成去重后的阶段学习计划。")
+    return {
+        "overview": (
+            f"当前画像版本为 V{profile.version or 1}，已有 {evidence_count} 项能力证据，"
+            f"画像可信度为“{confidence}”。"
+        ),
+        "strongest_dimension": {"code": strongest[0], "score": strongest[1]},
+        "weakest_dimension": {"code": weakest[0], "score": weakest[1]},
+        "evidence_count": evidence_count,
+        "confidence_level": confidence,
+        "next_actions": next_actions,
+    }
+
 
 def serialize(profile: LearnerProfile) -> dict:
+    dimensions = {**DIMENSION_DEFAULTS, **(profile.dimension_scores or {})}
+    skills = profile.skill_scores or {}
     return {
         "id": profile.id,
         "version": profile.version,
-        "background": profile.background,
-        "learning_goals": profile.goals,
-        "preferences": profile.preferences,
-        "weekly_hours": profile.weekly_hours,
-        "learning_style": profile.learning_style,
-        "knowledge_breadth": profile.knowledge_breadth,
-        "knowledge_depth": profile.knowledge_depth,
-        "engineering_maturity": profile.engineering_maturity,
-        "cognitive_load": profile.cognitive_load,
-        "dimension_scores": profile.dimension_scores,
-        "skill_scores": profile.skill_scores,
-        "blind_spots": profile.blind_spots,
-        "strengths": profile.strengths,
+        "background": profile.background or "",
+        "learning_goals": list(profile.goals or []),
+        "preferences": list(profile.preferences or []),
+        "weekly_hours": int(profile.weekly_hours or 8),
+        "learning_style": profile.learning_style or "balanced",
+        "knowledge_breadth": float(profile.knowledge_breadth or 0),
+        "knowledge_depth": float(profile.knowledge_depth or 0),
+        "engineering_maturity": float(profile.engineering_maturity or 0),
+        "cognitive_load": float(profile.cognitive_load or 0),
+        "dimension_scores": dimensions,
+        "skill_scores": skills,
+        "blind_spots": list(profile.blind_spots or []),
+        "strengths": list(profile.strengths or []),
         "comprehensive_score": (
-            round(sum(profile.dimension_scores.values()) / len(profile.dimension_scores), 1)
-            if profile.dimension_scores
+            round(sum(dimensions.values()) / len(dimensions), 1)
+            if dimensions
             else 0
         ),
-        "updated_at": profile.updated_at.isoformat(),
+        "analysis_summary": _analysis_summary(profile, dimensions, skills),
+        "updated_at": (
+            profile.updated_at.isoformat()
+            if profile.updated_at
+            else datetime.now(timezone.utc).isoformat()
+        ),
     }
 
 
@@ -108,6 +150,23 @@ def profile_trend(
         .order_by(ProfileSnapshot.created_at.asc())
         .limit(30)
     ).all()
+    if not rows and user.profile:
+        current = serialize(user.profile)
+        return success(
+            {
+                "items": [
+                    {
+                        "version": current["version"],
+                        "score": current["comprehensive_score"],
+                        "dimensions": current["dimension_scores"],
+                        "reason": "current_profile_backfill",
+                        "created_at": current["updated_at"],
+                    }
+                ],
+                "backfilled": True,
+                "notice": "历史版本缺少快照，已用当前画像建立趋势起点；后续分析、评测和反馈会持续追加。",
+            }
+        )
     return success(
         {
             "items": [

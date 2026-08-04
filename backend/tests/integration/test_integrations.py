@@ -212,3 +212,58 @@ def test_provider_config_isolated_between_users(client, auth_headers):
         json={"api_key": "sk-should-not-write"},
     )
     assert forbidden.status_code == 404
+
+
+def test_switching_secret_storage_requires_key_and_service_can_be_disabled(
+    client, auth_headers
+):
+    config = unwrap(
+        client.post(
+            "/api/v1/integrations/providers",
+            headers=auth_headers,
+            json={
+                "service_type": "llm",
+                "provider": "deepseek",
+                "label": "密钥模式边界测试",
+                "base_url": "https://api.deepseek.com/v1",
+                "model": "deepseek-chat",
+                "api_key": "sk-temporary-storage-key",
+                "storage_mode": "temporary",
+            },
+        )
+    )
+
+    missing_key = client.put(
+        f"/api/v1/integrations/providers/{config['id']}",
+        headers=auth_headers,
+        json={
+            "service_type": "llm",
+            "provider": "deepseek",
+            "label": "密钥模式边界测试",
+            "base_url": "https://api.deepseek.com/v1",
+            "model": "deepseek-chat",
+            "api_key": "",
+            "storage_mode": "encrypted",
+        },
+    )
+    assert missing_key.status_code == 422
+    assert "重新输入 API Key" in missing_key.json()["detail"]
+
+    disabled = unwrap(
+        client.put(
+            f"/api/v1/integrations/providers/{config['id']}",
+            headers=auth_headers,
+            json={
+                "service_type": "llm",
+                "provider": "deepseek",
+                "label": "密钥模式边界测试",
+                "base_url": "https://api.deepseek.com/v1",
+                "model": "deepseek-chat",
+                "api_key": "",
+                "storage_mode": "temporary",
+                "enabled": False,
+            },
+        )
+    )
+    assert disabled["enabled"] is False
+    assert disabled["key_available"] is True

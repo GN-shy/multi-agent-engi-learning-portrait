@@ -11,6 +11,15 @@ interface AuthPayload {
   user: User
 }
 
+function errorMessage(reason: any, fallback: string) {
+  const detail = reason.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item?.msg?.replace(/^Value error,\s*/, '') || '输入格式不正确').join('；')
+  }
+  return fallback
+}
+
 export const useUserStore = defineStore('user', () => {
   const current = ref<User | null>(null)
   const initialized = ref(false)
@@ -46,7 +55,7 @@ export const useUserStore = defineStore('user', () => {
       acceptAuth(await postData<AuthPayload>('/auth/login', { account, password }))
       return true
     } catch (reason: any) {
-      error.value = reason.response?.data?.detail || '登录失败，请检查账号和密码'
+      error.value = errorMessage(reason, '登录失败，请检查账号和密码')
       return false
     } finally {
       loading.value = false
@@ -60,7 +69,7 @@ export const useUserStore = defineStore('user', () => {
       acceptAuth(await postData<AuthPayload>('/auth/register', info))
       return true
     } catch (reason: any) {
-      error.value = reason.response?.data?.detail || '注册失败'
+      error.value = errorMessage(reason, '注册失败')
       return false
     } finally {
       loading.value = false

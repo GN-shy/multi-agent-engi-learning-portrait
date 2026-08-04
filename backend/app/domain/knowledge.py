@@ -86,6 +86,42 @@ class KnowledgeEngine:
                     ),
                 }
             )
+            for pathway in track.get("pathway_variants", []):
+                career = pathway.get("career", {})
+                for stage_index, stage in enumerate(pathway["stages"]):
+                    source = sources[(stage_index + len(track["skills"])) % len(sources)]
+                    topics = list(stage.get("topics", []))
+                    documents.append(
+                        {
+                            "chunk_id": f"pathway:{pathway['id']}:stage:{stage_index + 1}",
+                            "track_code": track["code"],
+                            "skill_code": "",
+                            "title": f"{pathway['name']} · {stage['title']}",
+                            "content": (
+                                f"建议周期：{stage['duration']}。"
+                                f"具体技术：{'、'.join(topics)}。"
+                                f"阶段目标：完成可运行示例、测试证据和复盘说明。"
+                            ),
+                            "difficulty": pathway.get("difficulty", 3),
+                            "source_id": source["id"],
+                            "source_title": source["title"],
+                            "source_url": source["url"],
+                            "content_version": source["version"],
+                            "credibility": 0.92,
+                            "search_text": " ".join(
+                                [
+                                    track["name"],
+                                    track["description"],
+                                    pathway["name"],
+                                    pathway.get("suitable_for", ""),
+                                    stage["title"],
+                                    " ".join(topics),
+                                    " ".join(career.get("roles", [])),
+                                    " ".join(career.get("work_content", [])),
+                                ]
+                            ),
+                        }
+                    )
         return documents
 
     def search(
@@ -95,7 +131,8 @@ class KnowledgeEngine:
         top_k: int = 8,
         target_difficulty: float | None = None,
     ) -> list[dict[str, Any]]:
-        query_tokens = tokenize(query)
+        query_tokens = list(dict.fromkeys(tokenize(query)))
+        normalized_query = re.sub(r"\s+", " ", query.lower()).strip()
         total_documents = len(self.documents)
         candidates = [
             document
@@ -105,6 +142,7 @@ class KnowledgeEngine:
         scored = []
         for document in candidates:
             document_tokens = tokenize(document["search_text"])
+            normalized_document = document["search_text"].lower()
             counts = Counter(document_tokens)
             lexical = 0.0
             matched = []
@@ -115,11 +153,29 @@ class KnowledgeEngine:
                         1 + total_documents / (1 + self.document_frequency[token])
                     )
                     lexical += (1 + math.log(counts[token])) * inverse_frequency
+                elif len(token) >= 3:
+                    partial = next(
+                        (
+                            candidate
+                            for candidate in counts
+                            if len(candidate) >= 3
+                            and (token in candidate or candidate in token)
+                        ),
+                        None,
+                    )
+                    if partial:
+                        matched.append(token)
+                        lexical += 0.65
+            phrase_bonus = (
+                2.0
+                if normalized_query and normalized_query in normalized_document
+                else 0.0
+            )
             track_bonus = 1.2 if track_code and document["track_code"] == track_code else 0
             difficulty_fit = 0.0
             if target_difficulty is not None:
                 difficulty_fit = max(0.0, 1.0 - abs(document["difficulty"] - target_difficulty) / 5)
-            score = lexical + track_bonus + difficulty_fit * 0.5
+            score = lexical + phrase_bonus + track_bonus + difficulty_fit * 0.5
             if score > 0 or not query_tokens:
                 scored.append(
                     {

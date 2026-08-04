@@ -7,6 +7,15 @@
       show-icon
     />
 
+    <section class="panel quick-start section">
+      <div class="quick-title"><div><span>3 步启用真实 AI</span><h3>配置一次，智能生成时按需选择</h3></div><el-tag effect="plain">OpenAI-compatible</el-tag></div>
+      <div class="quick-steps">
+        <div><i>1</i><p><b>选择厂商</b><span>DeepSeek、OpenAI 或兼容服务</span></p></div>
+        <div><i>2</i><p><b>粘贴密钥并限额</b><span>密钥不进入浏览器持久存储</span></p></div>
+        <div><i>3</i><p><b>连接测试</b><span>成功后在“智能生成”选择该模型</span></p></div>
+      </div>
+    </section>
+
     <div class="metric-grid section">
       <article class="metric"><span>服务配置</span><strong>{{ configs.length }}</strong><small>每个用户完全隔离</small></article>
       <article class="metric"><span>可用密钥</span><strong>{{ configs.filter(item => item.key_available).length }}</strong><small>明文永不返回前端</small></article>
@@ -49,16 +58,21 @@
             <div class="muted small">{{ usageFor(row.id).estimated_cost || 0 }} / {{ row.daily_budget }} 预算</div>
           </template>
         </el-table-column>
-        <el-table-column label="连接状态" width="130">
+        <el-table-column label="状态" min-width="190">
           <template #default="{ row }">
-            <el-tag :type="testType(row.last_test_status)">{{ testLabel(row.last_test_status) }}</el-tag>
+            <div class="status-line">
+              <el-tag :type="testType(row.last_test_status)">{{ testLabel(row.last_test_status) }}</el-tag>
+              <el-tag v-if="!row.enabled" type="info">已停用</el-tag>
+            </div>
+            <div v-if="row.last_test_message" class="muted small status-message">{{ row.last_test_message }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="250" fixed="right">
+        <el-table-column label="操作" width="285" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" :loading="testingId === row.id" @click="testConnection(row)">测试</el-button>
+            <el-button link type="primary" :loading="testingId === row.id" :disabled="!row.enabled || !row.key_available" @click="testConnection(row)">测试</el-button>
             <el-button link @click="openEdit(row)">编辑</el-button>
-            <el-button v-if="row.storage_mode === 'temporary'" link type="warning" @click="openTemporary(row)">装载密钥</el-button>
+            <el-button v-if="row.storage_mode === 'temporary'" link type="warning" @click="openTemporary(row)">{{ row.key_available ? '更换密钥' : '装载密钥' }}</el-button>
+            <el-button v-if="row.storage_mode === 'temporary' && row.key_available" link @click="clearTemporaryKey(row)">清除</el-button>
             <el-button link type="danger" @click="remove(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -103,6 +117,9 @@
             <el-radio value="encrypted">后端加密保存</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="服务状态">
+          <el-switch v-model="form.enabled" active-text="启用" inactive-text="停用" />
+        </el-form-item>
         <el-divider>限额与成本治理</el-divider>
         <div class="grid three">
           <el-form-item label="单次最大 Token"><el-input-number v-model="form.max_tokens_per_request" :min="64" :max="128000" /></el-form-item>
@@ -115,7 +132,8 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="save">保存配置</el-button>
+        <el-button :loading="saving" @click="save(false)">仅保存</el-button>
+        <el-button type="primary" :loading="saving" @click="save(true)">保存并测试</el-button>
       </template>
     </el-dialog>
 
@@ -139,6 +157,12 @@ import { deleteData, getData, postData, putData } from '@/api'
 const configs = ref<any[]>([])
 const providers = ref<any[]>([])
 const sourceModes = ref<any[]>([])
+const sourceModeCopy: Record<string, {name: string; description: string}> = {
+  knowledge_only: { name: '仅知识库', description: '只使用本地审核知识库，可靠性最高，不产生外部费用。' },
+  knowledge_web: { name: '知识库 + 全网检索', description: '补充最新框架和技术资料，不调用生成模型。' },
+  knowledge_ai: { name: '知识库 + AI 创作', description: '模型只能基于本地证据整合和个性化生成。' },
+  full: { name: '全能力模式', description: '本地知识、联网检索、双 Agent 生成、仲裁与引用校验。' },
+}
 const usage = ref<any[]>([])
 const dialogVisible = ref(false)
 const editingId = ref('')
@@ -169,15 +193,19 @@ const totalCost = computed(() => usage.value.reduce((sum, item) => sum + Number(
 onMounted(load)
 
 async function load() {
-  const [catalog, configData, usageData] = await Promise.all([
-    getData<any>('/integrations/providers/catalog'),
-    getData<any>('/integrations/providers'),
-    getData<any>('/integrations/usage'),
-  ])
-  providers.value = catalog.items
-  sourceModes.value = catalog.source_modes
-  configs.value = configData.items
-  usage.value = usageData.items
+  try {
+    const [catalog, configData, usageData] = await Promise.all([
+      getData<any>('/integrations/providers/catalog'),
+      getData<any>('/integrations/providers'),
+      getData<any>('/integrations/usage'),
+    ])
+    providers.value = catalog.items
+    sourceModes.value = catalog.source_modes.map((item: any) => ({ ...item, ...(sourceModeCopy[item.code] || {}) }))
+    configs.value = configData.items
+    usage.value = usageData.items
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.detail || '外部服务配置加载失败')
+  }
 }
 function openCreate() {
   editingId.value = ''
@@ -206,7 +234,7 @@ function applyProviderDefault() {
   if (item?.base_url) form.base_url = item.base_url
   if (form.provider === 'deepseek' && !form.model) form.model = 'deepseek-chat'
 }
-async function save() {
+async function save(runTest: boolean) {
   if (!form.label.trim() || !form.base_url.startsWith('https://') || (!editingId.value && !form.api_key)) {
     ElMessage.warning('请填写名称、HTTPS 服务地址和 API Key')
     return
@@ -217,9 +245,15 @@ async function save() {
   }
   saving.value = true
   try {
-    if (editingId.value) await putData(`/integrations/providers/${editingId.value}`, form)
-    else await postData('/integrations/providers', form)
-    ElMessage.success('服务配置已保存，明文密钥不会返回前端')
+    const saved = editingId.value
+      ? await putData<any>(`/integrations/providers/${editingId.value}`, form)
+      : await postData<any>('/integrations/providers', form)
+    if (runTest) {
+      const tested = await postData<any>(`/integrations/providers/${saved.id}/test`)
+      ElMessage.success(tested.message || '配置已保存并通过连接测试')
+    } else {
+      ElMessage.success('服务配置已保存，明文密钥不会返回前端')
+    }
     form.api_key = ''
     dialogVisible.value = false
     await load()
@@ -259,9 +293,17 @@ async function loadTemporaryKey() {
     temporaryDialog.visible = false
     ElMessage.success('临时密钥已装载')
     await load()
+  } catch (error: any) {
+    ElMessage.error(error.response?.data?.detail || '临时密钥装载失败')
   } finally {
     temporaryDialog.loading = false
   }
+}
+async function clearTemporaryKey(row: any) {
+  await ElMessageBox.confirm(`清除“${row.label}”的临时密钥？之后可随时重新装载。`, '清除临时密钥', { type: 'warning' })
+  await deleteData(`/integrations/providers/${row.id}/temporary-key`)
+  ElMessage.success('临时密钥已从后端内存清除')
+  await load()
 }
 function providerLabel(value: string) {
   return ({ deepseek: 'DeepSeek', openai: 'OpenAI', openai_compatible: 'OpenAI-compatible', tavily: 'Tavily', serper: 'Serper', custom: '自定义搜索' } as Record<string, string>)[value] || value
@@ -278,5 +320,5 @@ function testType(value: string) {
 </script>
 
 <style scoped>
-.section{margin-top:18px}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric small{display:block;color:var(--muted);margin-top:6px}.small{font-size:12px;margin-top:4px}.ellipsis{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mode-grid article{padding:16px;border:1px solid var(--line);border-radius:14px;background:#f7f9fd}.mode-grid p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:0}.el-select{width:100%}.temporary-input{margin-top:18px}@media(max-width:1000px){.metric-grid,.mode-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.metric-grid,.mode-grid{grid-template-columns:1fr}}
+.section{margin-top:18px}.quick-start{background:linear-gradient(120deg,#f8fbff,#eef4ff);border-color:#dbe6ff}.quick-title{display:flex;align-items:flex-start;justify-content:space-between}.quick-title span{color:#2b62df;font-size:11px;font-weight:800}.quick-title h3{margin:5px 0 0}.quick-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.quick-steps>div{display:flex;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.88);border:1px solid #e2eaff}.quick-steps i{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:#2d65e8;color:white;font-style:normal;font-weight:800}.quick-steps p,.quick-steps b,.quick-steps span{display:block;margin:0}.quick-steps span{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric small{display:block;color:var(--muted);margin-top:6px}.small{font-size:12px;margin-top:4px}.ellipsis{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-line{display:flex;gap:5px;align-items:center}.status-message{max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mode-grid article{padding:16px;border:1px solid var(--line);border-radius:14px;background:#f7f9fd}.mode-grid p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:0}.el-select{width:100%}.temporary-input{margin-top:18px}@media(max-width:1000px){.metric-grid,.mode-grid{grid-template-columns:repeat(2,1fr)}.quick-steps{grid-template-columns:1fr}}@media(max-width:600px){.metric-grid,.mode-grid{grid-template-columns:1fr}}
 </style>

@@ -1,5 +1,6 @@
 """HTTP 边界使用的 Pydantic 模型。"""
 
+import unicodedata
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -16,6 +17,33 @@ class RegisterInput(BaseModel):
     username: str = Field(min_length=2, max_length=40)
     email: str = Field(min_length=5, max_length=255, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def normalize_username(cls, value: Any) -> str:
+        normalized = unicodedata.normalize("NFKC", str(value or "")).strip()
+        if not normalized:
+            raise ValueError("用户名不能为空")
+        if any(unicodedata.category(char).startswith("C") for char in normalized):
+            raise ValueError("用户名不能包含不可见或控制字符")
+        if any(not (char.isalnum() or char in "_.-") for char in normalized):
+            raise ValueError("用户名仅支持中文、字母、数字、下划线、点和短横线")
+        return normalized
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        categories = sum(
+            [
+                any(char.islower() for char in value),
+                any(char.isupper() for char in value),
+                any(char.isdigit() for char in value),
+                any(not char.isalnum() for char in value),
+            ]
+        )
+        if categories < 3:
+            raise ValueError("密码至少包含大写字母、小写字母、数字、特殊字符中的三类")
+        return value
 
 
 class LoginInput(BaseModel):
@@ -115,6 +143,11 @@ class ExternalSearchInput(BaseModel):
 class PasswordChangeInput(BaseModel):
     current_password: str = Field(min_length=8, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password_strength(cls, value: str) -> str:
+        return RegisterInput.validate_password_strength(value)
 
 
 class AccountDeleteInput(BaseModel):

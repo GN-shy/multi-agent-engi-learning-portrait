@@ -60,7 +60,11 @@
                 </footer>
               </article>
             </div>
-            <div v-else class="empty">输入问题后查看可追溯知识片段</div>
+            <div v-else class="empty search-empty">
+              <h3>{{ query ? '暂未找到完全匹配的内容' : '输入问题后查看可追溯知识片段' }}</h3>
+              <p>可以尝试更具体的语言、框架或岗位名称：</p>
+              <div class="quick-searches"><el-button v-for="item in suggestions" :key="item" size="small" @click="quickSearch(item)">{{ item }}</el-button></div>
+            </div>
           </el-tab-pane>
 
           <el-tab-pane label="我的贡献" name="contributions">
@@ -197,6 +201,7 @@ const tracks = ref<TrackSummary[]>([])
 const results = ref<any[]>([])
 const contributions = ref<any[]>([])
 const catalogVersion = ref('')
+const suggestions = ref(['Python', 'Vue 3', 'React', 'Java', 'Agent', '算法', '嵌入式'])
 const loading = ref(false)
 const contributionLoading = ref(false)
 const submitting = ref(false)
@@ -224,11 +229,13 @@ async function search() {
       params: { q: query.value, track_code: trackCode.value || undefined, top_k: 20 },
     })
     results.value = data.items
+    suggestions.value = data.suggestions?.length ? data.suggestions : data.popular_queries || suggestions.value
     catalogVersion.value = data.filters.catalog_version
   } finally {
     loading.value = false
   }
 }
+function quickSearch(value: string) { query.value = value; search() }
 
 async function loadContributions() {
   contributionLoading.value = true
@@ -295,4 +302,5 @@ function openContribution(item: any) {
 
 <style scoped>
 .search-panel{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:30px}.search-panel h2{font-size:28px;margin:0 0 8px}.search-panel p{color:var(--muted);margin:0}.search-row{display:flex;gap:10px;flex:1;max-width:880px}.search-row :deep(.el-input-group__prepend){width:200px}.result-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:18px}.results{display:grid;gap:12px}.result{padding:18px;border:1px solid var(--line);border-radius:14px;transition:.2s}.result h3{margin:12px 0 7px}.result p,.result footer{color:var(--muted)}.result footer{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:12px;font-size:12px}.result footer b{color:#3168ee}.rag{padding-left:22px}.rag li{padding:0 0 23px 14px;border-left:2px solid #dbe5fa}.rag b,.rag span{display:block}.rag span{font-size:12px;color:var(--muted);margin-top:4px}.content{font-size:16px;line-height:1.85}.contribution-form{margin-top:20px}.contribution-form .el-select{width:100%}@media(max-width:1100px){.search-panel{flex-wrap:wrap}.search-row{order:3;min-width:100%}}@media(max-width:980px){.result-layout{grid-template-columns:1fr}.search-row{flex-direction:column}}
+.search-empty h3{margin:0 0 7px}.search-empty p{color:var(--muted);font-size:12px}.quick-searches{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
 </style>

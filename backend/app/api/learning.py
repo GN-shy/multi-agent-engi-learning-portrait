@@ -613,6 +613,26 @@ def records(
         .order_by(AssessmentAttempt.created_at.desc())
         .limit(limit)
     ).all()
+    practice_submissions = db.scalars(
+        select(Feedback)
+        .where(
+            Feedback.user_id == user.id,
+            Feedback.feedback_type == "practice_submission",
+        )
+        .order_by(Feedback.created_at.desc())
+        .limit(limit)
+    ).all()
+    session_ids = {item.session_id for item in practice_submissions if item.session_id}
+    sessions_by_id = {
+        row.id: row
+        for row in (
+            db.scalars(
+                select(LearningSession).where(LearningSession.id.in_(session_ids))
+            ).all()
+            if session_ids
+            else []
+        )
+    }
     items = [
         {
             "id": item.id,
@@ -638,13 +658,11 @@ def records(
             "id": item.id,
             "type": "practice_submission",
             "title": item.payload.get("resource_title", "项目实操证据提交"),
-            "track_code": (
-                db.get(LearningSession, item.session_id).track_code
-                if db.get(LearningSession, item.session_id)
-                else ""
-            ),
-            "score": item.adjustment.get("score"),
-            "passed": item.adjustment.get("passed", False),
+            "track_code": sessions_by_id.get(item.session_id).track_code
+            if sessions_by_id.get(item.session_id)
+            else "",
+            "score": (item.adjustment or {}).get("score"),
+            "passed": (item.adjustment or {}).get("passed", False),
             "created_at": item.created_at.isoformat(),
         }
         for item in practice_submissions
