@@ -77,6 +77,10 @@ class PathwayComposeInput(BaseModel):
     weekly_hours: int = Field(default=8, ge=1, le=80)
 
 
+class PathwayRecommendInput(BaseModel):
+    track_codes: list[str] = Field(min_length=1, max_length=6)
+
+
 class TrackSelectInput(BaseModel):
     track_code: str
 
@@ -108,6 +112,47 @@ class AssessmentSubmitInput(BaseModel):
 
 class CheckinInput(BaseModel):
     completed_task_ids: list[str] = Field(default_factory=list)
+    feedback_type: Literal["normal", "too_hard", "too_easy", "no_time", "blocked"] = "normal"
+    hours_spent: float = Field(default=0, ge=0, le=168)
+    note: str = Field(default="", max_length=1000)
+
+
+class JobParseInput(BaseModel):
+    raw_text: str = Field(min_length=30, max_length=30000)
+    source_url: str = Field(default="", max_length=1000)
+
+
+class CareerTargetInput(JobParseInput):
+    title: str = Field(min_length=2, max_length=160)
+    company: str = Field(default="", max_length=160)
+    city: str = Field(default="", max_length=80)
+    education: str = Field(default="", max_length=80)
+    experience: str = Field(default="", max_length=120)
+    salary: str = Field(default="", max_length=120)
+    required_skills: list[dict[str, Any]] = Field(default_factory=list, max_length=80)
+    responsibilities: list[str] = Field(default_factory=list, max_length=30)
+
+
+class EvidenceItemInput(BaseModel):
+    evidence_type: Literal["repository", "commit", "test", "deployment", "screenshot_note", "document", "note"]
+    value: str = Field(min_length=2, max_length=5000)
+    description: str = Field(default="", max_length=2000)
+
+
+class TaskEvidenceInput(BaseModel):
+    evidence: list[EvidenceItemInput] = Field(min_length=1, max_length=20)
+    reflection: str = Field(default="", max_length=3000)
+    hours_spent: float = Field(default=0, ge=0, le=168)
+
+
+class RecalibrationInput(BaseModel):
+    trigger: Literal["manual", "too_hard", "too_easy", "no_time", "blocked", "job_target", "evidence"]
+    note: str = Field(default="", max_length=1000)
+    weekly_hours: int | None = Field(default=None, ge=1, le=80)
+
+
+class RevisionDecisionInput(BaseModel):
+    action: Literal["accept", "reject", "revert"]
 
 
 class ExternalServiceInput(BaseModel):
@@ -119,7 +164,7 @@ class ExternalServiceInput(BaseModel):
     base_url: str = Field(min_length=8, max_length=500)
     model: str = Field(default="", max_length=160)
     api_key: str = Field(default="", max_length=1000)
-    storage_mode: Literal["temporary", "encrypted"] = "temporary"
+    storage_mode: Literal["temporary", "encrypted"] = "encrypted"
     max_tokens_per_request: int = Field(default=2048, ge=64, le=128000)
     daily_budget: float = Field(default=2.0, ge=0, le=100000)
     timeout_seconds: int = Field(default=45, ge=3, le=180)

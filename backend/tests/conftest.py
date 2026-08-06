@@ -39,7 +39,7 @@ def admin_headers(client):
         json={
             "username": "测试审核员",
             "email": "reviewer@test.local",
-            "password": "reviewer12345",
+            "password": "Reviewer@12345",
         },
     )
     assert response.status_code in {200, 201}
@@ -47,4 +47,4 @@ def admin_headers(client):
         reviewer = db.query(User).filter(User.email == "reviewer@test.local").one()
         reviewer.role = "admin"
         db.commit()
-    return _headers_for(client, "reviewer@test.local", "reviewer12345")
+    return _headers_for(client, "reviewer@test.local", "Reviewer@12345")

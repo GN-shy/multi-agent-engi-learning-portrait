@@ -32,7 +32,7 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
 
     tree = unwrap(client.get("/api/v1/tracks/tree"))
     assert len(tree["clusters"]) == 3
-    assert sum(len(cluster["tracks"]) for cluster in tree["clusters"]) == 15
+    assert sum(len(cluster["tracks"]) for cluster in tree["clusters"]) == 16
 
     compared = unwrap(
         client.post(
@@ -90,7 +90,14 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
             params={"q": "Agent 状态机 超时 恢复", "track_code": "agent_engineering"},
         )
     )
-    assert any(item["chunk_id"].startswith("contrib:") for item in search["items"])
+    contribution_result = next(
+        item for item in search["items"] if item["chunk_id"].startswith("contrib:")
+    )
+    contribution_detail = unwrap(
+        client.get(f"/api/v1/knowledge/chunks/{contribution_result['chunk_id']}")
+    )
+    assert contribution_detail["source_layer"] == "reviewed_contribution"
+    assert contribution_detail["title"] == "Agent 状态机工程实践"
 
     session = unwrap(
         client.post(
@@ -124,7 +131,14 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
             headers=auth_headers,
             json={
                 "completed_step_ids": step_ids,
-                "evidence": [f"commit-{index}" for index in range(len(step_ids))],
+                "evidence": [
+                    {
+                        "step_id": step_id,
+                        "type": "commit",
+                        "value": f"a1b2c3{index:02x}",
+                    }
+                    for index, step_id in enumerate(step_ids)
+                ],
             },
         )
     )
@@ -205,10 +219,10 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
     assert dashboard["latest_session"]["status"] == "completed"
 
     evaluation_summary = unwrap(
-        client.get("/api/v1/evaluation/summary", headers=auth_headers)
+        client.get("/api/v1/evaluation/summary", headers=admin_headers)
     )
-    assert evaluation_summary["dataset"]["task_count"] == 60
-    assert evaluation_summary["can_run"] is False
+    assert evaluation_summary["dataset"]["task_count"] == 64
+    assert evaluation_summary["can_run"] is True
 
     evaluation_run = unwrap(
         client.post("/api/v1/evaluation/run", headers=admin_headers)

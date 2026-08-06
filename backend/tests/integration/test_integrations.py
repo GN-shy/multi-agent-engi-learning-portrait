@@ -1,4 +1,5 @@
 import json
+import re
 
 from app.infrastructure.external_gateway import GatewayError, LLMResult
 
@@ -31,13 +32,23 @@ def test_byok_full_mode_masking_usage_and_safe_degradation(
         ]
 
     def fake_complete(self, messages, max_tokens=None, operation="generation"):
+        evidence_line = next(
+            line for line in messages[-1]["content"].splitlines() if line.startswith("[")
+        )
+        match = re.match(r"\[([^]]+)]\s*[^：]*：(.*)", evidence_line)
+        assert match
+        citation_id, evidence_quote = match.groups()
         return LLMResult(
             content=json.dumps(
                 {
-                    "personalized_summary": "优先完成状态图最小闭环，再提交失败恢复证据。",
-                    "project_tips": ["为工具调用增加超时测试", "保存结构化执行事件"],
-                    "caution": "不要跳过前置依赖。",
-                    "citation_ids": [],
+                    "atomic_claims": [
+                        {
+                            "kind": "tip",
+                            "text": evidence_quote,
+                            "citation_ids": [citation_id],
+                            "evidence_quote": evidence_quote,
+                        }
+                    ],
                 },
                 ensure_ascii=False,
             ),
@@ -130,6 +141,7 @@ def test_byok_full_mode_masking_usage_and_safe_degradation(
     enhancement = session["final_output"]["lecture"]["ai_enhancement"]
     assert enhancement["ai_generated"] is True
     assert enhancement["model"] == "mock-computer-model"
+    assert enhancement["claim_verification"]["grounded_claim_rate"] == 1
     serialized_session = json.dumps(session, ensure_ascii=False)
     assert llm_secret not in serialized_session
     assert search_secret not in serialized_session

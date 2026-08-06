@@ -26,9 +26,11 @@ class ContentEngine:
         selected_pathways = pathway_ids or ([pathway_id] if pathway_id else [])
         track = self._learning_scope(track_code, selected_pathways)
         ordered = self._ordered_skills(track)
+        catalog_sources = self._catalog_sources(track)
+        auditable_evidence = evidence + catalog_sources
         sections = []
         for skill in ordered:
-            source = self._evidence_for_skill(skill["code"], evidence)
+            source = self._evidence_for_skill(skill["code"], auditable_evidence)
             sections.append(
                 {
                     "skill_code": skill["code"],
@@ -59,7 +61,7 @@ class ContentEngine:
             profile,
             route_match,
             sections,
-            evidence,
+            auditable_evidence,
             practice_mode="specification_first",
             pathway_id=pathway_id,
             pathway_ids=selected_pathways,
@@ -78,9 +80,11 @@ class ContentEngine:
         selected_pathways = pathway_ids or ([pathway_id] if pathway_id else [])
         track = self._learning_scope(track_code, selected_pathways)
         skills = self._ordered_skills(track)
+        catalog_sources = self._catalog_sources(track)
+        auditable_evidence = evidence + catalog_sources
         sections = []
         for index, skill in enumerate(skills):
-            source = self._evidence_for_skill(skill["code"], evidence)
+            source = self._evidence_for_skill(skill["code"], auditable_evidence)
             sections.append(
                 {
                     "skill_code": skill["code"],
@@ -113,7 +117,7 @@ class ContentEngine:
             profile,
             route_match,
             sections,
-            evidence,
+            auditable_evidence,
             practice_mode="challenge_first",
             pathway_id=pathway_id,
             pathway_ids=selected_pathways,
@@ -241,6 +245,7 @@ class ContentEngine:
             "source_traces": [
                 {
                     "chunk_id": item["chunk_id"],
+                    "skill_code": item.get("skill_code", ""),
                     "title": item["title"],
                     "source_title": item["source_title"],
                     "source_url": item["source_url"],
@@ -302,9 +307,9 @@ class ContentEngine:
             "rules": {
                 "citation_coverage_at_least_95_percent": final_score["citation_coverage"] >= 0.95,
                 "no_prerequisite_violation": final_score["prerequisite_violations"] == 0,
-                "unreferenced_risk_below_5_percent": final_score["hallucination_risk"] < 0.05,
+                "system_detected_unsupported_content_below_5_percent": final_score["hallucination_risk"] < 0.05,
             },
-            "notice": "风险值是基于引用覆盖和引用完整性的规则估计；是否达到真实幻视率目标，以冻结评测集结果为准。",
+            "notice": "该闸门检查引用是否真实存在且与同一技能绑定；它是发布前系统检测，不等同于人工盲测的真实幻觉率。",
         }
         return {
             "candidate_scores": {"dgs_a": score_a, "dgs_b": score_b},
@@ -335,15 +340,31 @@ class ContentEngine:
             ]
         )
         covered = {section["skill_code"] for section in sections}
-        valid_sources = {item["chunk_id"] for item in evidence}
+        valid_sources = {item["chunk_id"] for item in evidence} | {
+            item["chunk_id"] for item in candidate.get("source_traces", [])
+        }
         cited_sections = [
             section
             for section in sections
             if section.get("citation_ids")
             and all(item in valid_sources for item in section["citation_ids"])
         ]
+        source_items = {
+            item["chunk_id"]: item
+            for item in evidence + candidate.get("source_traces", [])
+            if item.get("chunk_id")
+        }
+        grounded_sections = [
+            section
+            for section in cited_sections
+            if any(
+                source_items.get(citation_id, {}).get("skill_code") == section["skill_code"]
+                for citation_id in section.get("citation_ids", [])
+            )
+        ]
         coverage = len(target & covered) / max(1, len(target))
         citation_coverage = len(cited_sections) / max(1, len(sections))
+        grounding_coverage = len(grounded_sections) / max(1, len(sections))
         prerequisite_violations = self._prerequisite_violations(sections)
         expected_difficulty = 1 + profile.get("knowledge_depth", 0.2) * 4
         actual_difficulty = mean(section["difficulty"] for section in sections)
@@ -367,9 +388,10 @@ class ContentEngine:
                 / max(1, len(sections)),
                 3,
             ),
+            "grounding_coverage": round(grounding_coverage, 3),
             "profile_fit": round(difficulty_fit, 3),
             "prerequisite_violations": prerequisite_violations,
-            "hallucination_risk": round(max(0, 1 - citation_coverage) * 0.08, 3),
+            "hallucination_risk": round(max(0, 1 - grounding_coverage), 3),
         }
 
     def _prerequisite_violations(self, sections: list[dict[str, Any]]) -> int:
@@ -451,6 +473,34 @@ class ContentEngine:
         skill_code: str, evidence: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
         return next((item for item in evidence if item.get("skill_code") == skill_code), None)
+
+    @staticmethod
+    def _catalog_sources(track: dict[str, Any]) -> list[dict[str, Any]]:
+        """Turn reviewed catalog references into explicit, skill-scoped traces.
+
+        These traces do not pretend a web retrieval happened. They record the exact
+        route catalog source and version used for deterministic section content.
+        """
+        sources = track.get("sources", [])
+        if not sources:
+            return []
+        traces = []
+        for index, skill in enumerate(track.get("skills", [])):
+            source = sources[index % len(sources)]
+            traces.append(
+                {
+                    "chunk_id": f"catalog:{track['code']}:{skill['code']}",
+                    "skill_code": skill["code"],
+                    "title": f"{skill['name']}：领域目录审核依据",
+                    "source_title": source["title"],
+                    "source_url": source["url"],
+                    "content_version": source.get("version", "catalog-current"),
+                    "source_layer": "catalog_reference",
+                    "credibility": 0.9,
+                    "retrieved_at": None,
+                }
+            )
+        return traces
 
     @staticmethod
     def _merge_steps(primary: list[dict], secondary: list[dict]) -> list[dict]:

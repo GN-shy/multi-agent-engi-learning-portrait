@@ -8,7 +8,7 @@
     />
 
     <section class="panel quick-start section">
-      <div class="quick-title"><div><span>3 步启用真实 AI</span><h3>配置一次，智能生成时按需选择</h3></div><el-tag effect="plain">OpenAI-compatible</el-tag></div>
+      <div class="quick-title"><div><span>3 步启用真实 AI</span><h3>加密保存后长期可用，无需每次重新连接</h3></div><el-tag effect="plain">OpenAI-compatible</el-tag></div>
       <div class="quick-steps">
         <div><i>1</i><p><b>选择厂商</b><span>DeepSeek、OpenAI 或兼容服务</span></p></div>
         <div><i>2</i><p><b>粘贴密钥并限额</b><span>密钥不进入浏览器持久存储</span></p></div>
@@ -64,7 +64,8 @@
               <el-tag :type="testType(row.last_test_status)">{{ testLabel(row.last_test_status) }}</el-tag>
               <el-tag v-if="!row.enabled" type="info">已停用</el-tag>
             </div>
-            <div v-if="row.last_test_message" class="muted small status-message">{{ row.last_test_message }}</div>
+            <div v-if="row.storage_mode === 'encrypted' && row.key_available && row.last_test_status === 'success'" class="persisted-status">已持久连接，刷新或重新登录后自动恢复</div>
+            <div v-else-if="row.last_test_message" class="muted small status-message">{{ row.last_test_message }}</div>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="285" fixed="right">
@@ -114,7 +115,7 @@
         <el-form-item label="保存方式">
           <el-radio-group v-model="form.storage_mode">
             <el-radio value="temporary">临时使用（服务重启/过期后清除）</el-radio>
-            <el-radio value="encrypted">后端加密保存</el-radio>
+            <el-radio value="encrypted">后端加密保存（推荐，无需重复连接）</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="服务状态">
@@ -176,7 +177,7 @@ const defaults = {
   base_url: 'https://api.deepseek.com/v1',
   model: 'deepseek-chat',
   api_key: '',
-  storage_mode: 'temporary',
+  storage_mode: 'encrypted',
   max_tokens_per_request: 2048,
   daily_budget: 2,
   timeout_seconds: 45,
@@ -320,5 +321,5 @@ function testType(value: string) {
 </script>
 
 <style scoped>
-.section{margin-top:18px}.quick-start{background:linear-gradient(120deg,#f8fbff,#eef4ff);border-color:#dbe6ff}.quick-title{display:flex;align-items:flex-start;justify-content:space-between}.quick-title span{color:#2b62df;font-size:11px;font-weight:800}.quick-title h3{margin:5px 0 0}.quick-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.quick-steps>div{display:flex;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.88);border:1px solid #e2eaff}.quick-steps i{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:#2d65e8;color:white;font-style:normal;font-weight:800}.quick-steps p,.quick-steps b,.quick-steps span{display:block;margin:0}.quick-steps span{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric small{display:block;color:var(--muted);margin-top:6px}.small{font-size:12px;margin-top:4px}.ellipsis{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-line{display:flex;gap:5px;align-items:center}.status-message{max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mode-grid article{padding:16px;border:1px solid var(--line);border-radius:14px;background:#f7f9fd}.mode-grid p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:0}.el-select{width:100%}.temporary-input{margin-top:18px}@media(max-width:1000px){.metric-grid,.mode-grid{grid-template-columns:repeat(2,1fr)}.quick-steps{grid-template-columns:1fr}}@media(max-width:600px){.metric-grid,.mode-grid{grid-template-columns:1fr}}
+.section{margin-top:18px}.quick-start{background:linear-gradient(120deg,#f8fbff,#eef4ff);border-color:#dbe6ff}.quick-title{display:flex;align-items:flex-start;justify-content:space-between}.quick-title span{color:#2b62df;font-size:11px;font-weight:800}.quick-title h3{margin:5px 0 0}.quick-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.quick-steps>div{display:flex;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.88);border:1px solid #e2eaff}.quick-steps i{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:#2d65e8;color:white;font-style:normal;font-weight:800}.quick-steps p,.quick-steps b,.quick-steps span{display:block;margin:0}.quick-steps span{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.metric small{display:block;color:var(--muted);margin-top:6px}.small{font-size:12px;margin-top:4px}.ellipsis{max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-line{display:flex;gap:5px;align-items:center}.status-message{max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.persisted-status{font-size:11px;color:#16835d;margin-top:4px;line-height:1.35}.mode-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.mode-grid article{padding:16px;border:1px solid var(--line);border-radius:14px;background:#f7f9fd}.mode-grid p{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:0}.el-select{width:100%}.temporary-input{margin-top:18px}@media(max-width:1000px){.metric-grid,.mode-grid{grid-template-columns:repeat(2,1fr)}.quick-steps{grid-template-columns:1fr}}@media(max-width:600px){.metric-grid,.mode-grid{grid-template-columns:1fr}}
 </style>

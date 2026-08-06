@@ -4,7 +4,7 @@
   "frozen_at": "2026-07-24",
   "rubric_version": "computer-growth-rubric-v1",
   "notes": [
-    "共 60 个冻结任务：15 条正式路线各 4 个任务。",
+    "共 64 个冻结任务：16 个正式主方向各 4 个任务。",
     "覆盖画像诊断、路线决策、内容生成、前置依赖审计四类核心任务。",
     "当前可离线复算六 Agent 系统；直接 LLM 与单 Agent RAG 对照必须在相同模型、参数和知识快照下另行运行，未运行时不得伪造分数。"
   ],
@@ -82,6 +82,11 @@
     {"id":"EV057","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"profile_diagnosis","goal":"完成可追溯的学习行为数据平台","expected":{"min_evidence_count":4,"requires_blind_spots":true}},
     {"id":"EV058","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"route_decision","goal":"学习数据工程、批流处理、数据建模和质量治理","expected":{"target_track":"data_engineering","top_k":3}},
     {"id":"EV059","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"content_generation","goal":"完成可追溯的学习行为数据平台","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
-    {"id":"EV060","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"dependency_audit","goal":"建立可追溯的数据工程学习路径","expected":{"max_prerequisite_violations":0}}
+    {"id":"EV060","persona_id":"P02_career_switcher","cluster":"systems","track_code":"data_engineering","task_type":"dependency_audit","goal":"建立可追溯的数据工程学习路径","expected":{"max_prerequisite_violations":0}},
+
+    {"id":"EV061","persona_id":"P01_zero_beginner","cluster":"software","track_code":"uiux","task_type":"profile_diagnosis","goal":"完成有研究证据的学习产品交互原型","expected":{"min_evidence_count":3,"requires_blind_spots":true}},
+    {"id":"EV062","persona_id":"P01_zero_beginner","cluster":"software","track_code":"uiux","task_type":"route_decision","goal":"学习用户研究、信息架构、交互设计和可用性验证","expected":{"target_track":"uiux","top_k":3}},
+    {"id":"EV063","persona_id":"P01_zero_beginner","cluster":"software","track_code":"uiux","task_type":"content_generation","goal":"完成有研究证据的学习产品交互原型","expected":{"min_knowledge_coverage":0.90,"min_citation_coverage":0.95}},
+    {"id":"EV064","persona_id":"P01_zero_beginner","cluster":"software","track_code":"uiux","task_type":"dependency_audit","goal":"从用户研究到高保真原型和可用性验证","expected":{"max_prerequisite_violations":0}}
   ]
 }

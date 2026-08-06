@@ -129,6 +129,22 @@ export interface RouteMatch {
   readiness: number
   interest_fit: number
   feasibility: number
+  dimension_scores?: {
+    ability: number
+    interest: number
+    goal: number
+    education: number
+    city: number
+    time: number
+  }
+  decision_basis?: {
+    interest: string
+    education: string
+    city: string
+    city_data_type: string
+    profile_fields: Record<string, unknown>
+  }
+  confidence?: {level: string; evidence_count: number; note: string}
   estimated_weeks: number
   matched_keywords: string[]
   skill_gaps: Array<{
@@ -175,6 +191,7 @@ export interface Profile {
   background: string
   learning_goals: string[]
   preferences: string[]
+  decision_context?: Record<string, any>
   weekly_hours: number
   learning_style: string
   knowledge_breadth: number

@@ -220,7 +220,7 @@ def messages(
                 "type": "onboarding",
                 "title": "完成首次能力诊断",
                 "content": "画像是路线匹配和个性化生成的必要输入。",
-                "action_url": "/profile",
+                "action_url": "/onboarding",
                 "related_id": None,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "read": False,

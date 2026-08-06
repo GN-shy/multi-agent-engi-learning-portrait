@@ -11,7 +11,7 @@
         <div><span>待补盲区</span><strong>{{ profile?.blind_spots?.length || 0 }}</strong><small>按目标阈值排序</small></div>
         <div class="level"><span>当前阶段</span><strong>{{ levelText }}</strong><small>随新证据动态变化</small></div>
       </div>
-      <el-button type="primary" @click="editorVisible=true">更新画像证据</el-button>
+      <el-button type="primary" @click="router.push('/onboarding?edit=1')">重新校准画像</el-button>
     </section>
 
     <section v-if="profile?.analysis_summary" class="panel interpretation">
@@ -145,7 +145,7 @@ const preferencePercent=computed(() => ({theory_first:35,balanced:55,practice_fi
 const radarOption=computed(()=>({tooltip:{},radar:{indicator:Object.keys(profile.value?.dimension_scores||{}).map(name=>({name:label(name),max:100})),radius:'61%',splitArea:{areaStyle:{color:['#fbfcff','#f1f5ff']}},axisName:{fontSize:11}},series:[{type:'radar',data:[{value:Object.values(profile.value?.dimension_scores||{}),areaStyle:{color:'rgba(49,104,238,.2)'},lineStyle:{color:'#3168ee',width:2}}]}]}))
 
 onMounted(load)
-async function load(){try{profile.value=await getData<Profile>('/profiles/me');Object.assign(form,{background:profile.value.background,learning_goals:profile.value.learning_goals,preferences:profile.value.preferences,weekly_hours:profile.value.weekly_hours,learning_style:profile.value.learning_style});for(const skill of coreSkills)form.self_assessment[skill.code]=profile.value.skill_scores[skill.code]||30}catch{editorVisible.value=true}}
+async function load(){try{profile.value=await getData<Profile>('/profiles/me');Object.assign(form,{background:profile.value.background,learning_goals:profile.value.learning_goals,preferences:profile.value.preferences,weekly_hours:profile.value.weekly_hours,learning_style:profile.value.learning_style});for(const skill of coreSkills)form.self_assessment[skill.code]=profile.value.skill_scores[skill.code]||0}catch{router.replace('/onboarding')}}
 async function analyze(){saving.value=true;try{profile.value=await putData<Profile>('/profiles/me/analyze',form);editorVisible.value=false;ElMessage.success('画像已保存，路线比较将使用新版本')}finally{saving.value=false}}
 function openDetail(title:string,data:any){detail.title=title;detail.data=data;detail.visible=true}
 function label(key:string){return ({programming_and_algorithms:'编程与算法',systems_foundation:'系统基础',software_engineering:'软件工程',architecture_and_security:'架构与安全',engineering_delivery:'工程交付',route_specific:'方向专项'} as Record<string,string>)[key]||key}

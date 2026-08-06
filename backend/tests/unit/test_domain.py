@@ -1,6 +1,7 @@
 from app.domain.catalog import get_catalog
 from app.domain.content import ContentEngine
 from app.domain.evaluation import get_frozen_evaluation
+from app.domain.grounding import build_grounded_enhancement, verify_atomic_claims
 from app.domain.knowledge import get_knowledge_engine
 from app.domain.profile import ProfileEngine
 from app.domain.routing import RouteEngine
@@ -8,7 +9,7 @@ from app.domain.routing import RouteEngine
 
 def test_all_formal_tracks_have_real_minimum_loop():
     catalog = get_catalog()
-    assert len(catalog.tracks) == 15
+    assert len(catalog.tracks) == 16
     for track in catalog.tracks:
         assert len(track["skills"]) >= 3
         assert track["project"]["deliverables"]
@@ -63,14 +64,55 @@ def test_retrieval_generation_and_arbitration_have_citations():
     result = engine.arbitrate(candidate_a, candidate_b, evidence, profile)
     assert result["quality_metrics"]["knowledge_coverage"] == 1
     assert result["quality_metrics"]["citation_coverage"] == 1
+    assert result["quality_metrics"]["grounding_coverage"] == 1
+    assert result["quality_metrics"]["hallucination_risk"] == 0
     assert result["quality_metrics"]["prerequisite_violations"] == 0
     assert result["final_output"]["practice"]["steps"]
+
+
+def test_claim_grounding_rejects_fake_citations_numbers_and_unquoted_claims():
+    evidence = [
+        {
+            "chunk_id": "kb:fastapi-testing",
+            "title": "FastAPI 测试",
+            "content": "使用 TestClient 验证 API 正常路径与失败路径。",
+            "source_title": "FastAPI Documentation",
+        }
+    ]
+    payload = {
+        "atomic_claims": [
+            {
+                "kind": "tip",
+                "text": "使用 TestClient 验证 API 正常路径与失败路径。",
+                "citation_ids": ["kb:fastapi-testing"],
+                "evidence_quote": "使用 TestClient 验证 API 正常路径与失败路径。",
+            },
+            {
+                "kind": "summary",
+                "text": "FastAPI 3.0 可把性能提升 80%。",
+                "citation_ids": ["kb:fastapi-testing"],
+                "evidence_quote": "使用 TestClient 验证 API 正常路径与失败路径。",
+            },
+            {
+                "kind": "tip",
+                "text": "这条陈述没有模型提供的引用。",
+                "citation_ids": [],
+                "evidence_quote": "",
+            },
+        ]
+    }
+    audit = verify_atomic_claims(payload, evidence)
+    released = build_grounded_enhancement(payload, audit)
+    assert audit["supported_claims"] == 1
+    assert audit["rejected_claims"] == 2
+    assert released["project_tips"] == ["使用 TestClient 验证 API 正常路径与失败路径。"]
+    assert all(item["status"] == "supported" for item in released["atomic_claims"])
 
 
 def test_frozen_evaluation_covers_six_personas_sixty_tasks_and_all_tracks():
     summary = get_frozen_evaluation().validation
     assert summary["profile_count"] == 6
-    assert summary["task_count"] == 60
-    assert summary["track_count"] == 15
+    assert summary["task_count"] == 64
+    assert summary["track_count"] == 16
     assert set(summary["cluster_distribution"]) == {"software", "ai", "systems"}
     assert all(count == 4 for count in summary["tasks_per_track"].values())

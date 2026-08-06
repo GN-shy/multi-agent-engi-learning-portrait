@@ -12,6 +12,7 @@ from app.api.deps import get_current_user, success
 from app.core.database import get_db
 from app.core.models import LearnerProfile, ProfileSnapshot, TrackSelection, User
 from app.domain.profile import ProfileEngine
+from app.domain.routing import extract_decision_context, visible_preferences
 from app.schemas import ProfileInput
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -60,7 +61,8 @@ def serialize(profile: LearnerProfile) -> dict:
         "version": profile.version,
         "background": profile.background or "",
         "learning_goals": list(profile.goals or []),
-        "preferences": list(profile.preferences or []),
+        "preferences": visible_preferences(profile.preferences),
+        "decision_context": extract_decision_context(profile.preferences),
         "weekly_hours": int(profile.weekly_hours or 8),
         "learning_style": profile.learning_style or "balanced",
         "knowledge_breadth": float(profile.knowledge_breadth or 0),

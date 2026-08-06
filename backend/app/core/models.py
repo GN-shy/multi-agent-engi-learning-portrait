@@ -213,6 +213,62 @@ class LearningPlan(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class CareerTarget(Base):
+    __tablename__ = "career_targets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(160), index=True)
+    company: Mapped[str] = mapped_column(String(160), default="")
+    city: Mapped[str] = mapped_column(String(80), default="")
+    education: Mapped[str] = mapped_column(String(80), default="")
+    experience: Mapped[str] = mapped_column(String(120), default="")
+    salary: Mapped[str] = mapped_column(String(120), default="")
+    source_url: Mapped[str] = mapped_column(String(1000), default="")
+    raw_text: Mapped[str] = mapped_column(Text)
+    required_skills: Mapped[list] = mapped_column(JSON, default=list)
+    responsibilities: Mapped[list] = mapped_column(JSON, default=list)
+    analysis: Mapped[dict] = mapped_column(JSON, default=dict)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class EvidenceArtifact(Base):
+    __tablename__ = "evidence_artifacts"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    plan_id: Mapped[str] = mapped_column(ForeignKey("learning_plans.id", ondelete="CASCADE"), index=True)
+    task_id: Mapped[str] = mapped_column(String(240), index=True)
+    evidence_type: Mapped[str] = mapped_column(String(40))
+    value: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(30), default="reviewed", index=True)
+    score: Mapped[float] = mapped_column(Float, default=0)
+    verification: Mapped[dict] = mapped_column(JSON, default=dict)
+    skill_updates: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class RouteRevision(Base):
+    __tablename__ = "route_revisions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    plan_id: Mapped[str] = mapped_column(ForeignKey("learning_plans.id", ondelete="CASCADE"), index=True)
+    from_version: Mapped[int] = mapped_column(Integer)
+    to_version: Mapped[int] = mapped_column(Integer)
+    trigger: Mapped[str] = mapped_column(String(60), index=True)
+    reason: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(30), default="pending", index=True)
+    old_phases: Mapped[list] = mapped_column(JSON, default=list)
+    new_phases: Mapped[list] = mapped_column(JSON, default=list)
+    changes: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class ExternalServiceConfig(Base):
     __tablename__ = "external_service_configs"
 

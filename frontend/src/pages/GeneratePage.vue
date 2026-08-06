@@ -13,6 +13,8 @@
       </div>
     </section>
 
+    <el-alert v-if="route.query.from === 'onboarding'" class="onboarding-route-tip" title="这是根据你主动选择的多个方向生成的组合路线：系统保留每个方向，自动选择细分技术栈、合并重复基础并按前置依赖重排。" type="success" :closable="false" show-icon />
+
     <div class="generate-layout">
       <section class="panel form-panel">
         <div class="panel-title">
@@ -173,7 +175,13 @@
           <span>{{ metricLabel(String(key)) }}</span><strong>{{ formatMetric(String(key), value) }}</strong>
         </button>
       </div>
-      <el-alert v-if="Number(result.quality_metrics.hallucination_risk) <= .05" title="未引用风险估计 ≤ 5%，达到项目质量门槛；点击指标可查看口径。" type="success" :closable="false" show-icon />
+      <div v-if="claimAudit" class="grounding-audit">
+        <div><span>AI 原子主张证据校验</span><strong>{{ claimAudit.status === 'passed' ? '全部通过' : claimAudit.status === 'partial' ? '部分拦截' : '已阻断' }}</strong><small>{{ claimAudit.detector_version }} · 发布前自动检查</small></div>
+        <div><span>检测主张</span><strong>{{ claimAudit.total_claims }}</strong><small>逐条核验，不按整篇猜测</small></div>
+        <div><span>证据支持</span><strong>{{ claimAudit.supported_claims }}</strong><small>有效引用 + 原文证据片段</small></div>
+        <div><span>拒绝发布</span><strong>{{ claimAudit.rejected_claims }}</strong><small>缺引用、伪数字或语义不匹配</small></div>
+      </div>
+      <el-alert v-if="Number(result.quality_metrics.hallucination_risk) <= .05" title="系统未检出证据不足内容，已通过发布闸门；这不是人工盲测得到的真实幻觉率。" type="success" :closable="false" show-icon />
       <el-alert v-for="message in result.source_audit?.fallbacks || []" :key="message" class="fallback" :title="message" type="warning" :closable="false" show-icon />
       <div class="actions">
         <el-button type="primary" @click="router.push('/plan')">进入可勾选的学习计划</el-button>
@@ -207,6 +215,7 @@ const sourceModes = ref<any[]>([])
 const running = ref(false)
 const composing = ref(false)
 const routePlan = ref<(ComposedRoute & {pathway_count?: number}) | null>(null)
+const weeklyHours = ref(8)
 const result = ref<(LearningSession & {source_audit?: any}) | null>(null)
 const form = reactive({
   track_code: '',
@@ -236,16 +245,25 @@ const searchConfigs = computed(() => configs.value.filter((item) => item.service
 const needsLlm = computed(() => ['knowledge_ai', 'full'].includes(form.source_mode))
 const needsSearch = computed(() => ['knowledge_web', 'full'].includes(form.source_mode))
 const needsExternal = computed(() => needsLlm.value || needsSearch.value)
+const claimAudit = computed(() => result.value?.source_audit?.layers?.ai?.claim_verification || null)
 
 onMounted(async () => {
-  const [pathData, integrationData, catalog] = await Promise.all([
+  const [pathData, integrationData, catalog, profile] = await Promise.all([
     getData<{items: PathwayVariant[]}>('/tracks/pathways/catalog'),
     getData<{items: any[]}>('/integrations/providers'),
     getData<any>('/integrations/providers/catalog'),
+    getData<any>('/profiles/me').catch(()=>null),
   ])
   pathways.value = pathData.items
   configs.value = integrationData.items
   sourceModes.value = catalog.source_modes
+  weeklyHours.value = profile?.weekly_hours || 8
+  const preferredLlm = configs.value.find(item=>item.service_type==='llm'&&item.enabled&&item.key_available&&item.last_test_status==='success')
+    || configs.value.find(item=>item.service_type==='llm'&&item.enabled&&item.key_available)
+  const preferredSearch = configs.value.find(item=>item.service_type==='search'&&item.enabled&&item.key_available&&item.last_test_status==='success')
+    || configs.value.find(item=>item.service_type==='search'&&item.enabled&&item.key_available)
+  form.llm_config_id = preferredLlm?.id || null
+  form.search_config_id = preferredSearch?.id || null
   const queryIds = typeof route.query.pathways === 'string'
     ? route.query.pathways.split(',').filter(Boolean)
     : typeof route.query.pathway === 'string' ? [route.query.pathway] : []
@@ -269,7 +287,7 @@ async function composeRoute() {
   }
   composing.value = true
   try {
-    routePlan.value = await postData<any>('/tracks/pathways/compose', { pathway_ids: form.pathway_ids, weekly_hours: 8 })
+    routePlan.value = await postData<any>('/tracks/pathways/compose', { pathway_ids: form.pathway_ids, weekly_hours: weeklyHours.value })
     form.track_code = selectedPathways.value[0]?.track_code || ''
     form.pathway_id = form.pathway_ids[0] || null
   } catch (error: any) {
@@ -292,10 +310,10 @@ function eventFor(code: string) { return result.value?.events?.find((item) => it
 function statusFor(code: string) { return eventFor(code) ? 'done' : running.value ? 'queued' : 'waiting' }
 function statusText(code: string) { return eventFor(code) ? '已完成' : running.value ? '后端处理中' : '等待任务' }
 function metricLabel(key: string) {
-  return ({ total: '质量总分', knowledge_coverage: '知识覆盖', citation_coverage: '引用覆盖', citation_integrity: '引用完整性', profile_fit: '画像适配', prerequisite_violations: '前置冲突', hallucination_risk: '未引用风险估计' } as any)[key] || key
+  return ({ total: '质量总分', knowledge_coverage: '知识覆盖', citation_coverage: '引用覆盖', citation_integrity: '引用完整性', grounding_coverage: '同技能证据匹配', profile_fit: '画像适配', prerequisite_violations: '前置冲突', hallucination_risk: '系统检出证据不足风险' } as any)[key] || key
 }
 function formatMetric(key: string, value: any) {
-  return ['knowledge_coverage', 'citation_coverage', 'citation_integrity', 'profile_fit', 'hallucination_risk'].includes(key) ? `${Math.round(Number(value) * 100)}%` : value
+  return ['knowledge_coverage', 'citation_coverage', 'citation_integrity', 'grounding_coverage', 'profile_fit', 'hallucination_risk'].includes(key) ? `${Math.round(Number(value) * 100)}%` : value
 }
 function openMetric(key: string, value: any) {
   detail.title = metricLabel(key)
@@ -304,9 +322,10 @@ function openMetric(key: string, value: any) {
     knowledge_coverage: '所选路线的目标技术被生成内容实际覆盖的比例。',
     citation_coverage: '内容段落具有有效证据引用的比例。',
     citation_integrity: '引用能在本次检索证据集中被验证的比例。',
+    grounding_coverage: '引用不仅存在，而且与当前学习章节属于同一项技能的比例。',
     profile_fit: '内容难度、节奏与个人画像的匹配程度。',
     prerequisite_violations: '学习顺序违反技术前置依赖的数量，应为 0。',
-    hallucination_risk: '基于未引用内容比例计算的风险上界，不冒充真实世界幻觉率。',
+    hallucination_risk: '系统检出的无引用或引用与技能不匹配内容比例。它是发布闸门指标，不冒充人工盲测的真实幻觉率。',
     total: '仲裁器综合覆盖、证据、画像适配和前置依赖后的质量评分。',
   } as any)[key] || ''
   detail.visible = true
@@ -314,5 +333,5 @@ function openMetric(key: string, value: any) {
 </script>
 
 <style scoped>
-.page-head{display:flex;justify-content:space-between;align-items:center;gap:28px;padding:8px 4px 22px}.eyebrow{color:#2f67ee;font-size:12px;font-weight:800;letter-spacing:.08em}.page-head h2{font-size:29px;margin:7px 0}.page-head p{color:var(--muted);margin:0;line-height:1.7}.head-stats{display:flex;background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}.head-stats div{padding:14px 20px;text-align:center;border-right:1px solid var(--line)}.head-stats div:last-child{border:0}.head-stats strong,.head-stats span{display:block}.head-stats strong{font-size:21px;color:#2760e8}.head-stats span{font-size:11px;color:var(--muted)}.generate-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(430px,.92fr);gap:18px;align-items:start}.el-select{width:100%}.option-row{display:flex;justify-content:space-between;align-items:center;width:100%;gap:20px}.option-row span,.option-row b,.option-row small{display:block}.option-row small{font-size:11px;color:#8a95a9}.option-row i{font-style:normal;color:#6e7d95;font-size:12px}.selected-route-list{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:10px}.selected-route-list article{position:relative;padding:12px;border:1px solid #d6e0f7;border-radius:13px;background:#f7faff}.selected-route-list span,.selected-route-list b{display:block}.selected-route-list span{font-size:11px;color:#7385a7}.selected-route-list b{margin:3px 22px 5px 0}.selected-route-list p{font-size:12px;color:#60708b;margin:0 0 7px;line-height:1.5}.selected-route-list div{display:flex;gap:6px;flex-wrap:wrap}.selected-route-list i{font-style:normal;font-size:10px;background:white;border-radius:6px;padding:3px 6px;color:#52627b}.remove{position:absolute;right:8px;top:7px;border:0;background:none;font-size:18px;color:#8190a8;cursor:pointer}.task-title{margin-top:24px;padding-top:19px;border-top:1px solid var(--line)}.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.mode-grid label{display:block;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8fafd;cursor:pointer}.mode-grid label.selected{border-color:#3168ee;background:#eef4ff;box-shadow:0 0 0 3px rgba(49,104,238,.08)}.mode-grid input{display:none}.mode-grid b,.mode-grid span{display:block}.mode-grid span{color:var(--muted);font-size:11px;line-height:1.5;margin-top:4px}.external-config{padding:13px;border-radius:13px;background:#f7f9fd;margin-top:14px}.audit-alert{margin-top:15px}.run{width:100%;height:48px;margin-top:18px}.preview-column{display:grid;gap:18px}.route-preview{max-height:980px;overflow:auto}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.summary-grid div{background:#f4f7fd;border-radius:12px;padding:12px}.summary-grid span,.summary-grid b,.summary-grid small{display:block}.summary-grid span,.summary-grid small{font-size:11px;color:var(--muted)}.summary-grid b{font-size:20px;margin:4px 0}.stack-cloud{display:flex;gap:5px;flex-wrap:wrap;margin:14px 0}.stack-cloud span,.stack-cloud i{font-size:10px;padding:4px 7px;border-radius:6px;background:#edf3ff;color:#2b60db;font-style:normal}.stack-cloud i{background:#f1f3f7;color:#6e798c}.phase-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}.phase-list>li{display:grid;grid-template-columns:30px 1fr;gap:10px}.phase-marker{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;background:#2862ea;color:white;font-weight:800}.phase-list article{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fbfcfe}.phase-list header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.phase-list header>div b,.phase-list header>div span{display:block}.phase-list header span{font-size:11px;color:var(--muted);margin-top:3px}.phase-tasks{display:grid;gap:7px;margin-top:10px}.phase-tasks>div{padding:8px;background:white;border-radius:8px;border-left:3px solid #5f86ea}.phase-tasks b,.phase-tasks span,.phase-tasks small{display:block}.phase-tasks b{font-size:12px}.phase-tasks span,.phase-tasks small{font-size:10px;color:#6d7a91;line-height:1.5;margin-top:2px}.phase-tasks p{font-size:11px;color:#3168ee}.optimization{margin-top:14px;padding:13px;border-radius:12px;background:#f2faf6}.optimization p{font-size:11px;color:#506a5e;margin:6px 0}.pipeline{display:grid;gap:8px}.agent{display:grid;grid-template-columns:34px 1fr 80px;gap:10px;align-items:center;padding:11px;border-radius:12px;background:#f7f9fd;border:1px solid var(--line)}.agent>span{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:#e7edf8;color:#6f7d94}.agent b,.agent small{display:block}.agent small{color:var(--muted);font-size:11px;margin-top:3px}.agent i{font-style:normal;font-size:11px;text-align:right}.agent.queued{border-color:#b9caee;background:#f3f7ff}.agent.done>span{background:#17a673;color:white}.agent.done i{color:#17a673}.result{margin-top:18px}.metric-row{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:14px}.metric-row button{border:1px solid var(--line);background:#f7f9fd;border-radius:13px;padding:13px;cursor:pointer}.metric-row span,.metric-row strong{display:block}.metric-row span{font-size:11px;color:var(--muted)}.metric-row strong{font-size:20px;margin-top:6px}.fallback{margin-top:9px}.actions{margin-top:18px}.metric-explain{font-size:15px;line-height:1.8}@media(max-width:1100px){.generate-layout{grid-template-columns:1fr}.route-preview{max-height:none}.metric-row{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.page-head{align-items:flex-start;flex-direction:column}.head-stats{width:100%}.head-stats div{flex:1}.selected-route-list,.mode-grid,.summary-grid,.metric-row{grid-template-columns:1fr}.phase-list header{flex-direction:column}}
+.page-head{display:flex;justify-content:space-between;align-items:center;gap:28px;padding:8px 4px 22px}.eyebrow{color:#2f67ee;font-size:12px;font-weight:800;letter-spacing:.08em}.page-head h2{font-size:29px;margin:7px 0}.page-head p{color:var(--muted);margin:0;line-height:1.7}.head-stats{display:flex;background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}.head-stats div{padding:14px 20px;text-align:center;border-right:1px solid var(--line)}.head-stats div:last-child{border:0}.head-stats strong,.head-stats span{display:block}.head-stats strong{font-size:21px;color:#2760e8}.head-stats span{font-size:11px;color:var(--muted)}.generate-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(430px,.92fr);gap:18px;align-items:start}.el-select{width:100%}.option-row{display:flex;justify-content:space-between;align-items:center;width:100%;gap:20px}.option-row span,.option-row b,.option-row small{display:block}.option-row small{font-size:11px;color:#8a95a9}.option-row i{font-style:normal;color:#6e7d95;font-size:12px}.selected-route-list{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:10px}.selected-route-list article{position:relative;padding:12px;border:1px solid #d6e0f7;border-radius:13px;background:#f7faff}.selected-route-list span,.selected-route-list b{display:block}.selected-route-list span{font-size:11px;color:#7385a7}.selected-route-list b{margin:3px 22px 5px 0}.selected-route-list p{font-size:12px;color:#60708b;margin:0 0 7px;line-height:1.5}.selected-route-list div{display:flex;gap:6px;flex-wrap:wrap}.selected-route-list i{font-style:normal;font-size:10px;background:white;border-radius:6px;padding:3px 6px;color:#52627b}.remove{position:absolute;right:8px;top:7px;border:0;background:none;font-size:18px;color:#8190a8;cursor:pointer}.task-title{margin-top:24px;padding-top:19px;border-top:1px solid var(--line)}.mode-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.mode-grid label{display:block;padding:12px;border:1px solid var(--line);border-radius:12px;background:#f8fafd;cursor:pointer}.mode-grid label.selected{border-color:#3168ee;background:#eef4ff;box-shadow:0 0 0 3px rgba(49,104,238,.08)}.mode-grid input{display:none}.mode-grid b,.mode-grid span{display:block}.mode-grid span{color:var(--muted);font-size:11px;line-height:1.5;margin-top:4px}.external-config{padding:13px;border-radius:13px;background:#f7f9fd;margin-top:14px}.audit-alert{margin-top:15px}.run{width:100%;height:48px;margin-top:18px}.preview-column{display:grid;gap:18px}.route-preview{max-height:980px;overflow:auto}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.summary-grid div{background:#f4f7fd;border-radius:12px;padding:12px}.summary-grid span,.summary-grid b,.summary-grid small{display:block}.summary-grid span,.summary-grid small{font-size:11px;color:var(--muted)}.summary-grid b{font-size:20px;margin:4px 0}.stack-cloud{display:flex;gap:5px;flex-wrap:wrap;margin:14px 0}.stack-cloud span,.stack-cloud i{font-size:10px;padding:4px 7px;border-radius:6px;background:#edf3ff;color:#2b60db;font-style:normal}.stack-cloud i{background:#f1f3f7;color:#6e798c}.phase-list{list-style:none;padding:0;margin:0;display:grid;gap:10px}.phase-list>li{display:grid;grid-template-columns:30px 1fr;gap:10px}.phase-marker{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;background:#2862ea;color:white;font-weight:800}.phase-list article{border:1px solid var(--line);border-radius:13px;padding:11px;background:#fbfcfe}.phase-list header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.phase-list header>div b,.phase-list header>div span{display:block}.phase-list header span{font-size:11px;color:var(--muted);margin-top:3px}.phase-tasks{display:grid;gap:7px;margin-top:10px}.phase-tasks>div{padding:8px;background:white;border-radius:8px;border-left:3px solid #5f86ea}.phase-tasks b,.phase-tasks span,.phase-tasks small{display:block}.phase-tasks b{font-size:12px}.phase-tasks span,.phase-tasks small{font-size:10px;color:#6d7a91;line-height:1.5;margin-top:2px}.phase-tasks p{font-size:11px;color:#3168ee}.optimization{margin-top:14px;padding:13px;border-radius:12px;background:#f2faf6}.optimization p{font-size:11px;color:#506a5e;margin:6px 0}.pipeline{display:grid;gap:8px}.agent{display:grid;grid-template-columns:34px 1fr 80px;gap:10px;align-items:center;padding:11px;border-radius:12px;background:#f7f9fd;border:1px solid var(--line)}.agent>span{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:#e7edf8;color:#6f7d94}.agent b,.agent small{display:block}.agent small{color:var(--muted);font-size:11px;margin-top:3px}.agent i{font-style:normal;font-size:11px;text-align:right}.agent.queued{border-color:#b9caee;background:#f3f7ff}.agent.done>span{background:#17a673;color:white}.agent.done i{color:#17a673}.result{margin-top:18px}.metric-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-bottom:14px}.metric-row button{border:1px solid var(--line);background:#f7f9fd;border-radius:13px;padding:13px;cursor:pointer}.metric-row span,.metric-row strong{display:block}.metric-row span{font-size:11px;color:var(--muted)}.metric-row strong{font-size:20px;margin-top:6px}.grounding-audit{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:10px;padding:14px;margin:0 0 12px;border:1px solid #c9eadb;border-radius:14px;background:#f1fbf6}.grounding-audit>div{padding:4px 11px;border-right:1px solid #d9eee4}.grounding-audit>div:last-child{border:0}.grounding-audit span,.grounding-audit strong,.grounding-audit small{display:block}.grounding-audit span,.grounding-audit small{font-size:11px;color:#63786d}.grounding-audit strong{font-size:18px;margin:5px 0;color:#167a51}.fallback{margin-top:9px}.actions{margin-top:18px}.metric-explain{font-size:15px;line-height:1.8}@media(max-width:1100px){.generate-layout{grid-template-columns:1fr}.route-preview{max-height:none}.metric-row{grid-template-columns:repeat(3,1fr)}.grounding-audit{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.page-head{align-items:flex-start;flex-direction:column}.head-stats{width:100%}.head-stats div{flex:1}.selected-route-list,.mode-grid,.summary-grid,.metric-row,.grounding-audit{grid-template-columns:1fr}.grounding-audit>div{border-right:0;border-bottom:1px solid #d9eee4}.phase-list header{flex-direction:column}}
 </style>

@@ -28,7 +28,7 @@ def search(
             get_catalog().get_track(track_code)
         except CatalogError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
-    items = get_knowledge_engine().search(q, track_code=track_code, top_k=top_k)
+    items = get_knowledge_engine().search(q, track_code=track_code, top_k=top_k * 2)
     query_terms = set(tokenize(q))
     contributions = db.scalars(
         select(KnowledgeContribution).where(
@@ -64,7 +64,17 @@ def search(
                 "source_layer": "reviewed_contribution",
             }
         )
-    items = sorted(items + reviewed_items, key=lambda item: item["score"], reverse=True)[:top_k]
+    # 审核通过的用户贡献属于本地审核知识库。不同检索器的原始分数不可直接比较，
+    # 因此为相关贡献保留结果位，避免 TF-IDF 数值尺度将其静默挤出。
+    reviewed_items.sort(key=lambda item: item["score"], reverse=True)
+    reserved_count = min(len(reviewed_items), max(1, top_k // 3))
+    reserved = reviewed_items[:reserved_count]
+    remainder = sorted(
+        items + reviewed_items[reserved_count:],
+        key=lambda item: item["score"],
+        reverse=True,
+    )
+    items = (reserved + remainder)[:top_k]
     return success(
         {
             "items": items,
@@ -82,7 +92,28 @@ def search(
 
 
 @router.get("/chunks/{chunk_id:path}")
-def chunk_detail(chunk_id: str):
+def chunk_detail(chunk_id: str, db: Session = Depends(get_db)):
+    if chunk_id.startswith("contrib:"):
+        row = db.get(KnowledgeContribution, chunk_id.removeprefix("contrib:"))
+        if not row or row.status != "approved":
+            raise HTTPException(status_code=404, detail="知识片段不存在")
+        return success(
+            {
+                "chunk_id": chunk_id,
+                "track_code": row.track_code,
+                "skill_code": "",
+                "title": row.title,
+                "content": row.content,
+                "difficulty": 3,
+                "source_id": chunk_id,
+                "source_title": row.title,
+                "source_url": row.source_url,
+                "content_version": row.content_version,
+                "credibility": 0.88,
+                "source_layer": "reviewed_contribution",
+                "reviewed_at": row.reviewed_at.isoformat() if row.reviewed_at else None,
+            }
+        )
     item = next(
         (
             document

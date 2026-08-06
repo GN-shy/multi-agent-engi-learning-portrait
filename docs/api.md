@@ -27,6 +27,8 @@
 | 用户 | `GET /auth/data-export`、`DELETE /auth/me` | 数据导出与账号注销 |
 | 路线 | `GET /tracks/tree`、`GET /tracks/{code}` | 路线树、技能图谱和诊断 |
 | 路线 | `POST /tracks/compare`、`POST /tracks/select` | 反事实比较与正式选择 |
+| 岗位 | `POST /career/jobs/parse` | 从真实 JD 提取可确认的岗位要求 |
+| 岗位 | `POST /career/targets`、`GET /career/targets/current` | 确认目标岗位、读取当前目标与技能差距 |
 | 画像 | `PUT /profiles/me/analyze` | 生成/更新画像 |
 | 画像 | `GET /profiles/me`、`GET /profiles/me/trend` | 当前画像和版本趋势 |
 | 知识 | `GET /knowledge/search` | 本地审核知识检索 |
@@ -38,6 +40,10 @@
 | 实操 | `POST /practice/{resource_id}/submit` | 提交步骤和运行证据 |
 | 测试 | `POST /assessments/{resource_id}/submit` | 自动评分并回写画像 |
 | 计划 | `GET /plans/current`、`POST /plans/{id}/checkin` | 当前计划与打卡 |
+| 计划 | `GET /plans/{id}/workspace` | 目标岗位、成果证据与路线版本工作区 |
+| 计划 | `POST /plans/{id}/tasks/{task_id}/evidence` | 提交任务成果并在证据通过后更新画像 |
+| 计划 | `POST /plans/{id}/recalibrate` | 根据 JD、难度、阻塞、时间或成果生成待确认路线 |
+| 计划 | `POST /plans/{id}/revisions/{revision_id}/decision` | 接受、拒绝或撤销路线版本 |
 | 报告 | `GET /reports/latest`、`GET /reports/latest/print` | 数据报告和打印版 |
 | 记录 | `GET /records` | 学习活动时间线 |
 | 消息 | `GET /notifications`、`PATCH /notifications/{id}/read` | 通知和已读状态 |
@@ -65,3 +71,10 @@
 ## 密钥约束
 
 创建/更新外部服务时允许提交 `api_key`，之后任何读取接口都只返回脱敏尾号。密钥不会出现在会话、报告、导出、轨迹或错误响应中。
+
+## 路线调整与证据边界
+
+- `checkin.feedback_type` 支持 `normal`、`too_hard`、`too_easy`、`no_time`、`blocked`。非正常反馈只触发一份 `pending` 建议，不直接覆盖当前路线。
+- `evidence_type` 支持 `repository`、`commit`、`test`、`deployment`、`document`、`screenshot_note`、`note`。
+- URL 与提交哈希的自动结果只代表格式有效；接口会返回 `verification.scope`，不得将其表述成仓库可运行或代码归属已确认。
+- 只有达到证据阈值且包含代码、提交、测试、部署或文档等强证据时，才会更新对应技能分与画像版本。

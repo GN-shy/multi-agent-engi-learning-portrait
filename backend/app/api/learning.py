@@ -424,7 +424,13 @@ def checkin(
     accepted = sorted(set(body.completed_task_ids) & valid_ids)
     checkins = list(plan.checkins)
     checkins.append(
-        {"date": datetime.now(timezone.utc).date().isoformat(), "completed_task_ids": accepted}
+        {
+            "date": datetime.now(timezone.utc).date().isoformat(),
+            "completed_task_ids": accepted,
+            "feedback_type": body.feedback_type,
+            "hours_spent": body.hours_spent,
+            "note": body.note,
+        }
     )
     plan.checkins = checkins
     completed = set(item for record in checkins for item in record["completed_task_ids"])
@@ -445,7 +451,13 @@ def checkin(
     plan.updated_at = datetime.now(timezone.utc)
     db.commit()
     return success(
-        {"progress": plan.progress, "phases": phases, "accepted_task_ids": accepted},
+        {
+            "progress": plan.progress,
+            "phases": phases,
+            "accepted_task_ids": accepted,
+            "feedback_saved": body.feedback_type,
+            "recalibration_recommended": body.feedback_type != "normal",
+        },
         "打卡已保存",
     )
 

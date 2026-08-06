@@ -12,7 +12,12 @@ from app.core.models import LearnerProfile, TrackSelection, User
 from app.domain.catalog import CatalogError, get_catalog
 from app.domain.profile import ProfileEngine
 from app.domain.routing import RouteEngine
-from app.schemas import PathwayComposeInput, RouteCompareInput, TrackSelectInput
+from app.schemas import (
+    PathwayComposeInput,
+    PathwayRecommendInput,
+    RouteCompareInput,
+    TrackSelectInput,
+)
 
 router = APIRouter(prefix="/tracks", tags=["tracks"])
 
@@ -70,6 +75,20 @@ def compose_pathways(body: PathwayComposeInput):
                 weekly_hours=body.weekly_hours,
             )
         )
+    except CatalogError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/pathways/recommend")
+def recommend_pathways(
+    body: PathwayRecommendInput,
+    user: User = Depends(get_current_user),
+):
+    """用户已明确主方向时，直接选择细分栈并生成去重后的组合路线。"""
+    if not user.profile:
+        raise HTTPException(status_code=409, detail="请先完成成长档案")
+    try:
+        return success(RouteEngine().recommend_pathways(profile_view(user.profile), body.track_codes))
     except CatalogError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

@@ -4,7 +4,7 @@
       <div class="logo">GX</div>
       <p class="kicker">工学智链 · 计算机成长导航</p>
       <h1>不是再给你一份课程清单，<br />而是帮你做出<span>路线决策</span>。</h1>
-      <p class="lead">画像诊断、方向比较、技能图谱、可信生成、项目实操、测试反馈和动态重规划形成一个闭环。</p>
+      <p class="lead">用 3 分钟说明真实情况，系统比较适合的方向，再给出具体到技术、项目和本周任务的学习路线。</p>
       <div class="proofs">
         <div><strong>{{ proofCounts.tracks }}</strong><span>个计算机主方向</span></div>
         <div><strong>{{ proofCounts.pathways }}</strong><span>条细分学习路线</span></div>
@@ -16,7 +16,7 @@
       <el-segmented v-model="mode" :options="[{label:'登录',value:'login'},{label:'注册',value:'register'}]" />
       <div class="auth-title">
         <h2>{{ mode === 'login' ? '欢迎回来' : '建立成长档案' }}</h2>
-        <p>{{ mode === 'login' ? '继续你的计算机能力成长路径' : '注册后先完成画像与路线比较' }}</p>
+        <p>{{ mode === 'login' ? '继续今天真正需要完成的任务' : '注册后用选择题建立初始档案，无需写自我介绍' }}</p>
       </div>
       <el-form ref="loginFormRef" :model="form" :rules="rules" label-position="top" @submit.prevent="submit">
         <el-form-item v-if="mode === 'register'" prop="username" label="用户名">
@@ -37,7 +37,7 @@
           {{ mode === 'login' ? '进入学习空间' : '注册并开始诊断' }}
         </el-button>
       </el-form>
-      <div class="login-tools"><button @click="clearForm">清空输入</button><button @click="useDemo">使用演示账号</button></div>
+      <div class="login-tools"><button @click="clearForm">清空输入</button><button v-if="demoEnabled" @click="useDemo">使用演示账号</button></div>
       <p class="privacy">刷新令牌保存在 HttpOnly Cookie；系统只展示可审计执行摘要，不展示模型隐藏思维链。</p>
     </section>
   </div>
@@ -57,6 +57,7 @@ const loginFormRef = ref<FormInstance>()
 const mode = ref<'login' | 'register'>('login')
 const form = reactive({ username: '', account: '', password: '' })
 const proofCounts = reactive({ tracks: 16, pathways: 29, agents: 6 })
+const demoEnabled = import.meta.env.DEV
 const rules = computed<FormRules>(() => ({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -118,7 +119,7 @@ async function submit() {
   const ok = mode.value === 'login'
     ? await user.login(form.account, form.password)
     : await user.register({ username: form.username, email: form.account, password: form.password })
-  if (ok) router.replace(String(route.query.redirect || '/'))
+  if (ok) router.replace(mode.value === 'register' ? '/onboarding' : String(route.query.redirect || '/'))
 }
 </script>
 

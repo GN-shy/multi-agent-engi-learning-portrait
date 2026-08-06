@@ -15,6 +15,7 @@ from sqlalchemy import or_, select
 
 from app.api import (
     auth,
+    career,
     dashboard,
     evaluation,
     integrations,
@@ -125,12 +126,16 @@ async def request_context(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(_: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    for item in errors:
+        if item.get("ctx"):
+            item["ctx"] = {key: str(value) for key, value in item["ctx"].items()}
     return JSONResponse(
         status_code=422,
         content={
             "code": 422,
             "message": "请求参数校验失败",
-            "data": {"errors": exc.errors()},
+            "data": {"errors": errors},
             "request_id": uuid.uuid4().hex[:12],
         },
     )
@@ -138,6 +143,7 @@ async def validation_error(_: Request, exc: RequestValidationError):
 
 for api_router in (
     auth.router,
+    career.router,
     tracks.router,
     profiles.router,
     evaluation.router,
