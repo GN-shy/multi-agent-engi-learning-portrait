@@ -27,6 +27,11 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
+# Claude Code 本地配置
+.claude/settings.local.json
+.claude/scheduled_tasks.json
+.claude/scheduled_tasks.lock
+
 # 密钥
 *.pem
 *.key
