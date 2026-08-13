@@ -155,20 +155,23 @@ class ContentEngine:
             {
                 "id": f"q-{skill['code']}",
                 "skill_code": skill["code"],
-                "type": "evidence",
-                "question": f"为“{skill['name']}”设计一个可验证的小任务，并写出通过标准。",
+                "type": "structured_scenario",
+                "question": f"你要用“{skill['name']}”完成一个可交付增量。请给出方案、验收、失败处理与技术取舍，并附上已有成果证据。",
                 "rubric": [
-                    "写出可执行行动",
-                    "给出客观验证方式",
-                    "覆盖异常与失败边界",
-                    "解释关键技术取舍",
+                    "实施方案（2 分）",
+                    "验收与验证（2 分）",
+                    "失败处理（2 分）",
+                    "技术取舍（2 分）",
+                    "成果证据与可信度（2 分）",
                 ],
-                "answer_requirements": [
-                    "做什么",
-                    "如何验证",
-                    "失败如何定位",
-                    "为什么这样选择",
+                "response_fields": [
+                    {"code": "action", "label": "实施方案", "hint": "按顺序说明做什么、输入输出和涉及的技术对象"},
+                    {"code": "validation", "label": "验收与验证", "hint": "给出测试方法、预期结果和通过标准"},
+                    {"code": "boundary", "label": "失败处理", "hint": "给出至少一个异常场景及定位、恢复办法"},
+                    {"code": "reasoning", "label": "技术取舍", "hint": "比较主方案与备选方案，说明选择依据和代价"},
                 ],
+                "evidence_types": ["repository", "commit", "test", "deployment", "screenshot_note", "note"],
+                "scoring_notice": "没有成果证据时仍可获得形成性反馈，但不会用高权重改写能力画像。",
                 "max_score": 10,
             }
             for skill in track["skills"]

@@ -36,9 +36,9 @@
 | 会话 | `POST /sessions` | 运行六 Agent 学习闭环 |
 | 会话 | `GET /sessions/{id}` | 会话、轨迹、证据、审计 |
 | 会话 | `POST /sessions/{id}/feedback` | 难度/帮助反馈并调路 |
-| 资源 | `GET /resources`、`GET /resources/{id}` | 讲义、实操、测试、计划 |
+| 资源 | `GET /resources`、`GET /resources/{id}` | 讲义、实操、工作样本测评、计划 |
 | 实操 | `POST /practice/{resource_id}/submit` | 提交步骤和运行证据 |
-| 测试 | `POST /assessments/{resource_id}/submit` | 自动评分并回写画像 |
+| 测评 | `POST /assessments/{resource_id}/submit` | 结构化工作样本评分；仅合格成果证据按可信度回写画像 |
 | 计划 | `GET /plans/current`、`POST /plans/{id}/checkin` | 当前计划与打卡 |
 | 计划 | `GET /plans/{id}/workspace` | 目标岗位、成果证据与路线版本工作区 |
 | 计划 | `POST /plans/{id}/tasks/{task_id}/evidence` | 提交任务成果并在证据通过后更新画像 |
@@ -78,3 +78,9 @@
 - `evidence_type` 支持 `repository`、`commit`、`test`、`deployment`、`document`、`screenshot_note`、`note`。
 - URL 与提交哈希的自动结果只代表格式有效；接口会返回 `verification.scope`，不得将其表述成仓库可运行或代码归属已确认。
 - 只有达到证据阈值且包含代码、提交、测试、部署或文档等强证据时，才会更新对应技能分与画像版本。
+
+## 工作样本测评
+
+`POST /assessments/{resource_id}/submit` 的 `answers` 以题目 ID 为键，每项包含 `action`、`validation`、`boundary`、`reasoning` 与 `evidence[]`。返回形成性总分、验证后得分、五维评分、证据可信度、完整反馈，以及实际写入画像的 `skill_updates`。
+
+没有达到成果证据门槛时返回 `result_type=formative`，用于提示改进但不创建新的能力画像版本；达到门槛后才按证据强度设置回写权重。仓库和部署地址当前只校验格式，外部真实性仍需 CI、沙箱或人工复核。

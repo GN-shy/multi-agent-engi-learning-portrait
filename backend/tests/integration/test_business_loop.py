@@ -149,10 +149,16 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
         client.get(f"/api/v1/resources/{assessment['id']}", headers=auth_headers)
     )
     answers = {
-        question["id"]: (
-            "1. 实现最小任务；2. 编写测试验证正常与边界输入；"
-            "3. 记录运行指标；4. 构造失败样例并说明定位方法与通过标准。"
-        )
+        question["id"]: {
+            "action": "步骤 1：建立最小模块与接口；步骤 2：输入样例数据并记录实际输出；步骤 3：提交可运行增量。",
+            "validation": "运行自动测试并断言状态码与输出字段，正常和错误样例都必须通过，记录测试命令和通过数量。",
+            "boundary": "构造空值、权限错误和超时场景；根据日志定位失败位置，必要时回滚配置并验证恢复结果。",
+            "reasoning": "主方案选择小步提交，相比一次性实现更易测试和回滚；代价是提交次数增加，但维护风险更低。",
+            "evidence": [
+                {"type": "test", "value": "pytest -q：10 passed，覆盖正常路径、权限错误和超时恢复。"},
+                {"type": "commit", "value": "a1b2c3d4"},
+            ],
+        }
         for question in assessment_detail["content"]["questions"]
     }
     assessment_result = unwrap(
@@ -163,6 +169,7 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
         )
     )
     assert assessment_result["passed"] is True
+    assert assessment_result["result_type"] == "verified"
     assert assessment_result["skill_updates"]
 
     feedback = unwrap(

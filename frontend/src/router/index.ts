@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: () => import('@/pages/LoginPage.vue'), meta: { public: true } },
@@ -14,7 +15,7 @@ export default createRouter({
     { path: '/generate', component: () => import('@/pages/GeneratePage.vue'), meta: { title: '智能生成', eyebrow: '六 Agent 协作生成个性化学习闭环' } },
     { path: '/resources', component: () => import('@/pages/ResourcePage.vue'), meta: { title: '学习资源', eyebrow: '讲义、实操、测试与计划统一管理' } },
     { path: '/practice', component: () => import('@/pages/PracticePage.vue'), meta: { title: '项目实操', eyebrow: '提交运行证据，而不只是阅读' } },
-    { path: '/assessment', component: () => import('@/pages/AssessmentPage.vue'), meta: { title: '分阶测试', eyebrow: '评测结果直接回写学习画像' } },
+    { path: '/assessment', component: () => import('@/pages/AssessmentPage.vue'), meta: { title: '工作样本测评', eyebrow: '先反馈，再用可核验证据更新画像' } },
     { path: '/report', component: () => import('@/pages/ReportPage.vue'), meta: { title: '成长报告', eyebrow: '路线、盲区、趋势和质量证据' } },
     { path: '/agents', component: () => import('@/pages/AgentsPage.vue'), meta: { title: '多智能体协作', eyebrow: '展示可审计轨迹，不展示隐藏思维链' } },
     { path: '/plan', component: () => import('@/pages/LearningPlan.vue'), meta: { title: '学习计划', eyebrow: '按反馈动态调整的阶段路径' } },
@@ -27,3 +28,15 @@ export default createRouter({
     { path: '/:pathMatch(.*)*', component: () => import('@/pages/NotFound.vue'), meta: { title: '页面未找到', eyebrow: '请检查链接是否有效' } },
   ],
 })
+
+router.beforeEach(async (to) => {
+  const user = useUserStore()
+  await user.initialize()
+  if (to.meta.public) {
+    if (to.path === '/login' && to.query.reset === '1') return true
+    return user.isLoggedIn && to.path === '/login' ? '/' : true
+  }
+  return user.isLoggedIn ? true : { path: '/login', query: { redirect: to.fullPath } }
+})
+
+export default router

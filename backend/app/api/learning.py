@@ -25,6 +25,7 @@ from app.core.models import (
     User,
 )
 from app.domain.catalog import get_catalog
+from app.domain.assessment import FIELDS, profile_update_weight, score_structured_answer
 from app.schemas import AssessmentSubmitInput, CheckinInput
 
 router = APIRouter(tags=["learning"])
@@ -113,47 +114,6 @@ def _review_practice_evidence(
         else 0
     )
     return rows, min(1.0, evidence_coverage), min(1.0, evidence_quality)
-
-
-ASSESSMENT_DIMENSIONS = {
-    "action": {
-        "label": "可执行行动",
-        "terms": ["实现", "设计", "配置", "编写", "部署", "运行", "步骤", "接口", "数据"],
-    },
-    "validation": {
-        "label": "客观验证",
-        "terms": ["测试", "验证", "断言", "指标", "日志", "通过", "结果", "检查"],
-    },
-    "boundary": {
-        "label": "异常边界",
-        "terms": ["边界", "异常", "失败", "超时", "回滚", "错误", "风险", "降级"],
-    },
-    "reasoning": {
-        "label": "技术取舍",
-        "terms": ["因为", "取舍", "权衡", "原因", "依赖", "前置", "相比", "选择"],
-    },
-}
-
-
-def _score_assessment_answer(answer: str, max_score: float) -> tuple[float, dict[str, float], list[str]]:
-    scores: dict[str, float] = {}
-    missing: list[str] = []
-    for code, dimension in ASSESSMENT_DIMENSIONS.items():
-        matches = sum(term in answer for term in dimension["terms"])
-        score = min(2.5, matches * 1.25)
-        if len(answer) >= 80 and matches:
-            score = min(2.5, score + 0.5)
-        scores[code] = round(score, 1)
-        if score < 1.5:
-            missing.append(code)
-
-    raw_score = sum(scores.values())
-    if len(answer) < 25:
-        raw_score = min(raw_score, 3.0)
-    elif len(answer) < 50:
-        raw_score = min(raw_score, 6.0)
-    score = round(min(max_score, raw_score / 10 * max_score), 1)
-    return score, scores, missing
 
 
 def _resource_view(item: LearningResource, detail: bool = False) -> dict[str, Any]:
@@ -294,15 +254,16 @@ def submit_assessment(
     questions = resource.content.get("questions", [])
     details = []
     skill_updates = {}
+    formative_skill_scores = {}
     for question in questions:
-        answer = str(body.answers.get(question["id"], "")).strip()
-        score, rubric_scores, missing_dimensions = _score_assessment_answer(
-            answer,
-            float(question["max_score"]),
+        scoring = score_structured_answer(
+            body.answers.get(question["id"], {}), float(question["max_score"])
         )
+        score = scoring["score"]
+        missing_dimensions = scoring["missing_dimensions"]
         skill = get_catalog().get_skill(question["skill_code"])
         missing_labels = [
-            ASSESSMENT_DIMENSIONS[code]["label"] for code in missing_dimensions
+            FIELDS.get(code, {"label": "成果证据"})["label"] for code in missing_dimensions
         ]
         details.append(
             {
@@ -311,16 +272,28 @@ def submit_assessment(
                 "skill_name": skill["name"],
                 "score": score,
                 "max_score": question["max_score"],
-                "rubric_scores": rubric_scores,
+                "verified_score": scoring["verified_score"],
+                "rubric_scores": scoring["rubric_scores"],
+                "evidence_score": scoring["evidence_score"],
+                "evidence_confidence": scoring["evidence_confidence"],
+                "evidence_level": scoring["evidence_level"],
                 "missing_dimensions": missing_dimensions,
+                "guidance": scoring["guidance"],
+                "evidence_review": scoring["evidence_review"],
+                "integrity_flags": scoring["integrity_flags"],
+                "eligible_for_profile_update": scoring["eligible_for_profile_update"],
                 "feedback": (
-                    "四类能力证据较完整，回答具备可执行、可验证和可复盘性。"
-                    if score >= 7 and not missing_dimensions
+                    "方案完整且成果证据达到画像回写门槛。"
+                    if scoring["eligible_for_profile_update"] and score >= 7
+                    else "方案回答已形成测评反馈，但需要补充可靠成果证据后再确认能力。"
+                    if not scoring["eligible_for_profile_update"]
                     else f"需要补充：{'、'.join(missing_labels) or '更具体的技术细节'}。"
                 ),
             }
         )
-        skill_updates[question["skill_code"]] = score * 10
+        formative_skill_scores[question["skill_code"]] = score * 10
+        if scoring["eligible_for_profile_update"]:
+            skill_updates[question["skill_code"]] = scoring["verified_score"] * 10
 
     total = sum(item["score"] for item in details)
     maximum = sum(item["max_score"] for item in details)
@@ -332,14 +305,23 @@ def submit_assessment(
         answers=body.answers,
         score=score,
         skill_updates=skill_updates,
-        feedback={"details": details, "passed": score >= 70},
+        feedback={
+            "details": details,
+            "passed": score >= 70 and bool(skill_updates),
+            "formative_score": score,
+            "verified_skill_count": len(skill_updates),
+        },
     )
     db.add(attempt)
     profile = user.profile
-    if profile:
+    if profile and skill_updates:
         updated = dict(profile.skill_scores)
         for skill_code, evidence_score in skill_updates.items():
-            updated[skill_code] = round(updated.get(skill_code, 0) * 0.7 + evidence_score * 0.3, 1)
+            detail = next(item for item in details if item["skill_code"] == skill_code)
+            weight = profile_update_weight(detail["evidence_confidence"])
+            updated[skill_code] = round(
+                updated.get(skill_code, 0) * (1 - weight) + evidence_score * weight, 1
+            )
         profile.skill_scores = updated
         profile.version += 1
         profile.updated_at = datetime.now(timezone.utc)
@@ -364,9 +346,16 @@ def submit_assessment(
         {
             "attempt_id": attempt.id,
             "score": score,
-            "passed": score >= 70,
+            "passed": score >= 70 and bool(skill_updates),
+            "result_type": "verified" if skill_updates else "formative",
+            "result_notice": (
+                "本次有成果证据的能力项已按证据可信度回写画像。"
+                if skill_updates
+                else "本次仅提供形成性反馈；未检测到达到门槛的成果证据，能力画像未被抬高。"
+            ),
             "details": details,
             "skill_updates": skill_updates,
+            "formative_skill_scores": formative_skill_scores,
         },
         "测试已评分并回写画像",
     )

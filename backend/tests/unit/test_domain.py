@@ -2,6 +2,7 @@ from app.domain.catalog import get_catalog
 from app.domain.content import ContentEngine
 from app.domain.evaluation import get_frozen_evaluation
 from app.domain.grounding import build_grounded_enhancement, verify_atomic_claims
+from app.domain.assessment import score_structured_answer
 from app.domain.knowledge import get_knowledge_engine
 from app.domain.profile import ProfileEngine
 from app.domain.routing import RouteEngine
@@ -107,6 +108,31 @@ def test_claim_grounding_rejects_fake_citations_numbers_and_unquoted_claims():
     assert audit["rejected_claims"] == 2
     assert released["project_tips"] == ["使用 TestClient 验证 API 正常路径与失败路径。"]
     assert all(item["status"] == "supported" for item in released["atomic_claims"])
+
+
+def test_structured_assessment_requires_distinct_reasoning_and_evidence_for_profile_update():
+    repeated = "测试异常取舍实现步骤，因为测试异常取舍实现步骤。" * 4
+    gaming = score_structured_answer(
+        {"action": repeated, "validation": repeated, "boundary": repeated, "reasoning": repeated, "evidence": []}
+    )
+    assert gaming["eligible_for_profile_update"] is False
+    assert "duplicated_sections" in gaming["integrity_flags"]
+
+    verified = score_structured_answer(
+        {
+            "action": "步骤 1：实现 API 模块；步骤 2：输入样例数据；步骤 3：检查输出并提交增量。",
+            "validation": "运行 pytest 并断言状态码和输出字段，正常与错误样例全部通过。",
+            "boundary": "构造权限错误和超时场景，通过日志定位后重试或回滚并检查恢复。",
+            "reasoning": "选择分层模块而不用单文件方案，因为维护和测试成本更低；代价是初期结构更多。",
+            "evidence": [
+                {"type": "test", "value": "pytest -q：10 passed，包含权限错误与超时恢复用例。"},
+                {"type": "commit", "value": "a1b2c3d4"},
+            ],
+        }
+    )
+    assert verified["score"] >= 7
+    assert verified["eligible_for_profile_update"] is True
+    assert verified["evidence_level"] in {"moderate", "strong"}
 
 
 def test_frozen_evaluation_covers_six_personas_sixty_tasks_and_all_tracks():

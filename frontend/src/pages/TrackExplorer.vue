@@ -46,6 +46,19 @@
       </div>
     </section>
 
+    <section class="catalog-summary panel">
+      <div>
+        <span class="eyebrow">完整方向目录</span>
+        <h3>{{ totalTracks }} 个主方向 · {{ allPathways.length }} 条细分路线</h3>
+        <p>默认展示全部方向；分类标签只用于快速筛选，不会隐藏或删除其他路线。</p>
+      </div>
+      <div class="catalog-shortcuts">
+        <el-button @click="focusTrack('fullstack')">全栈开发</el-button>
+        <el-button type="primary" plain @click="focusTrack('agent_engineering')">Agent 全栈开发</el-button>
+        <el-button @click="focusTrack('llm_application')">LLM 应用开发</el-button>
+      </div>
+    </section>
+
     <el-tabs v-model="activeCluster" class="cluster-tabs">
       <el-tab-pane
         v-for="cluster in visibleClusters"
@@ -238,7 +251,7 @@ const router = useRouter()
 const route = useRoute()
 const clusters = ref<TrackCluster[]>([])
 const allPathways = ref<PathwayVariant[]>([])
-const activeCluster = ref('software')
+const activeCluster = ref('all')
 const keyword = ref('')
 const selectedTracks = ref<string[]>([])
 const selectedPathwayIds = ref<string[]>([])
@@ -256,6 +269,7 @@ const detail = reactive({
   pathway: null as PathwayVariant | null,
 })
 const assessmentMode = computed(() => route.query.from === 'assessment')
+const totalTracks = computed(() => clusters.value.reduce((sum, cluster) => sum + cluster.tracks.length, 0))
 
 const selectedPathways = computed(() =>
   selectedPathwayIds.value
@@ -264,8 +278,7 @@ const selectedPathways = computed(() =>
 )
 const visibleClusters = computed(() => {
   const value = keyword.value.trim().toLowerCase()
-  if (!value) return clusters.value
-  return clusters.value
+  const filtered = !value ? clusters.value : clusters.value
     .map((cluster) => ({
       ...cluster,
       tracks: cluster.tracks.filter((track) => {
@@ -276,6 +289,22 @@ const visibleClusters = computed(() => {
       }),
     }))
     .filter((cluster) => cluster.tracks.length)
+  const priority = ['web_frontend', 'backend', 'fullstack', 'agent_engineering', 'llm_application']
+  const allTracks = filtered
+    .flatMap((cluster) => cluster.tracks)
+    .sort((left, right) => {
+      const leftRank = priority.indexOf(left.code)
+      const rightRank = priority.indexOf(right.code)
+      return (leftRank < 0 ? 99 : leftRank) - (rightRank < 0 ? 99 : rightRank)
+    })
+  return [{
+    code: 'all',
+    name: '全部方向',
+    description: value
+      ? `找到 ${allTracks.length} 个与“${keyword.value.trim()}”相关的主方向。`
+      : '完整展示软件、人工智能、算法、系统、数据与基础设施方向，可直接比较或进入细分路线。',
+    tracks: allTracks,
+  }, ...filtered]
 })
 
 onMounted(async () => {
@@ -321,6 +350,12 @@ function togglePathway(pathway: PathwayVariant) {
   } else ElMessage.warning('组合路线最多选择 6 个细分方向')
 }
 function clearPathways() { selectedPathwayIds.value = [] }
+function focusTrack(code: string) {
+  keyword.value = ''
+  activeCluster.value = 'all'
+  const track = clusters.value.flatMap((cluster) => cluster.tracks).find((item) => item.code === code)
+  if (track) openTrack(track)
+}
 function countTopics(pathway: PathwayVariant) { return new Set(pathway.stages.flatMap((stage) => stage.topics)).size }
 async function openTrack(track: TrackSummary) {
   const full = await getData<any>(`/tracks/${track.code}`)
@@ -381,7 +416,7 @@ async function goGenerateSelected() {
 </script>
 
 <style scoped>
-.hero{display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center;background:linear-gradient(125deg,#fff 0%,#f3f7ff 72%,#e9f1ff 100%)}.eyebrow{color:#2f67ee;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.hero h2{font-size:30px;margin:8px 0}.hero p,.cluster-copy,.section-title>span{color:var(--muted);line-height:1.7}.hero-actions{display:grid;grid-template-columns:1fr auto;gap:10px}.route-cart{margin-top:18px;border-color:#bdd0ff;background:linear-gradient(120deg,#fff,#f5f8ff)}.cart-title,.cart-footer,.section-title{display:flex;align-items:center;justify-content:space-between;gap:20px}.cart-title h3{margin:4px 0}.selected-chips{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.selected-chips button{display:grid;grid-template-columns:1fr auto;border:1px solid #cbd9fb;background:white;border-radius:12px;padding:9px 10px;text-align:left;color:inherit;cursor:pointer;min-width:170px}.selected-chips span{font-size:11px;color:#72809a}.selected-chips b{font-size:13px;margin-top:3px}.selected-chips i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:20px;color:#8190aa;padding-left:10px}.cart-footer p{margin:0;color:var(--muted);font-size:13px}.cluster-tabs{margin-top:22px}.track-grid,.compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.track-card,.compare-card{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;transition:.2s}.track-card:hover,.compare-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(31,61,123,.09)}.track-card.chosen{border-color:#3168ee;box-shadow:0 0 0 3px rgba(49,104,238,.09)}.track-top,.track-card footer{display:flex;justify-content:space-between;align-items:center;gap:10px}.track-body{width:100%;border:0;background:none;text-align:left;color:inherit;padding:0;cursor:pointer}.track-body h3{font-size:20px;margin:17px 0 8px}.track-body p{color:var(--muted);min-height:50px;line-height:1.6}.tag-row{display:flex;gap:6px;flex-wrap:wrap}.track-card footer{border-top:1px solid var(--line);margin-top:17px;padding-top:13px;font-size:12px;color:var(--muted)}.comparison{margin-top:24px}.section-title h3{margin:4px 0 14px;font-size:22px}.compare-card{text-align:center;position:relative}.rank{position:absolute;top:15px;left:15px;border-radius:8px;padding:4px 8px;background:#f1f3f7;color:#7c879b;font-size:11px}.rank.first{background:#fff0d9;color:#d27900}.score{width:64px;height:64px;border-radius:20px;margin:8px auto;display:grid;place-items:center;background:#edf3ff;color:#2f64e5;font-size:26px;font-weight:800}.compare-card>p{color:var(--muted)}.triple{display:flex;justify-content:space-between;font-size:12px;color:#758197;margin:13px 0}.triple b{color:#16213a}.career-mini{display:grid;gap:6px;background:#f7f9fc;border-radius:10px;padding:10px;text-align:left;font-size:12px;color:#5f6e86}.compare-actions{display:flex;justify-content:center;margin-top:14px}.detail-description{font-size:15px;line-height:1.75;color:#56647c}.track-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 22px}.track-summary>div{padding:12px;border-radius:12px;background:#f6f8fc}.track-summary span,.track-summary b{display:block}.track-summary span{font-size:11px;color:var(--muted);margin-bottom:5px}.pathway-title{width:100%;display:flex;justify-content:space-between;align-items:center;padding-right:12px}.pathway-title>div{display:flex;flex-direction:column;align-items:flex-start}.pathway-title span,.pathway-fit{font-size:12px;color:var(--muted)}.career-panel{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px;border:1px solid #cfe3db;background:#f4fbf8;border-radius:14px}.career-panel>div{display:grid;gap:4px}.career-panel span{font-size:11px;color:#628074}.career-panel b{font-size:13px;line-height:1.5}.career-panel small{grid-column:1/-1;color:#74827e;line-height:1.5}.stage-list{list-style:none;padding:0;display:grid;gap:10px}.stage-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fafbfe}.stage-number{width:28px;height:28px;border-radius:9px;background:#e8efff;color:#2862e9;display:grid;place-items:center;font-weight:800}.stage-list header{display:flex;justify-content:space-between;gap:12px}.stage-list header span{color:#3168ee;font-size:12px}.topic-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.topic-list i{font-style:normal;font-size:12px;padding:5px 8px;background:white;border:1px solid #e1e7f1;border-radius:7px;color:#536179}.portfolio,.milestone{padding:12px 14px;border-radius:12px;line-height:1.7}.portfolio{background:#fff8eb;margin:12px 0}.portfolio ul{margin:5px 0 0;padding-left:20px}.milestone{background:#eef5ff}.reason-list{line-height:1.9}@media(max-width:1100px){.hero{grid-template-columns:1fr}.track-grid,.compare-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.track-grid,.compare-grid,.track-summary,.career-panel{grid-template-columns:1fr}.hero-actions{grid-template-columns:1fr}.cart-footer,.section-title{align-items:flex-start;flex-direction:column}.pathway-title{align-items:flex-start;gap:8px;flex-direction:column}}
+.hero{display:grid;grid-template-columns:1fr 420px;gap:36px;align-items:center;background:linear-gradient(125deg,#fff 0%,#f3f7ff 72%,#e9f1ff 100%)}.eyebrow{color:#2f67ee;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.hero h2{font-size:30px;margin:8px 0}.hero p,.cluster-copy,.section-title>span{color:var(--muted);line-height:1.7}.hero-actions{display:grid;grid-template-columns:1fr auto;gap:10px}.catalog-summary{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:18px;padding:18px 22px}.catalog-summary h3{margin:4px 0;font-size:20px}.catalog-summary p{margin:0;color:var(--muted);font-size:13px}.catalog-shortcuts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.route-cart{margin-top:18px;border-color:#bdd0ff;background:linear-gradient(120deg,#fff,#f5f8ff)}.cart-title,.cart-footer,.section-title{display:flex;align-items:center;justify-content:space-between;gap:20px}.cart-title h3{margin:4px 0}.selected-chips{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.selected-chips button{display:grid;grid-template-columns:1fr auto;border:1px solid #cbd9fb;background:white;border-radius:12px;padding:9px 10px;text-align:left;color:inherit;cursor:pointer;min-width:170px}.selected-chips span{font-size:11px;color:#72809a}.selected-chips b{font-size:13px;margin-top:3px}.selected-chips i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:20px;color:#8190aa;padding-left:10px}.cart-footer p{margin:0;color:var(--muted);font-size:13px}.cluster-tabs{margin-top:12px}.track-grid,.compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.track-card,.compare-card{background:white;border:1px solid var(--line);border-radius:18px;padding:18px;transition:.2s}.track-card:hover,.compare-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(31,61,123,.09)}.track-card.chosen{border-color:#3168ee;box-shadow:0 0 0 3px rgba(49,104,238,.09)}.track-top,.track-card footer{display:flex;justify-content:space-between;align-items:center;gap:10px}.track-body{width:100%;border:0;background:none;text-align:left;color:inherit;padding:0;cursor:pointer}.track-body h3{font-size:20px;margin:17px 0 8px}.track-body p{color:var(--muted);min-height:50px;line-height:1.6}.tag-row{display:flex;gap:6px;flex-wrap:wrap}.track-card footer{border-top:1px solid var(--line);margin-top:17px;padding-top:13px;font-size:12px;color:var(--muted)}.comparison{margin-top:24px}.section-title h3{margin:4px 0 14px;font-size:22px}.compare-card{text-align:center;position:relative}.rank{position:absolute;top:15px;left:15px;border-radius:8px;padding:4px 8px;background:#f1f3f7;color:#7c879b;font-size:11px}.rank.first{background:#fff0d9;color:#d27900}.score{width:64px;height:64px;border-radius:20px;margin:8px auto;display:grid;place-items:center;background:#edf3ff;color:#2f64e5;font-size:26px;font-weight:800}.compare-card>p{color:var(--muted)}.triple{display:flex;justify-content:space-between;font-size:12px;color:#758197;margin:13px 0}.triple b{color:#16213a}.career-mini{display:grid;gap:6px;background:#f7f9fc;border-radius:10px;padding:10px;text-align:left;font-size:12px;color:#5f6e86}.compare-actions{display:flex;justify-content:center;margin-top:14px}.detail-description{font-size:15px;line-height:1.75;color:#56647c}.track-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 22px}.track-summary>div{padding:12px;border-radius:12px;background:#f6f8fc}.track-summary span,.track-summary b{display:block}.track-summary span{font-size:11px;color:var(--muted);margin-bottom:5px}.pathway-title{width:100%;display:flex;justify-content:space-between;align-items:center;padding-right:12px}.pathway-title>div{display:flex;flex-direction:column;align-items:flex-start}.pathway-title span,.pathway-fit{font-size:12px;color:var(--muted)}.career-panel{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px;border:1px solid #cfe3db;background:#f4fbf8;border-radius:14px}.career-panel>div{display:grid;gap:4px}.career-panel span{font-size:11px;color:#628074}.career-panel b{font-size:13px;line-height:1.5}.career-panel small{grid-column:1/-1;color:#74827e;line-height:1.5}.stage-list{list-style:none;padding:0;display:grid;gap:10px}.stage-list li{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fafbfe}.stage-number{width:28px;height:28px;border-radius:9px;background:#e8efff;color:#2862e9;display:grid;place-items:center;font-weight:800}.stage-list header{display:flex;justify-content:space-between;gap:12px}.stage-list header span{color:#3168ee;font-size:12px}.topic-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.topic-list i{font-style:normal;font-size:12px;padding:5px 8px;background:white;border:1px solid #e1e7f1;border-radius:7px;color:#536179}.portfolio,.milestone{padding:12px 14px;border-radius:12px;line-height:1.7}.portfolio{background:#fff8eb;margin:12px 0}.portfolio ul{margin:5px 0 0;padding-left:20px}.milestone{background:#eef5ff}.reason-list{line-height:1.9}@media(max-width:1100px){.hero{grid-template-columns:1fr}.track-grid,.compare-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.catalog-summary{align-items:flex-start;flex-direction:column}.catalog-shortcuts{justify-content:flex-start}.track-grid,.compare-grid,.track-summary,.career-panel{grid-template-columns:1fr}.hero-actions{grid-template-columns:1fr}.cart-footer,.section-title{align-items:flex-start;flex-direction:column}.pathway-title{align-items:flex-start;gap:8px;flex-direction:column}}
 .profile-required{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:24px;border-color:#cbdafa;background:linear-gradient(120deg,#fff,#f1f6ff)}.profile-required h3{margin:5px 0}.profile-required p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}.onboarding-result{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:18px}.compare-card.confirmed{border-color:#29a77b;box-shadow:0 0 0 3px rgba(41,167,123,.1)}.confirm-track{width:100%;margin-top:10px}@media(max-width:700px){.profile-required{align-items:flex-start;flex-direction:column}.onboarding-result{grid-template-columns:1fr}}
 .dimension-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:13px 0}.dimension-grid span{padding:7px 3px;border-radius:8px;background:#f6f8fc;font-size:10px;color:#758197}.dimension-grid b{display:block;color:#16213a;font-size:13px;margin-top:2px}
 .hero-actions{grid-template-columns:minmax(180px,1fr) auto auto}.hero{grid-template-columns:1fr 500px}@media(max-width:700px){.hero-actions{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
