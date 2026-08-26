@@ -1,0 +1,13 @@
+
+  #  C:\Users\cw139\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe[4256]: std::shared_ptr<InitializationResultImpl> __cdecl node::InitializeOncePerProcessInternal(const std::vector<std::string> &, ProcessInitializationFlags::Flags) at src\node.cc:1269
+  #  Assertion failed: ncrypto::CSPRNG(nullptr, 0)
+
+----- Native stack trace -----
+
+ 1: 00007FF71C16474A node::MultiIsolatePlatform::DisposeIsolate+754058
+ 2: 00007FF71C1C685C node::InitializeOncePerProcess+3100
+ 3: 00007FF71C1C6BBD node::Start+445
+ 4: 00007FF71C281552 node::AsyncResource::CallbackScope::CallbackScope+610
+ 5: 00007FF71C4914F4 node::AsyncResource::CallbackScope::CallbackScope+2163204
+ 6: 00007FF9F40CCCB7 BaseThreadInitThunk+23
+ 7: 00007FF9F4CAAD6C RtlUserThreadStart+44

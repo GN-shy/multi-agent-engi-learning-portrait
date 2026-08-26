@@ -10,6 +10,7 @@ from statistics import mean
 from typing import Any
 
 from app.core.config import settings
+from app.domain.curriculum import build_learning_unit
 
 
 class CatalogError(RuntimeError):
@@ -38,12 +39,28 @@ class ComputerCatalog:
             }
             for pathway in (pathways_raw or {}).get("directions", [])
         ]
+        track_sources = {track["code"]: track["sources"] for track in self.tracks}
+        for pathway in self.pathways:
+            pathway["learning_sources"] = track_sources.get(pathway["track_code"], [])
+            for stage in pathway["stages"]:
+                stage["learning_units"] = [
+                    build_learning_unit(
+                        topic,
+                        track_code=pathway["track_code"],
+                        pathway_name=pathway["name"],
+                        stage_title=stage["title"],
+                    )
+                    for topic in stage["topics"]
+                ]
+            pathway["knowledge_point_count"] = sum(
+                len(unit["knowledge_points"])
+                for stage in pathway["stages"]
+                for unit in stage["learning_units"]
+            )
         self._pathway_map = {pathway["id"]: pathway for pathway in self.pathways}
         for track in self.tracks:
             track["pathway_variants"] = [
-                pathway
-                for pathway in self.pathways
-                if pathway["track_code"] == track["code"]
+                pathway for pathway in self.pathways if pathway["track_code"] == track["code"]
             ]
         self._track_map = {track["code"]: track for track in self.tracks}
         self._skill_map = {skill["code"]: skill for skill in raw["core_skills"]}
@@ -88,9 +105,19 @@ class ComputerCatalog:
                     raise CatalogError(f"细分路线 {pathway.get('id')} 缺少就业画像")
                 for stage in pathway["stages"]:
                     if not stage.get("title") or not stage.get("topics"):
-                        raise CatalogError(
-                            f"细分路线 {pathway['id']} 存在不可执行的空阶段"
-                        )
+                        raise CatalogError(f"细分路线 {pathway['id']} 存在不可执行的空阶段")
+                    units = stage.get("learning_units", [])
+                    if len(units) != len(stage["topics"]):
+                        raise CatalogError(f"细分路线 {pathway['id']} 的学习单元与主题数量不一致")
+                    for unit in units:
+                        if (
+                            len(unit.get("knowledge_points", [])) < 4
+                            or len(unit.get("validation", [])) < 2
+                            or len(unit.get("search_terms", [])) < 3
+                        ):
+                            raise CatalogError(
+                                f"细分路线 {pathway['id']} 的主题 {unit.get('topic')} 粒度不足"
+                            )
 
     def get_track(self, code: str) -> dict[str, Any]:
         try:
@@ -104,32 +131,39 @@ class ComputerCatalog:
         except KeyError as exc:
             raise CatalogError(f"未知技能: {code}") from exc
 
-    def get_pathway(
-        self, pathway_id: str, track_code: str | None = None
-    ) -> dict[str, Any]:
+    def get_pathway(self, pathway_id: str, track_code: str | None = None) -> dict[str, Any]:
         try:
             pathway = self._pathway_map[pathway_id]
         except KeyError as exc:
             raise CatalogError(f"未知细分路线: {pathway_id}") from exc
         if track_code and pathway["track_code"] != track_code:
-            raise CatalogError(
-                f"细分路线 {pathway_id} 不属于主路线 {track_code}"
-            )
+            raise CatalogError(f"细分路线 {pathway_id} 不属于主路线 {track_code}")
         return pathway
 
     def pathway_summary(self, pathway: dict[str, Any]) -> dict[str, Any]:
         track = self.get_track(pathway["track_code"])
         return {
             **pathway,
+            "stages": [
+                {
+                    key: value
+                    for key, value in stage.items()
+                    if key != "learning_units"
+                }
+                | {
+                    "knowledge_point_count": sum(
+                        len(unit["knowledge_points"])
+                        for unit in stage["learning_units"]
+                    )
+                }
+                for stage in pathway["stages"]
+            ],
             "track_name": track["name"],
             "track_role": track["role"],
             "stage_count": len(pathway["stages"]),
+            "knowledge_point_count": pathway["knowledge_point_count"],
             "technology_count": len(
-                {
-                    self._topic_key(topic)
-                    for stage in pathway["stages"]
-                    for topic in stage["topics"]
-                }
+                {self._topic_key(topic) for stage in pathway["stages"] for topic in stage["topics"]}
             ),
         }
 
@@ -208,7 +242,9 @@ class ComputerCatalog:
                 ]
                 source_weeks.append(self._duration_weeks(stage["duration"]))
                 checkpoints.append(f"{pathway['name']}：完成“{stage['title']}”阶段作品")
-                for topic_index, topic in enumerate(stage["topics"]):
+                learning_units = stage["learning_units"]
+                for topic_index, unit in enumerate(learning_units):
+                    topic = unit["topic"]
                     topic_key = self._topic_key(topic)
                     if topic_key in seen_topics:
                         continue
@@ -217,25 +253,16 @@ class ComputerCatalog:
                     tasks.append(
                         {
                             "id": (
-                                f"{pathway['id']}:stage-{stage_index + 1}:"
-                                f"task-{topic_index + 1}"
+                                f"{pathway['id']}:stage-{stage_index + 1}:task-{topic_index + 1}"
                             ),
                             "title": topic,
                             "pathway_id": pathway["id"],
                             "pathway_name": pathway["name"],
+                            "track_code": pathway["track_code"],
                             "stage_title": stage["title"],
                             "skill_code": assigned_skill,
-                            "learning_action": (
-                                f"围绕“{topic}”完成原理说明、最小可运行示例、"
-                                "正常与异常路径验证，并记录一次关键取舍。"
-                            ),
-                            "evidence_required": (
-                                "代码仓库或作品链接 + 运行截图/日志 + 测试结果 + 复盘说明"
-                            ),
-                            "acceptance": (
-                                f"能够不照抄教程独立完成“{topic}”代表任务，"
-                                "解释失败边界，并用客观证据证明结果。"
-                            ),
+                            **unit,
+                            "_stage_position": topic_index / max(1, len(learning_units)),
                         }
                     )
             if not tasks:
@@ -245,6 +272,21 @@ class ComputerCatalog:
                 1,
                 ceil(base_weeks * (1 + 0.35 * max(0, len(stage_entries) - 1))),
             )
+            tasks_per_week: dict[int, int] = {}
+            for task in tasks:
+                scheduled_week = week_cursor + min(
+                    duration_weeks - 1,
+                    int(task.pop("_stage_position") * duration_weeks),
+                )
+                task["scheduled_week"] = scheduled_week
+                task["week_label"] = f"第 {scheduled_week} 周"
+                tasks_per_week[scheduled_week] = tasks_per_week.get(scheduled_week, 0) + 1
+            for sequence, task in enumerate(tasks, start=1):
+                task["sequence"] = sequence
+                task["estimated_hours"] = max(
+                    0.5,
+                    round(weekly_hours / tasks_per_week[task["scheduled_week"]], 1),
+                )
             phases.append(
                 {
                     "id": f"phase-{len(phases) + 1}",
@@ -283,11 +325,7 @@ class ComputerCatalog:
                     for index, stage in enumerate(pathway["stages"])
                 ],
                 "technologies": list(
-                    dict.fromkeys(
-                        topic
-                        for stage in pathway["stages"]
-                        for topic in stage["topics"]
-                    )
+                    dict.fromkeys(topic for stage in pathway["stages"] for topic in stage["topics"])
                 ),
                 "milestone": pathway["milestone"],
             }
@@ -307,8 +345,7 @@ class ComputerCatalog:
             # 兼容早期客户端使用的 stages 字段；两者均指向去重、重排后的组合阶段。
             "stages": phases,
             "final_milestones": [
-                {"pathway_name": item["name"], "milestone": item["milestone"]}
-                for item in pathways
+                {"pathway_name": item["name"], "milestone": item["milestone"]} for item in pathways
             ],
             "optimization_notes": [
                 "公共基础只学习一次，重复技术点已自动合并，避免多路线重复投入。",
@@ -392,20 +429,26 @@ class ComputerCatalog:
         track = self.get_track(track_code)
         questions = []
         for index, skill in enumerate(track["skills"]):
+            unit = build_learning_unit(
+                skill["name"],
+                track_code=track_code,
+                pathway_name=track["name"],
+                stage_title="能力诊断",
+            )
             questions.append(
                 {
                     "id": f"diag-{track_code}-{index + 1}",
                     "skill_code": skill["code"],
                     "type": "self_evidence",
                     "prompt": (
-                        f"你能否在不照抄教程的情况下完成“{skill['name']}”相关任务，"
-                        "并解释关键取舍？"
+                        f"你能否独立完成“{unit['practice']}”，并用实际输出说明"
+                        f"“{unit['knowledge_points'][0]}”？"
                     ),
                     "options": [
                         {"label": "不了解", "score": 10},
                         {"label": "能跟做", "score": 35},
                         {"label": "能独立完成", "score": 70},
-                        {"label": "能评审和优化", "score": 90}
+                        {"label": "能评审和优化", "score": 90},
                     ],
                 }
             )

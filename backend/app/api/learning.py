@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 from html import escape
-import re
 from typing import Any
 from urllib.parse import urlparse
 
@@ -24,8 +24,9 @@ from app.core.models import (
     TrackSelection,
     User,
 )
-from app.domain.catalog import get_catalog
 from app.domain.assessment import FIELDS, profile_update_weight, score_structured_answer
+from app.domain.catalog import get_catalog
+from app.domain.curriculum import upgrade_plan_phases
 from app.schemas import AssessmentSubmitInput, CheckinInput
 
 router = APIRouter(tags=["learning"])
@@ -109,9 +110,7 @@ def _review_practice_evidence(
             )
     evidence_coverage = len(quality_by_step) / max(1, len(completed_step_ids))
     evidence_quality = (
-        sum(quality_by_step.values()) / max(1, len(completed_step_ids))
-        if completed_step_ids
-        else 0
+        sum(quality_by_step.values()) / max(1, len(completed_step_ids)) if completed_step_ids else 0
     )
     return rows, min(1.0, evidence_coverage), min(1.0, evidence_quality)
 
@@ -168,11 +167,7 @@ def submit_practice(
     db: Session = Depends(get_db),
 ):
     resource = db.get(LearningResource, resource_id)
-    if (
-        not resource
-        or resource.user_id != user.id
-        or resource.resource_type != "practice"
-    ):
+    if not resource or resource.user_id != user.id or resource.resource_type != "practice":
         raise HTTPException(status_code=404, detail="实操任务不存在")
     evidence = body.get("evidence", [])
     steps = resource.content.get("steps", [])
@@ -210,7 +205,7 @@ def submit_practice(
         "evidence_review": evidence_review,
         "verification_notice": "平台已检查证据格式、步骤关联和描述完整性；外部仓库与链接仍需评审者复核。",
         "next_action": (
-            "进入分阶段测评，并在项目复盘中说明关键取舍。"
+            "进入分阶段测评，并在项目复盘中说明接口、测试范围和失败恢复决策。"
             if passed
             else (
                 "请至少补充一条代码、提交、测试或部署证据。"
@@ -245,11 +240,7 @@ def submit_assessment(
     db: Session = Depends(get_db),
 ):
     resource = db.get(LearningResource, resource_id)
-    if (
-        not resource
-        or resource.user_id != user.id
-        or resource.resource_type != "assessment"
-    ):
+    if not resource or resource.user_id != user.id or resource.resource_type != "assessment":
         raise HTTPException(status_code=404, detail="测试不存在")
     questions = resource.content.get("questions", [])
     details = []
@@ -373,13 +364,28 @@ def current_plan(
     )
     if not row:
         raise HTTPException(status_code=404, detail="尚未生成学习计划")
+    catalog = get_catalog()
+    skill_names = {
+        code: catalog.get_skill(code)["name"]
+        for phase in row.phases
+        for code in phase.get("skills", [])
+    }
+    phases, upgraded = upgrade_plan_phases(
+        row.phases,
+        track_code=row.track_code,
+        skill_names=skill_names,
+    )
+    if upgraded:
+        row.phases = phases
+        row.updated_at = datetime.now(timezone.utc)
+        db.commit()
     return success(
         {
             "id": row.id,
             "track_code": row.track_code,
-            "track_name": get_catalog().get_track(row.track_code)["name"],
+            "track_name": catalog.get_track(row.track_code)["name"],
             "goal": row.goal,
-            "phases": row.phases,
+            "phases": phases,
             "progress": row.progress,
             "version": row.version,
             "checkins": row.checkins,
@@ -398,16 +404,11 @@ def checkin(
     plan = db.get(LearningPlan, plan_id)
     if not plan or plan.user_id != user.id:
         raise HTTPException(status_code=404, detail="学习计划不存在")
+
     def phase_task_ids(phase: dict[str, Any]) -> set[str]:
         if phase.get("tasks"):
-            return {
-                f"{phase['id']}:{task['id']}"
-                for task in phase["tasks"]
-            }
-        return {
-            f"{phase['id']}:{skill}"
-            for skill in phase.get("skills", [])
-        }
+            return {f"{phase['id']}:{task['id']}" for task in phase["tasks"]}
+        return {f"{phase['id']}:{skill}" for skill in phase.get("skills", [])}
 
     valid_ids = set().union(*(phase_task_ids(phase) for phase in plan.phases))
     accepted = sorted(set(body.completed_task_ids) & valid_ids)
@@ -567,8 +568,7 @@ def printable_report(
         for name, score in report["dimensions"].items()
     )
     blind_spots = "".join(
-        f"<li>{escape(item['name'])}（{item['score']}）</li>"
-        for item in report["blind_spots"]
+        f"<li>{escape(item['name'])}（{item['score']}）</li>" for item in report["blind_spots"]
     )
     html = f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
     <title>工学智链学习报告</title><style>
@@ -584,13 +584,13 @@ def printable_report(
     </style></head><body>
     <button class="no-print" onclick="window.print()">打印 / 另存为 PDF</button>
     <section class="hero"><h1>工学智链 · {escape(user.username)} 的学习报告</h1>
-    <p>生成时间：{escape(report['generated_at'])} · 画像版本 V{report['profile_version']}</p></section>
-    <div class="card"><h2>综合能力 <span class="score">{report['comprehensive_score']}</span></h2><ul class="dimensions">{dimensions}</ul></div>
+    <p>生成时间：{escape(report["generated_at"])} · 画像版本 V{report["profile_version"]}</p></section>
+    <div class="card"><h2>综合能力 <span class="score">{report["comprehensive_score"]}</span></h2><ul class="dimensions">{dimensions}</ul></div>
     <div class="card"><h2>关键盲区</h2><ul>{blind_spots}</ul></div>
-    <div class="card"><h2>路线依据</h2>{render_value(report['route'])}</div>
+    <div class="card"><h2>路线依据</h2>{render_value(report["route"])}</div>
     <div class="card"><h2>内容质量证据</h2>
       <p class="muted">“未引用风险估计”仅由引用覆盖推算，不代表独立事实核验结果。</p>
-      {render_value(report['quality_metrics'])}
+      {render_value(report["quality_metrics"])}
     </div>
     </body></html>"""
     return Response(content=html, media_type="text/html")
@@ -627,46 +627,48 @@ def records(
     sessions_by_id = {
         row.id: row
         for row in (
-            db.scalars(
-                select(LearningSession).where(LearningSession.id.in_(session_ids))
-            ).all()
+            db.scalars(select(LearningSession).where(LearningSession.id.in_(session_ids))).all()
             if session_ids
             else []
         )
     }
-    items = [
-        {
-            "id": item.id,
-            "type": f"resource:{item.resource_type}",
-            "title": item.title,
-            "track_code": item.track_code,
-            "created_at": item.created_at.isoformat(),
-        }
-        for item in resources
-    ] + [
-        {
-            "id": item.id,
-            "type": "assessment",
-            "title": f"{get_catalog().get_track(item.track_code)['name']} 测试 · {item.score} 分",
-            "track_code": item.track_code,
-            "score": item.score,
-            "passed": item.score >= 70,
-            "created_at": item.created_at.isoformat(),
-        }
-        for item in attempts
-    ] + [
-        {
-            "id": item.id,
-            "type": "practice_submission",
-            "title": item.payload.get("resource_title", "项目实操证据提交"),
-            "track_code": sessions_by_id.get(item.session_id).track_code
-            if sessions_by_id.get(item.session_id)
-            else "",
-            "score": (item.adjustment or {}).get("score"),
-            "passed": (item.adjustment or {}).get("passed", False),
-            "created_at": item.created_at.isoformat(),
-        }
-        for item in practice_submissions
-    ]
+    items = (
+        [
+            {
+                "id": item.id,
+                "type": f"resource:{item.resource_type}",
+                "title": item.title,
+                "track_code": item.track_code,
+                "created_at": item.created_at.isoformat(),
+            }
+            for item in resources
+        ]
+        + [
+            {
+                "id": item.id,
+                "type": "assessment",
+                "title": f"{get_catalog().get_track(item.track_code)['name']} 测试 · {item.score} 分",
+                "track_code": item.track_code,
+                "score": item.score,
+                "passed": item.score >= 70,
+                "created_at": item.created_at.isoformat(),
+            }
+            for item in attempts
+        ]
+        + [
+            {
+                "id": item.id,
+                "type": "practice_submission",
+                "title": item.payload.get("resource_title", "项目实操证据提交"),
+                "track_code": sessions_by_id.get(item.session_id).track_code
+                if sessions_by_id.get(item.session_id)
+                else "",
+                "score": (item.adjustment or {}).get("score"),
+                "passed": (item.adjustment or {}).get("passed", False),
+                "created_at": item.created_at.isoformat(),
+            }
+            for item in practice_submissions
+        ]
+    )
     items.sort(key=lambda item: item["created_at"], reverse=True)
     return success({"items": items[:limit]})

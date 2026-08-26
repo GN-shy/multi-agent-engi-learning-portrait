@@ -17,7 +17,7 @@
         <el-tab-pane label="协作过程" name="events">
           <section class="panel">
             <div class="panel-title">
-              <div><h3>六 Agent 协作记录</h3><p>每一步都来自后端实际运行结果，不使用前端模拟数据</p></div>
+              <div><h3>多智能体协作记录</h3><p>每一步都来自后端实际运行结果，不使用前端模拟数据</p></div>
               <el-tag type="success">{{ session.events?.length || 0 }} 步已完成</el-tag>
             </div>
             <div class="event-list">

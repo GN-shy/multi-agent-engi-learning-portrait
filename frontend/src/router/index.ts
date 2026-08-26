@@ -4,7 +4,7 @@ import { useUserStore } from '@/stores/user'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/login', component: () => import('@/pages/LoginPage.vue'), meta: { public: true } },
+    { path: '/login', component: () => import('@/pages/LoginPage.vue'), meta: { public: true, title: '登录与注册' } },
     { path: '/onboarding', component: () => import('@/pages/OnboardingPage.vue'), meta: { title: '建立成长档案', eyebrow: '先了解你，再给路线' } },
     { path: '/', component: () => import('@/pages/Dashboard.vue'), meta: { title: '首页总览', eyebrow: '今天从正确的路线继续成长' } },
     { path: '/tracks', component: () => import('@/pages/TrackExplorer.vue'), meta: { title: '方向探索', eyebrow: '比较之后再选择，不用靠猜' } },
@@ -12,7 +12,7 @@ const router = createRouter({
     { path: '/skills', component: () => import('@/pages/SkillGraphPage.vue'), meta: { title: '技能图谱', eyebrow: '看清前置依赖和能力缺口' } },
     { path: '/profile', component: () => import('@/pages/ProfilePage.vue'), meta: { title: '能力画像', eyebrow: '用证据认识当前的自己' } },
     { path: '/knowledge', component: () => import('@/pages/KnowledgePage.vue'), meta: { title: '知识检索', eyebrow: '所有生成内容都能追溯来源' } },
-    { path: '/generate', component: () => import('@/pages/GeneratePage.vue'), meta: { title: '智能生成', eyebrow: '六 Agent 协作生成个性化学习闭环' } },
+    { path: '/generate', component: () => import('@/pages/GeneratePage.vue'), meta: { title: '智能生成', eyebrow: '运用多智能体协作生成个性化学习闭环' } },
     { path: '/resources', component: () => import('@/pages/ResourcePage.vue'), meta: { title: '学习资源', eyebrow: '讲义、实操、测试与计划统一管理' } },
     { path: '/practice', component: () => import('@/pages/PracticePage.vue'), meta: { title: '项目实操', eyebrow: '提交运行证据，而不只是阅读' } },
     { path: '/assessment', component: () => import('@/pages/AssessmentPage.vue'), meta: { title: '工作样本测评', eyebrow: '先反馈，再用可核验证据更新画像' } },
@@ -37,6 +37,11 @@ router.beforeEach(async (to) => {
     return user.isLoggedIn && to.path === '/login' ? '/' : true
   }
   return user.isLoggedIn ? true : { path: '/login', query: { redirect: to.fullPath } }
+})
+
+router.afterEach((to) => {
+  const pageTitle = typeof to.meta.title === 'string' ? to.meta.title : '工学智链'
+  document.title = pageTitle === '工学智链' ? pageTitle : `${pageTitle} — 工学智链`
 })
 
 export default router

@@ -21,10 +21,26 @@ export interface TrackSummary {
   estimated_months: string[]
 }
 
+export interface LearningUnit {
+  topic: string
+  curriculum_version: string
+  knowledge_points: string[]
+  learning_steps: string[]
+  learning_action: string
+  practice: string
+  failure_drill: string
+  validation: string[]
+  search_terms: string[]
+  evidence_required: string
+  acceptance: string
+}
+
 export interface PathwayStage {
   title: string
   duration: string
   topics: string[]
+  learning_units?: LearningUnit[]
+  knowledge_point_count?: number
 }
 
 export interface CareerProfile {
@@ -54,17 +70,37 @@ export interface PathwayVariant {
   stages: PathwayStage[]
   stage_count?: number
   technology_count?: number
+  knowledge_point_count?: number
   career?: CareerProfile
   salary_scope?: string
+  learning_sources?: Array<{
+    id: string
+    title: string
+    url: string
+    version: string
+  }>
 }
 
 export interface ComposedRouteTask {
+  id: string
   title: string
+  topic: string
   pathway_id: string
   pathway_name: string
+  track_code: string
   stage_title: string
   skill_code: string
+  sequence: number
+  scheduled_week: number
+  week_label: string
+  estimated_hours: number
+  knowledge_points: string[]
+  learning_steps: string[]
   learning_action: string
+  practice: string
+  failure_drill: string
+  validation: string[]
+  search_terms: string[]
   evidence_required: string
   acceptance: string
 }

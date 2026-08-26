@@ -151,7 +151,7 @@
               <div class="pathway-title">
                 <div>
                   <b>{{ pathway.name }}</b>
-                  <span>{{ pathway.estimated_months }} 个月 · {{ pathway.stages.length }} 个阶段 · {{ countTopics(pathway) }} 项技术</span>
+                  <span>{{ pathway.estimated_months }} 个月 · {{ pathway.stages.length }} 个阶段 · {{ countTopics(pathway) }} 个主题 · {{ pathway.knowledge_point_count }} 个具体知识点</span>
                 </div>
                 <el-tag :type="isPathwaySelected(pathway.id) ? 'success' : 'info'">
                   {{ isPathwaySelected(pathway.id) ? '已加入组合' : '展开查看' }}
@@ -178,12 +178,24 @@
               </div>
               <small>{{ pathway.salary_scope }}</small>
             </section>
+            <nav v-if="pathway.learning_sources?.length" class="source-links" aria-label="优先学习来源">
+              <b>优先查官方/权威资料</b>
+              <a v-for="source in pathway.learning_sources" :key="source.id" :href="source.url" target="_blank" rel="noopener noreferrer">{{ source.title }} · {{ source.version }}</a>
+            </nav>
             <ol class="stage-list">
               <li v-for="(stage, index) in pathway.stages" :key="stage.title">
                 <span class="stage-number">{{ index + 1 }}</span>
                 <div>
                   <header><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></header>
                   <div class="topic-list"><i v-for="topic in stage.topics" :key="topic">{{ topic }}</i></div>
+                  <div class="unit-list">
+                    <details v-for="unit in (stage.learning_units || [])" :key="unit.topic">
+                      <summary>{{ unit.topic }}：{{ unit.knowledge_points.length }} 个具体知识点</summary>
+                      <ol><li v-for="point in unit.knowledge_points" :key="point">{{ point }}</li></ol>
+                      <p>{{ unit.practice }}</p>
+                      <small><b>建议搜索：</b>{{ unit.search_terms.join(' ｜ ') }}</small>
+                    </details>
+                  </div>
                 </div>
               </li>
             </ol>
@@ -210,10 +222,25 @@
           <div><span>薪资参考</span><b>{{ detail.pathway.career.salary_range }}</b></div>
           <div><span>学历要求</span><b>{{ detail.pathway.career.education.competitive }}</b></div>
         </section>
+        <nav v-if="detail.pathway.learning_sources?.length" class="source-links" aria-label="优先学习来源">
+          <b>优先查官方/权威资料</b>
+          <a v-for="source in detail.pathway.learning_sources" :key="source.id" :href="source.url" target="_blank" rel="noopener noreferrer">{{ source.title }} · {{ source.version }}</a>
+        </nav>
         <ol class="stage-list">
           <li v-for="(stage, index) in detail.pathway.stages" :key="stage.title">
             <span class="stage-number">{{ index + 1 }}</span>
-            <div><header><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></header><div class="topic-list"><i v-for="topic in stage.topics" :key="topic">{{ topic }}</i></div></div>
+            <div>
+              <header><b>{{ stage.title }}</b><span>{{ stage.duration }}</span></header>
+              <div class="topic-list"><i v-for="topic in stage.topics" :key="topic">{{ topic }}</i></div>
+              <div class="unit-list">
+                <details v-for="unit in (stage.learning_units || [])" :key="unit.topic">
+                  <summary>{{ unit.topic }}：{{ unit.knowledge_points.length }} 个具体知识点</summary>
+                  <ol><li v-for="point in unit.knowledge_points" :key="point">{{ point }}</li></ol>
+                  <p>{{ unit.practice }}</p>
+                  <small><b>建议搜索：</b>{{ unit.search_terms.join(' ｜ ') }}</small>
+                </details>
+              </div>
+            </div>
           </li>
         </ol>
       </template>
@@ -365,10 +392,13 @@ async function openTrack(track: TrackSummary) {
   detail.visible = true
   openPathways.value = full.pathway_variants?.length ? [full.pathway_variants[0].id] : []
 }
-function openPathway(pathway: PathwayVariant) {
-  detail.title = pathway.name
+async function openPathway(pathway: PathwayVariant) {
+  const full = pathway.stages.some((stage) => stage.learning_units?.length)
+    ? pathway
+    : await getData<PathwayVariant>(`/tracks/pathways/${pathway.id}`)
+  detail.title = full.name
   detail.kind = 'pathway'
-  detail.pathway = pathway
+  detail.pathway = full
   detail.visible = true
 }
 async function compareSelected() {
@@ -420,4 +450,6 @@ async function goGenerateSelected() {
 .profile-required{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:24px;border-color:#cbdafa;background:linear-gradient(120deg,#fff,#f1f6ff)}.profile-required h3{margin:5px 0}.profile-required p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}.onboarding-result{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:18px}.compare-card.confirmed{border-color:#29a77b;box-shadow:0 0 0 3px rgba(41,167,123,.1)}.confirm-track{width:100%;margin-top:10px}@media(max-width:700px){.profile-required{align-items:flex-start;flex-direction:column}.onboarding-result{grid-template-columns:1fr}}
 .dimension-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:13px 0}.dimension-grid span{padding:7px 3px;border-radius:8px;background:#f6f8fc;font-size:10px;color:#758197}.dimension-grid b{display:block;color:#16213a;font-size:13px;margin-top:2px}
 .hero-actions{grid-template-columns:minmax(180px,1fr) auto auto}.hero{grid-template-columns:1fr 500px}@media(max-width:700px){.hero-actions{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+.unit-list{display:grid;gap:6px;margin-top:10px}.unit-list details{border-top:1px dashed #dce4f1;padding-top:7px}.unit-list summary{color:#2d5fcd;font-size:12px;font-weight:700;cursor:pointer;line-height:1.5}.unit-list ol{margin:8px 0;padding-left:22px;color:#4e5d75;font-size:12px;line-height:1.65}.unit-list p,.unit-list small{display:block;color:#68768d;font-size:11px;line-height:1.6;margin:6px 0}.unit-list summary:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+.source-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;border-radius:10px;background:#f1f6ff}.source-links b{font-size:12px}.source-links a{font-size:11px;color:#245dcc;text-decoration:underline;text-underline-offset:2px}.source-links a:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:3px}
 </style>

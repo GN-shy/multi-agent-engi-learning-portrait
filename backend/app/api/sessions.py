@@ -462,7 +462,7 @@ def create_session(
                 user_id=user.id,
                 notification_type="session_completed",
                 title="个性化学习闭环已生成",
-                content=f"{row.goal} 已完成六 Agent 协作与质量校验。",
+                content=f"{row.goal} 已完成多智能体协作与质量校验。",
                 action_url=f"/session/{row.id}",
                 related_id=row.id,
             )

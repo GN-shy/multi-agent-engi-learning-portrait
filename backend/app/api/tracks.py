@@ -93,6 +93,15 @@ def recommend_pathways(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.get("/pathways/{pathway_id}")
+def pathway_detail(pathway_id: str):
+    try:
+        pathway = get_catalog().get_pathway(pathway_id)
+        return success(get_catalog().pathway_summary(pathway) | {"stages": pathway["stages"]})
+    except CatalogError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.post("/compare")
 def compare_tracks(
     body: RouteCompareInput,

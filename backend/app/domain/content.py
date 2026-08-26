@@ -7,6 +7,7 @@ from statistics import mean
 from typing import Any
 
 from app.domain.catalog import ComputerCatalog, get_catalog
+from app.domain.curriculum import build_learning_unit
 
 
 class ContentEngine:
@@ -31,25 +32,31 @@ class ContentEngine:
         sections = []
         for skill in ordered:
             source = self._evidence_for_skill(skill["code"], auditable_evidence)
+            unit = build_learning_unit(
+                skill["name"],
+                track_code=track["code"],
+                pathway_name=track["name"],
+                stage_title="岗位核心能力",
+            )
             sections.append(
                 {
                     "skill_code": skill["code"],
                     "title": skill["name"],
                     "difficulty": skill["difficulty"],
-                    "objective": f"能够解释并完成 {skill['name']} 的代表性任务",
+                    "objective": (
+                        f"掌握“{unit['knowledge_points'][0]}”，并完成：{unit['practice']}"
+                    ),
                     "explanation": skill["description"],
                     "why_this_matters": f"{skill['name']} 是完成“{track['project']['title']}”时必须能够独立判断和落地的能力。",
-                    "learning_tasks": [
-                        f"用一个最小示例验证 {skill['name']} 的核心机制",
-                        "记录输入、预期输出、实际输出和差异",
-                        "整理一条可复用的排错清单",
-                    ],
+                    "knowledge_points": unit["knowledge_points"],
+                    "learning_tasks": unit["learning_steps"],
                     "common_mistakes": [
-                        "只记结论，没有运行或对照证据",
-                        "忽略异常路径与失败边界",
+                        f"只收藏“{skill['name']}”教程，没有完成独立练习和实际输出",
+                        f"没有执行“{unit['failure_drill']}”",
                     ],
-                    "verification": "提供可重复执行的命令、测试结果或界面操作记录。",
-                    "checkpoint": f"用自己的话说明 {skill['name']} 的边界、常见失败和验证方法。",
+                    "verification": unit["evidence_required"],
+                    "checkpoint": unit["acceptance"],
+                    "learning_unit": unit,
                     "citation_ids": [source["chunk_id"]] if source else [],
                 }
             )
@@ -85,6 +92,12 @@ class ContentEngine:
         sections = []
         for index, skill in enumerate(skills):
             source = self._evidence_for_skill(skill["code"], auditable_evidence)
+            unit = build_learning_unit(
+                skill["name"],
+                track_code=track["code"],
+                pathway_name=track["name"],
+                stage_title="项目能力挑战",
+            )
             sections.append(
                 {
                     "skill_code": skill["code"],
@@ -95,17 +108,15 @@ class ContentEngine:
                         f"先实现最小结果，再根据失败现象回到原理：{skill['description']}"
                     ),
                     "why_this_matters": f"这一能力直接决定“{track['project']['title']}”能否从演示走向可交付。",
-                    "learning_tasks": [
-                        "先交付一个可以运行的最小增量",
-                        "为正常路径和异常路径各补一条验证",
-                        "根据证据解释一次关键技术取舍",
-                    ],
+                    "knowledge_points": unit["knowledge_points"],
+                    "learning_tasks": unit["learning_steps"],
                     "common_mistakes": [
-                        "只展示最终界面，无法复现过程",
-                        "用主观描述代替测试、日志或数据指标",
+                        f"把“{skill['name']}”混在整个项目里，无法单独验证输入输出",
+                        f"跳过“{unit['failure_drill']}”",
                     ],
-                    "verification": "将代码提交、测试结果与对应任务步骤关联。",
-                    "checkpoint": f"提交运行证据，并说明一次与 {skill['name']} 有关的取舍。",
+                    "verification": unit["evidence_required"],
+                    "checkpoint": unit["acceptance"],
+                    "learning_unit": unit,
                     "citation_ids": [source["chunk_id"]] if source else [],
                 }
             )
@@ -165,12 +176,35 @@ class ContentEngine:
                     "成果证据与可信度（2 分）",
                 ],
                 "response_fields": [
-                    {"code": "action", "label": "实施方案", "hint": "按顺序说明做什么、输入输出和涉及的技术对象"},
-                    {"code": "validation", "label": "验收与验证", "hint": "给出测试方法、预期结果和通过标准"},
-                    {"code": "boundary", "label": "失败处理", "hint": "给出至少一个异常场景及定位、恢复办法"},
-                    {"code": "reasoning", "label": "技术取舍", "hint": "比较主方案与备选方案，说明选择依据和代价"},
+                    {
+                        "code": "action",
+                        "label": "实施方案",
+                        "hint": "按顺序说明做什么、输入输出和涉及的技术对象",
+                    },
+                    {
+                        "code": "validation",
+                        "label": "验收与验证",
+                        "hint": "给出测试方法、预期结果和通过标准",
+                    },
+                    {
+                        "code": "boundary",
+                        "label": "失败处理",
+                        "hint": "给出至少一个异常场景及定位、恢复办法",
+                    },
+                    {
+                        "code": "reasoning",
+                        "label": "技术取舍",
+                        "hint": "比较主方案与备选方案，说明选择依据和代价",
+                    },
                 ],
-                "evidence_types": ["repository", "commit", "test", "deployment", "screenshot_note", "note"],
+                "evidence_types": [
+                    "repository",
+                    "commit",
+                    "test",
+                    "deployment",
+                    "screenshot_note",
+                    "note",
+                ],
                 "scoring_notice": "没有成果证据时仍可获得形成性反馈，但不会用高权重改写能力画像。",
                 "max_score": 10,
             }
@@ -271,9 +305,9 @@ class ContentEngine:
         score_a = self._score(candidate_a, evidence, profile)
         score_b = self._score(candidate_b, evidence, profile)
         delta = abs(score_a["total"] - score_b["total"])
-        debate_triggered = delta < 4 or min(
-            score_a["citation_coverage"], score_b["citation_coverage"]
-        ) < 0.95
+        debate_triggered = (
+            delta < 4 or min(score_a["citation_coverage"], score_b["citation_coverage"]) < 0.95
+        )
         debate = []
         if debate_triggered:
             debate = [
@@ -310,7 +344,10 @@ class ContentEngine:
             "rules": {
                 "citation_coverage_at_least_95_percent": final_score["citation_coverage"] >= 0.95,
                 "no_prerequisite_violation": final_score["prerequisite_violations"] == 0,
-                "system_detected_unsupported_content_below_5_percent": final_score["hallucination_risk"] < 0.05,
+                "system_detected_unsupported_content_below_5_percent": final_score[
+                    "hallucination_risk"
+                ]
+                < 0.05,
             },
             "notice": "该闸门检查引用是否真实存在且与同一技能绑定；它是发布前系统检测，不等同于人工盲测的真实幻觉率。",
         }
@@ -338,8 +375,7 @@ class ContentEngine:
         target = set(
             candidate.get("target_skill_codes")
             or [
-                skill["code"]
-                for skill in self.catalog.get_track(candidate["track_code"])["skills"]
+                skill["code"] for skill in self.catalog.get_track(candidate["track_code"])["skills"]
             ]
         )
         covered = {section["skill_code"] for section in sections}
@@ -414,8 +450,7 @@ class ContentEngine:
                 item
                 for item in remaining.values()
                 if all(
-                    prerequisite not in remaining
-                    for prerequisite in item.get("prerequisites", [])
+                    prerequisite not in remaining for prerequisite in item.get("prerequisites", [])
                 )
             ]
             if not ready:
@@ -439,16 +474,9 @@ class ContentEngine:
         track_codes = list(dict.fromkeys(item["track_code"] for item in pathways))
         tracks = [self.catalog.get_track(code) for code in track_codes]
         skills = list(
-            {
-                skill["code"]: skill
-                for track in tracks
-                for skill in track["skills"]
-            }.values()
+            {skill["code"]: skill for track in tracks for skill in track["skills"]}.values()
         )
-        deliverables = [
-            f"{pathway['name']}：{pathway['milestone']}"
-            for pathway in pathways
-        ]
+        deliverables = [f"{pathway['name']}：{pathway['milestone']}" for pathway in pathways]
         return {
             **primary,
             "name": " + ".join(pathway["name"] for pathway in pathways),
@@ -460,13 +488,11 @@ class ContentEngine:
             "selected_pathways": pathways,
             "skills": skills,
             "project": {
-                "title": "跨方向综合作品：" + " + ".join(
-                    pathway["name"] for pathway in pathways
-                ),
+                "title": "跨方向综合作品：" + " + ".join(pathway["name"] for pathway in pathways),
                 "deliverables": deliverables,
                 "acceptance": (
                     "每条所选路线均完成对应里程碑；共同技术只验收一次，"
-                    "跨方向接口、部署、测试和关键取舍必须有可复现证据。"
+                    "跨方向接口契约、部署方式、测试范围与失败恢复决策必须有可复现证据。"
                 ),
             },
         }
@@ -529,13 +555,9 @@ class ContentEngine:
             week_cursor = 1
             phases = []
             for index, stage in enumerate(pathway["stages"]):
-                duration_numbers = [
-                    int(value) for value in re.findall(r"\d+", stage["duration"])
-                ]
+                duration_numbers = [int(value) for value in re.findall(r"\d+", stage["duration"])]
                 duration_weeks = (
-                    max(1, min(10, round(mean(duration_numbers))))
-                    if duration_numbers
-                    else 2
+                    max(1, min(10, round(mean(duration_numbers)))) if duration_numbers else 2
                 )
                 assigned_skill = route_skills[
                     min(
@@ -543,15 +565,37 @@ class ContentEngine:
                         index * len(route_skills) // max(1, len(pathway["stages"])),
                     )
                 ]
-                tasks = [
-                    {
-                        "id": f"{pathway['id']}:stage-{index + 1}:task-{task_index + 1}",
-                        "title": topic,
-                        "skill_code": assigned_skill,
-                        "evidence_required": "学习笔记、可运行代码、测试结果或作品截图至少一项",
-                    }
-                    for task_index, topic in enumerate(stage["topics"])
+                units = stage.get("learning_units") or [
+                    build_learning_unit(
+                        topic,
+                        track_code=pathway["track_code"],
+                        pathway_name=pathway["name"],
+                        stage_title=stage["title"],
+                    )
+                    for topic in stage["topics"]
                 ]
+                tasks = []
+                for task_index, unit in enumerate(units):
+                    scheduled_week = week_cursor + min(
+                        duration_weeks - 1,
+                        int(task_index / max(1, len(units)) * duration_weeks),
+                    )
+                    tasks.append(
+                        {
+                            "id": (f"{pathway['id']}:stage-{index + 1}:task-{task_index + 1}"),
+                            "title": unit["topic"],
+                            "skill_code": assigned_skill,
+                            "track_code": pathway["track_code"],
+                            **unit,
+                            "sequence": task_index + 1,
+                            "scheduled_week": scheduled_week,
+                            "week_label": f"第 {scheduled_week} 周",
+                            "estimated_hours": max(
+                                0.5,
+                                round(weekly_hours * duration_weeks / max(1, len(units)), 1),
+                            ),
+                        }
+                    )
                 phases.append(
                     {
                         "id": f"phase-{index + 1}",
@@ -563,14 +607,14 @@ class ContentEngine:
                         "week_end": week_cursor + duration_weeks - 1,
                         "hours_per_week": weekly_hours,
                         "strategy": strategy,
-                        "skills": sorted(
-                            {task["skill_code"] for task in tasks}
-                        ),
+                        "skills": sorted({task["skill_code"] for task in tasks}),
                         "tasks": tasks,
                         "milestone": (
                             pathway["milestone"]
                             if index == len(pathway["stages"]) - 1
-                            else f"完成“{stage['title']}”的可验证阶段作品并通过复盘"
+                            else (
+                                f"完成“{stage['title']}”全部任务，逐项通过自测并提交阶段成果"
+                            )
                         ),
                         "status": "active" if index == 0 else "pending",
                     }
@@ -580,21 +624,46 @@ class ContentEngine:
 
         labels = ["基础校准", "核心能力", "项目交付", "评测与复盘"]
         buckets = [sections[:1], sections[1:3], sections[3:], sections[-1:]]
-        return [
-            {
-                "id": f"phase-{index + 1}",
-                "name": label,
-                "week_start": index * 2 + 1,
-                "week_end": index * 2 + 2,
-                "hours_per_week": weekly_hours,
-                "strategy": strategy,
-                "skills": [section["skill_code"] for section in bucket],
-                "milestone": (
-                    track["project"]["deliverables"][
-                        min(index, len(track["project"]["deliverables"]) - 1)
-                    ]
-                ),
-                "status": "active" if index == 0 else "pending",
-            }
-            for index, (label, bucket) in enumerate(zip(labels, buckets))
-        ]
+        phases = []
+        for index, (label, bucket) in enumerate(zip(labels, buckets)):
+            week_start = index * 2 + 1
+            tasks = []
+            for task_index, section in enumerate(bucket):
+                unit = section.get("learning_unit") or build_learning_unit(
+                    section["title"],
+                    track_code=track["code"],
+                    pathway_name=track["name"],
+                    stage_title=label,
+                )
+                tasks.append(
+                    {
+                        "id": f"{track['code']}:{label}:task-{task_index + 1}",
+                        "title": section["title"],
+                        "skill_code": section["skill_code"],
+                        "track_code": track["code"],
+                        **unit,
+                        "sequence": task_index + 1,
+                        "scheduled_week": week_start + min(1, task_index),
+                        "week_label": f"第 {week_start + min(1, task_index)} 周",
+                        "estimated_hours": max(1, round(weekly_hours / max(1, len(bucket)), 1)),
+                    }
+                )
+            phases.append(
+                {
+                    "id": f"phase-{index + 1}",
+                    "name": label,
+                    "week_start": week_start,
+                    "week_end": week_start + 1,
+                    "hours_per_week": weekly_hours,
+                    "strategy": strategy,
+                    "skills": [section["skill_code"] for section in bucket],
+                    "tasks": tasks,
+                    "milestone": (
+                        track["project"]["deliverables"][
+                            min(index, len(track["project"]["deliverables"]) - 1)
+                        ]
+                    ),
+                    "status": "active" if index == 0 else "pending",
+                }
+            )
+        return phases

@@ -93,7 +93,7 @@
         <div class="panel-title">
           <div>
             <h3>知识共建审核</h3>
-            <p>审核通过后才会进入检索和六 Agent 生成证据链</p>
+            <p>审核通过后才会进入检索，并由多智能体协作生成证据链</p>
           </div>
           <div class="tag-row">
             <el-radio-group v-model="documentStatus" @change="loadDocuments">

@@ -6,7 +6,7 @@
   "notes": [
     "共 64 个冻结任务：16 个正式主方向各 4 个任务。",
     "覆盖画像诊断、路线决策、内容生成、前置依赖审计四类核心任务。",
-    "当前可离线复算六 Agent 系统；直接 LLM 与单 Agent RAG 对照必须在相同模型、参数和知识快照下另行运行，未运行时不得伪造分数。"
+    "当前可离线复算多智能体协作系统；直接 LLM 与单 Agent RAG 对照必须在相同模型、参数和知识快照下另行运行，未运行时不得伪造分数。"
   ],
   "tasks": [
     {"id":"EV001","persona_id":"P01_zero_beginner","cluster":"software","track_code":"web_frontend","task_type":"profile_diagnosis","goal":"完成可访问的学习路线仪表盘","expected":{"min_evidence_count":3,"requires_blind_spots":true}},

@@ -226,7 +226,7 @@ class FrozenEvaluation:
             "run_type": "deterministic_offline_replay",
             "dataset": self.validation,
             "system": {
-                "name": "工学智链六 Agent",
+                "name": "工学智链多智能体协作",
                 "status": "completed",
                 "metrics": metrics,
                 "targets": targets,

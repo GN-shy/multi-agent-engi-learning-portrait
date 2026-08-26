@@ -34,6 +34,15 @@ def test_complete_human_learning_loop(client, auth_headers, admin_headers):
     assert len(tree["clusters"]) == 3
     assert sum(len(cluster["tracks"]) for cluster in tree["clusters"]) == 16
 
+    pathway_catalog = unwrap(client.get("/api/v1/tracks/pathways/catalog"))
+    agent_pathway = next(item for item in pathway_catalog["items"] if item["id"] == "agent-fullstack")
+    assert "learning_units" not in agent_pathway["stages"][0]
+    assert agent_pathway["stages"][0]["knowledge_point_count"] >= 20
+    pathway_detail = unwrap(client.get("/api/v1/tracks/pathways/agent-fullstack"))
+    assert pathway_detail["stages"][0]["learning_units"][0]["topic"] == "Python"
+    assert pathway_detail["stages"][0]["learning_units"][0]["knowledge_points"]
+    assert len(pathway_detail["learning_sources"]) >= 2
+
     compared = unwrap(
         client.post(
             "/api/v1/tracks/compare",
